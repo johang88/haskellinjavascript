@@ -17,7 +17,14 @@ haskell.interpreter.interpret = function(env, ast) {
 			return interpret(env, ast.lhs) / interpret(env, ast.rhs);
 			break;
 		default:
-			return symbol;
+			if (symbol instanceof Array) { 
+				// Special case caused when there are parantheses present because sequence returns an array in that case,
+				// I think that sequence should fail when there are no parantheses but it does not for some reason.
+				return interpret(env, symbol[0]);
+			} else {
+				return symbol;
+			}
+			
 			break;
 	}
 }

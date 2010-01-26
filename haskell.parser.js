@@ -37,7 +37,7 @@ haskell.parser.parse = function(code) {
 		};
 	})};
 	
-	var value = choice(number, expr);
+	var value = choice(number, sequence(expect('('), expr, expect(')')));
 	var product = chainl(value, operator_action(choice('*', '/')));
 	var sum = chainl(product, operator_action(choice('+', '-')));
 	var expr = sum;
