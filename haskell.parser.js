@@ -1,10 +1,25 @@
 // The parser
+
+/**
+ **** Lambda Calculus Language Grammar ****
+ * Program := [Func]
+ * 
+ * Func := "\\" [Ident] "->" Expr
+ *
+ * Expr := Ident
+ * Expr := Integer
+ * Expr := Expr "+" Expr
+ * Expr := Expr "-" Expr
+ * Expr := Expr "*" Expr
+ * Expr := Expr "/" Expr
+ */
+
+
 /**
  * Parses Haskell code
  * \code Code to parse
  * \return The ast
  */
- 
 haskell.parser.parse = function(code) {
 	var expr = function(state) { return expr(state); };
 	
