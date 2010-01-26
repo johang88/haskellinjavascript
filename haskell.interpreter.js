@@ -1,20 +1,23 @@
-haskell.interpreter.interpret = function(env, ast) {
-	var result = 0;
+haskell.interpreter.interpret = function(env, ast) {	
+	var interpret = haskell.interpreter.interpret;
 	
-	for (var i = 0; i < ast.length; i++) {
-		var node = ast[i];
-		
-		switch (node) {
-			case '+':
-				break;
-			case '-':
-				break;
-			case '*':
-				break;
-			case '/':
-				break;
-			default:
-				break;
-		}
+	var symbol = ast.symbol == undefined ? ast : ast.symbol;
+
+	switch (symbol) {
+		case '+':
+			return interpret(env, ast.lhs) + interpret(env, ast.rhs);
+			break;
+		case '-':
+			return interpret(env, ast.lhs) - interpret(env, ast.rhs);
+			break;
+		case '*':
+			return interpret(env, ast.lhs) * interpret(env, ast.rhs);
+			break;
+		case '/':
+			return interpret(env, ast.lhs) / interpret(env, ast.rhs);
+			break;
+		default:
+			return symbol;
+			break;
 	}
 }

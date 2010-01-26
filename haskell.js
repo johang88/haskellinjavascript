@@ -4,5 +4,6 @@ var haskell = {
 };
 
 haskell.eval = function(code) {
-	return(haskell.parser.parse(code));
+	var ast = haskell.parser.parse(code).ast;
+	return haskell.interpreter.interpret(undefined, ast);
 };
