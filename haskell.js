@@ -29,6 +29,11 @@ haskell.env = function() {
 }
 
 haskell.eval = function(code) {
+	if (typeof(console) == "undefined") {
+		console = {};
+		console.log = function() {};
+	}
+	
 	var ast = haskell.parser.parse(code).ast;
 	console.log("%o", ast);
 	return haskell.interpreter.interpret(new haskell.env(), ast);
