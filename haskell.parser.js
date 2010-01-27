@@ -37,7 +37,16 @@ haskell.parser.parse = function(code) {
 		};
 	})};
 	
-	var value = choice(number, sequence(expect('('), expr, expect(')')));
+	var dearray = function(p) {
+		return action(p, function(ast) {
+			if (ast instanceof Array && ast.length == 1) {
+				ast = ast[0];
+			}
+			return ast;
+		});
+	};
+	
+	var value = choice(number, dearray(sequence(expect('('), expr, expect(')'))));
 	var product = chainl(value, operator_action(choice('*', '/')));
 	var sum = chainl(product, operator_action(choice('+', '-')));
 	var expr = sum;
