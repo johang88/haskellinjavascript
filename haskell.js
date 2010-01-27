@@ -23,8 +23,8 @@ haskell.env = function() {
 		return this.symbols[symbol] != undefined;
 	}
 	
-	this.set_arg_list = function(arg_list) {
-		this.arg_list = arg_list;
+	this.set_arg_list = function(args) {
+		this.arg_list = args;
 	}
 }
 

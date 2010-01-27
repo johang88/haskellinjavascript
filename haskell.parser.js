@@ -69,7 +69,7 @@ haskell.parser.parse = function(code, isExpr) {
 	
 	var fun_call = sequence(ident, expect('('), list(expr, ','), expect(')'));
 	
-	var value = choice( fun_call, 
+	var value = choice( fun_call_action(fun_call), 
 						choice(ident, number), 
 						value_action(sequence(expect('('), fun_decl, expect(')'))));
 	var product = chainl(value, operator_action(choice('*', '/')));

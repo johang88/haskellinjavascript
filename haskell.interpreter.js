@@ -9,17 +9,24 @@ function isInteger(x) {
 haskell.interpreter.interpret = function(env, ast) {	
 	var interpret = haskell.interpreter.interpret;
 	
-	if (ast.arguments != undefined) {
+	if(ast.fun_name != undefined) {
+		// eval function
+		var f = env.get_symbol(ast.fun_name);
+		env.set_arg_list(ast.arguments);
+		var result = interpret(env, f.value);
+		return result;
+	} if (ast.arguments != undefined) {
 		for (var i = 0; i < ast.arguments.length; i++) {
 			var arg = ast.arguments[i];
 			
 			if (env.arg_list.length > i) {
 				var value = env.arg_list[i];
+				value = value.toString();
 				value = haskell.parser.parse(value, true).ast;
 				env.set_symbol(arg, value, false);
 			} else if (!env.exists_symbol(arg)) {
 				var value = prompt("enter a value for " + arg);
-				value = haskell.parser.parse(value, true).ast;
+				value = haskell.parser.parse(value, false).ast;
 				env.set_symbol(arg, value, false);
 			}
 		}
@@ -43,12 +50,6 @@ haskell.interpreter.interpret = function(env, ast) {
 				console.log("unknown symbol %o     ast: %o", ast.symbol, ast);
 				break;
 		}
-	} else if(ast.fun_name != undefined) {
-		// eval function
-		var f = env.get_symbol(ast.fun_name);
-		env.set_arg_list(ast.arguments);
-		var result = interpret(env, f);
-		return result;
 	} else {
 		if (isInteger(ast)) {
 			return ast;
