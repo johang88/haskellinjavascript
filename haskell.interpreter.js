@@ -15,7 +15,7 @@ haskell.interpreter.interpret = function(env, ast) {
 		env.set_arg_list(ast.arguments);
 		var result = interpret(env, f.value);
 		return result;
-	} if (ast.arguments != undefined) {
+	} else if (ast.arguments != undefined) {
 		for (var i = 0; i < ast.arguments.length; i++) {
 			var arg = ast.arguments[i];
 			
