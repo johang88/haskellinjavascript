@@ -75,7 +75,8 @@ haskell.parser.parse = function(code, isExpr) {
 	var product = chainl(value, operator_action(choice('*', '/')));
 	var sum = chainl(product, operator_action(choice('+', '-')));
 	var expr = sum;
-	var fun_decl = fun_action(sequence(expect('\\'), list(ident, ' '), expect("->"), expr));
+	var fun_decl = choice( expr, 
+						   fun_action(sequence(expect('\\'), list(ident, ' '), expect("->"), expr)));
 	
 	if (isExpr != undefined && isExpr) {
 		return expr(ps(code));
