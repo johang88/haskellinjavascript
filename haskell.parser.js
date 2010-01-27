@@ -31,6 +31,7 @@ haskell.parser.parse = function(code, isExpr) {
 		this.rhs = rhs;
 	}
 	
+	// AST Build functions
 	var number = action(repeat1(range('0', '9')), function(ast) { return parseInt(ast.join("")); });
 	var ident = action(repeat1(range('a', 'z')), function(ast) { return ast.join(""); });
 	
@@ -67,6 +68,7 @@ haskell.parser.parse = function(code, isExpr) {
 		});
 	}
 	
+	// Grammar
 	var fun_call = sequence(ident, expect('('), list(expr, ','), expect(')'));
 	
 	var value = choice( fun_call_action(fun_call), 
