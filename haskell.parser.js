@@ -20,7 +20,7 @@
  * \code Code to parse
  * \return The ast
  */
-haskell.parser.parse = function(code) {
+haskell.parser.parse = function(code, isExpr) {
 	var expr = function(state) { return expr(state); };
 	
 	var operator = function(symbol, lhs, rhs) {
@@ -30,6 +30,7 @@ haskell.parser.parse = function(code) {
 	}
 	
 	var number = action(repeat1(range('0', '9')), function(ast) { return parseInt(ast.join("")); });
+	var ident = action(repeat1(range('a', 'z')), function(ast) { return ast.join(""); });
 	
 	var operator_action = function(p) { return action(p, function(ast) {
 		return function(lhs, rhs) {
@@ -37,7 +38,7 @@ haskell.parser.parse = function(code) {
 		};
 	})};
 	
-	var dearray = function(p) {
+	var value_action = function(p) {
 		return action(p, function(ast) {
 			if (ast instanceof Array && ast.length == 1) {
 				ast = ast[0];
@@ -46,10 +47,24 @@ haskell.parser.parse = function(code) {
 		});
 	};
 	
-	var value = choice(number, dearray(sequence(expect('('), expr, expect(')'))));
+	var fun_action = function(p) {
+		return action(p, function(ast) {
+			var a = {};
+			a.arguments = ast[0]
+			a.expr = ast[1];
+			return a;
+		});
+	};
+	
+	var value = choice(choice(ident, number), value_action(sequence(expect('('), fun, expect(')'))));
 	var product = chainl(value, operator_action(choice('*', '/')));
 	var sum = chainl(product, operator_action(choice('+', '-')));
 	var expr = sum;
-
-	return expr(ps(code));
+	var fun = fun_action(sequence(expect('\\'), list(ident, ' '), expect("->"), expr));
+	
+	if (isExpr != undefined && isExpr) {
+		return expr(ps(code));
+	} else {
+		return fun(ps(code));
+	}
 };
