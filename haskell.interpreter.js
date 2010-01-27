@@ -12,7 +12,16 @@ haskell.interpreter.interpret = function(env, ast) {
 	if (ast.arguments != undefined) {
 		for (var i = 0; i < ast.arguments.length; i++) {
 			var arg = ast.arguments[i];
-			env.set_symbol(arg, prompt("enter a value for " + arg));
+			
+			if (env.arg_list.length > i) {
+				var value = env.arg_list[i];
+				value = haskell.parser.parse(value, true).ast;
+				env.set_symbol(arg, value, false);
+			} else if (!env.exists_symbol(arg)) {
+				var value = prompt("enter a value for " + arg);
+				value = haskell.parser.parse(value, true).ast;
+				env.set_symbol(arg, value, false);
+			}
 		}
 		
 		return interpret(env, ast.expr);
@@ -34,14 +43,25 @@ haskell.interpreter.interpret = function(env, ast) {
 				console.log("unknown symbol %o     ast: %o", ast.symbol, ast);
 				break;
 		}
+	} else if(ast.fun_name != undefined) {
+		// eval function
+		var f = env.get_symbol(ast.fun_name);
+		env.set_arg_list(ast.arguments);
+		var result = interpret(env, f);
+		return result;
 	} else {
 		if (isInteger(ast)) {
 			return ast;
 		} else { 
 			// ast is a symbol so look it up
-			var ast2 = haskell.parser.parse(env.get_symbol(ast), true).ast;
-			var result = interpret(new haskell.env(), ast2);
-			return result;
+			var symbol = env.get_symbol(ast);
+			if (symbol.evaluated) {
+				return symbol.value;
+			} else {
+				var result = interpret(new haskell.env(), symbol.value);
+				env.set_symbol(ast, result, true);
+				return result;
+			}
 		}
 	}
 }

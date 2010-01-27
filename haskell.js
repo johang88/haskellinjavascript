@@ -5,9 +5,14 @@ var haskell = {
 
 haskell.env = function() {
 	this.symbols = {};
+	this.arg_list = {};
 	
-	this.set_symbol = function(symbol, value) {
-		this.symbols[symbol] = value;
+	this.set_symbol = function(symbol, value, evaluated) {
+		var s = {};
+		s.value = value;
+		s.evaluated = evaluated == undefined ? false : evaluated;
+		
+		this.symbols[symbol] = s;
 	}
 	
 	this.get_symbol = function(symbol) {
@@ -17,9 +22,14 @@ haskell.env = function() {
 	this.exists_symbol = function(symbol) {
 		return this.symbols[symbol] != undefined;
 	}
+	
+	this.set_arg_list = function(arg_list) {
+		this.arg_list = arg_list;
+	}
 }
 
 haskell.eval = function(code) {
 	var ast = haskell.parser.parse(code).ast;
+	console.log("%o", ast);
 	return haskell.interpreter.interpret(new haskell.env(), ast);
 };

@@ -7,6 +7,7 @@
  * Func := "\\" [Ident] "->" Expr
  *
  * Expr := Ident
+ * Expr := Ident([Expr])
  * Expr := Integer
  * Expr := Expr "+" Expr
  * Expr := Expr "-" Expr
@@ -22,6 +23,7 @@
  */
 haskell.parser.parse = function(code, isExpr) {
 	var expr = function(state) { return expr(state); };
+	var fun_decl = function(state) { return fun_decl(state); };
 	
 	var operator = function(symbol, lhs, rhs) {
 		this.symbol = symbol;
@@ -56,15 +58,28 @@ haskell.parser.parse = function(code, isExpr) {
 		});
 	};
 	
-	var value = choice(choice(ident, number), value_action(sequence(expect('('), fun, expect(')'))));
+	var fun_call_action = function(p) {
+		return action(p, function(ast) {
+			var a = {};
+			a.fun_name = ast[0];
+			a.arguments = ast[1];
+			return a;
+		});
+	}
+	
+	var fun_call = sequence(ident, expect('('), list(expr, ','), expect(')'));
+	
+	var value = choice( fun_call, 
+						choice(ident, number), 
+						value_action(sequence(expect('('), fun_decl, expect(')'))));
 	var product = chainl(value, operator_action(choice('*', '/')));
 	var sum = chainl(product, operator_action(choice('+', '-')));
 	var expr = sum;
-	var fun = fun_action(sequence(expect('\\'), list(ident, ' '), expect("->"), expr));
+	var fun_decl = fun_action(sequence(expect('\\'), list(ident, ' '), expect("->"), expr));
 	
 	if (isExpr != undefined && isExpr) {
 		return expr(ps(code));
 	} else {
-		return fun(ps(code));
+		return fun_decl(ps(code));
 	}
 };
