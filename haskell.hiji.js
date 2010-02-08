@@ -7,7 +7,7 @@
         return "<ul class='modules'><li>" + modules.join("</li><li>") + "</li></ul>";
     };
     var makeEntered = function(modules, entered){
-        return $("<li class='entered'>" + makeModules(modules) + "<span class='line'>" + entered + "</span></li>");1
+        return $("<li class='entered'>" + makeModules(modules) + "<span class='line'>" + entered + "</span></li>");
     };
     var makeResponse = function(response){
 
