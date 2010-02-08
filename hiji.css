@@ -1,0 +1,41 @@
+.ghci-look * {
+    margin:0;
+    padding:0;
+    font-family:monospace;
+}
+
+.ghci-look {
+    cursor:text;
+}
+
+.ghci-look ol{
+    width:800px;
+    height:400px;
+    overflow-x:auto;
+    overflow-y:scroll;
+    list-style-type:none;
+}
+
+.ghci-look .input input {
+    border:none;
+    display:inline-block;
+    margin-left:-1px;
+}
+
+.ghci-look .modules {
+    display:inline;
+}
+
+.ghci-look .modules li {
+    display:inline;
+    padding-right:0.5em;
+}
+
+.ghci-look .modules li:last-child {
+    padding-right:0;
+}
+
+.ghci-look .modules:after {
+    content:">";
+    padding-right:0.5em;
+}
