@@ -88,5 +88,143 @@ haskell.parser.parse = function(code, isExpr) {
 };
 
 haskel.parser.parse2 = function(code) {
-    var module = sequence("module");
+    var gconsym = undefined;
+    
+    var qop = undefined;
+    
+    var op = undefined;
+    
+    var qconop = undefined;
+    
+    var conop = undefined;
+    
+    var qvarop = undefined;
+    
+    var varop = undefined;
+    
+    var qcon = undefined;
+    
+    var con = undefined;
+    
+    var qvar = undefined;
+    
+    var var = undefined;
+    
+    var gcon = undefined;
+    
+    var fpat = undefined;
+    
+    var apat = undefined;
+    
+    var rpat = undefined;
+    
+    var lpat = undefined;
+    
+    var pat = undefined;
+    
+    var fbind = undefined;
+    
+    var stmt = undefined;
+    
+    var stmts = undefined;
+    
+    var gdpat = undefined;
+    
+    var alt = undefined;
+    
+    var alts = undefined;
+    
+    var qval = undefined;
+    
+    var aexp = undefined;
+    
+    var fexp = undefined;
+    
+    var rexp = undefined;
+    
+    var lexp = undefined;
+    
+    var exp = undefined;
+    
+    var gd = undefined;
+    
+    var gdrhs = undefined;
+    
+    var rhs = undefined;
+    
+    var funlhs = undefined;
+    
+    var inst = undefined;
+    
+    var dclass = undefined;
+    
+    var deriving = undefined;
+    
+    var fielddecl = undefined;
+    
+    var newconstr = undefined;
+    
+    var constr = undefined;
+    
+    var constrs = undefined;
+    
+    var simpletype = undefined;
+    
+    var simpleclass = undefined;
+    
+    var scontext = undefined;
+    
+    var class = undefined;
+    
+    var context = undefined;
+    
+    var gtycon = undefined;
+    
+    var atype = undefined;
+    
+    var btype = undefined;
+    
+    var type = undefined;
+    
+    var fixity = undefined;
+    
+    var vars = undefined;
+    
+    var ops = undefined;
+    
+    var gendecl = undefined;
+    
+    var idecl = undefined;
+    
+    var idecls = undefined;
+    
+    var cdecl = undefined;
+    
+    var cdecls = undefined;
+    
+    var decl = undefined;
+    
+    var decls = undefined;
+    
+    var topdecl = undefined;
+    
+    var topdecls = undefined;
+    
+    var cname = undefined;
+    
+    var import = undefined;
+    
+    var impspec = undefined;
+    
+    var impcecl = undefined;
+
+    var export = undefined;
+
+    var exports = undefined;
+
+    var impdecls = undefined;
+
+    var body = undefined;
+
+    var module = undefined;
 };
