@@ -86,3 +86,7 @@ haskell.parser.parse = function(code, isExpr) {
 		return fun_decl(ps(code));
 	}
 };
+
+haskel.parser.parse2 = function(code) {
+    var module = sequence("module");
+};

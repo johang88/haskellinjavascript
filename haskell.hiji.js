@@ -1,7 +1,7 @@
 (function($){
     var evaluateHaskell = function(line, env)
     {
-        return "Not implemented";
+        return haskell.eval(line);
     };
     var makeModules = function(modules){
         return "<ul class='modules'><li>" + modules.join("</li><li>") + "</li></ul>";
