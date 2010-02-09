@@ -108,7 +108,7 @@ haskel.parser.parse2 = function(code) {
     
     var qvar = undefined;
     
-    var var = undefined;
+    var var_ = undefined;
     
     var gcon = undefined;
     
@@ -174,7 +174,7 @@ haskel.parser.parse2 = function(code) {
     
     var scontext = undefined;
     
-    var class = undefined;
+    var class_ = undefined;
     
     var context = undefined;
     
@@ -212,13 +212,13 @@ haskel.parser.parse2 = function(code) {
     
     var cname = undefined;
     
-    var import = undefined;
+    var import_ = undefined;
     
     var impspec = undefined;
     
     var impcecl = undefined;
 
-    var export = undefined;
+    var export_ = undefined;
 
     var exports = undefined;
 
