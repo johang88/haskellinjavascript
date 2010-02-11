@@ -87,7 +87,29 @@ haskell.parser.parse = function(code, isExpr) {
 	}
 };
 
-haskel.parser.parse2 = function(code) {
+haskell.parser.parse2 = function(code) {
+    var ident = action(repeat1(range('a', 'z')), function(ast) { return ast.join(""); });
+    
+    var modid = action(sequence(range('A', 'Z'), ident), function(ast) { return ast.join(""); });
+    
+    var varid = ident;
+    var varsym = ident;
+    
+    var qvarid = ident;
+    var qvarsym = ident;
+    
+    var qtycon = ident;
+    
+    var qtycls = ident;
+    
+    var conid = ident;
+    var consym = ident;
+
+    var tycon = ident;
+    var tyvar = ident;
+    
+    var tycls = epsilon_p;
+
     var gconsym = undefined;
     
     var qop = undefined;
@@ -104,11 +126,11 @@ haskel.parser.parse2 = function(code) {
     
     var qcon = undefined;
     
-    var con = undefined;
+    var con = choice(conid, sequence(ws('('), consym, ws(')')));
     
-    var qvar = undefined;
+    var qvar = choice(qvarid, sequence(ws('('), qvarsym, ws(')')));
     
-    var var_ = undefined;
+    var var_ = choice(varid, sequence(ws('('), varsym, ws(')')));
     
     var gcon = undefined;
     
@@ -158,17 +180,17 @@ haskel.parser.parse2 = function(code) {
     
     var dclass = undefined;
     
-    var deriving = undefined;
+    var deriving = epsilon_p;
     
     var fielddecl = undefined;
     
-    var newconstr = undefined;
+    var newconstr = epsilon_p;
     
     var constr = undefined;
     
-    var constrs = undefined;
+    var constrs = epsilon_p;
     
-    var simpletype = undefined;
+    var simpletype = sequence(ws(tycon), ws(list(tyvar, ' ')));
     
     var simpleclass = undefined;
     
@@ -178,13 +200,23 @@ haskel.parser.parse2 = function(code) {
     
     var context = undefined;
     
-    var gtycon = undefined;
+    var gtycon = choice(qtycon,
+                        "()",
+                        "[]",
+                        "(->)",
+                        sequence(ws('('), repeat1(ws(',')), ws(')'))
+                        );
     
-    var atype = undefined;
+    var atype = choice( gtycon,
+                        tyvar,
+                        sequence(ws('('), list(ws(type), ','), ws(')')),
+                        sequence(ws('['), ws(type), ws(']')),
+                        sequence(ws('('), ws(type), ws(')'))
+                        );
     
-    var btype = undefined;
+    var btype = sequence(optional(ws(btype)), ws(atype));
     
-    var type = undefined;
+    var type = sequence(ws(btype), optional(sequence(ws("->"), type)));
     
     var fixity = undefined;
     
@@ -196,35 +228,54 @@ haskel.parser.parse2 = function(code) {
     
     var idecl = undefined;
     
-    var idecls = undefined;
+    var idecls = epsilon_p;
     
     var cdecl = undefined;
     
-    var cdecls = undefined;
+    var cdecls = epsilon_p;
     
     var decl = undefined;
     
     var decls = undefined;
     
-    var topdecl = undefined;
+    var topdecl = choice(   sequence(ws("type"), ws(simpletype), ws('='), ws(type)),
+                            sequence(ws("data"), optional(sequence(context, "=>")), ws(simpletype), ws('='), constrs, optional(deriving)),
+                            sequence(ws("newtype"), optional(sequence(context, "=>")), ws(simpletype), ws('='), newconstr, optional(deriving)),
+                            sequence(ws("class"), optional(sequence(scontext, "=>")), tycls, tyvar, optional(sequence(ws("where"), cdecls))),
+                            sequence(ws("instance"), optional(sequence(scontext, "=>")), qtycls, inst, optional(sequence(ws("where"), idecls))),
+                            sequence(ws("default"), ws('('), list(type, ','), ws(')'))
+                        );
     
-    var topdecls = undefined;
+    var topdecls = list(topdecl, ';');
     
-    var cname = undefined;
+    var cname = choice(var_, con);
     
     var import_ = undefined;
     
     var impspec = undefined;
     
-    var impcecl = undefined;
+    var impdecl = choice(sequence(ws("import"), optional(ws("qualified")), ws(modid)),
+                        '');
 
-    var export_ = undefined;
+    var export_ = choice(   qvar,
+                            sequence(qtycon, optional(choice(sequence(ws('('), ws(".."), ws(')')),
+                                                        sequence(ws('('), list(cname, ','), ws(')'))))),
+                            sequence(qtycls, optional(choice(sequence(ws('('), ws(".."), ws(')')),
+                                                        sequence(ws('('), list(qvar, ','), ws(')'))))),
+                            sequence(ws("module"), modid)
+                        );
 
-    var exports = undefined;
+    var exports = sequence(ws('('), list(export_, ','), ws(')'));
 
-    var impdecls = undefined;
+    var impdecls = list(impdecl, ';');
 
-    var body = undefined;
+    var body = choice(  sequence(ws('{'), impdecls, ws(';'), topdecls, ws('}')),
+                        sequence(ws('{'), impdecls, ws('}')),
+                        sequence(ws('{'), topdecls, ws('}'))
+                    );
 
-    var module = undefined;
+    var module = choice(sequence(ws("module"), ws(modid), optional(exports), ws("where"), body),
+                        body);
+                        
+    return module(ps(code));
 };

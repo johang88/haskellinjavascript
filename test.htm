@@ -9,8 +9,14 @@
   <script src="haskell.parser.js" type="text/javascript"></script>
   <script src="haskell.interpreter.js" type="text/javascript"></script>
   <script type="text/javascript">
-    var code = prompt("Enter teh code!");
-    var result = haskell.eval(code);
+    var test1 = "module Test (asd,ysd) where { import Test }";
+    var test2 = "import Test";
+  
+    var res = haskell.parser.parse2(test1);
+    console.log("%o", res);
+    
+    //var code = prompt("Enter teh code!");
+    //var result = haskell.eval(code);
     //console.log("%o", result);
   </script>
 </head>
