@@ -98,18 +98,17 @@ haskell.parser.parse2 = function(code) {
     var qvarid = ident;
     var qvarsym = ident;
     
-    var qtycon = ident;
+    var qtycon = action(sequence(range('A', 'Z'), ident), function(ast) { return ast.join(""); });
     
     var qtycls = ident;
     
     var conid = ident;
     var consym = ident;
 
-    var tycon = ident;
+    var tycon = qtycon;
     var tyvar = ident;
     
-    var tycls = epsilon_p;
-
+    var tycls = epsilon_p;	
     var gconsym = undefined;
     
     var qop = undefined;
@@ -190,7 +189,7 @@ haskell.parser.parse2 = function(code) {
     
     var constrs = epsilon_p;
     
-    var simpletype = sequence(ws(tycon), ws(list(tyvar, ' ')));
+    var simpletype = sequence(ws(tycon), optional(ws(list(tyvar, ' '))));
     
     var simpleclass = undefined;
     
@@ -207,6 +206,7 @@ haskell.parser.parse2 = function(code) {
                         sequence(ws('('), repeat1(ws(',')), ws(')'))
                         );
     
+    var type = function(state) { return type(state); };
     var atype = choice( gtycon,
                         tyvar,
                         sequence(ws('('), list(ws(type), ','), ws(')')),
@@ -214,9 +214,8 @@ haskell.parser.parse2 = function(code) {
                         sequence(ws('('), ws(type), ws(')'))
                         );
     
-    var btype = sequence(optional(ws(btype)), ws(atype));
-    
-    var type = sequence(ws(btype), optional(sequence(ws("->"), type)));
+    var btype = repeat1(ws(atype));
+    var type = list(ws(btype), ws("->"));
     
     var fixity = undefined;
     
@@ -265,17 +264,17 @@ haskell.parser.parse2 = function(code) {
                             sequence(ws("module"), modid)
                         );
 
-    var exports = sequence(ws('('), list(export_, ','), ws(')'));
+    var exports = sequence(ws('('), list(ws(export_), ws(',')), ws(')'));
 
     var impdecls = list(impdecl, ';');
 
-    var body = choice(  sequence(ws('{'), impdecls, ws(';'), topdecls, ws('}')),
-                        sequence(ws('{'), impdecls, ws('}')),
-                        sequence(ws('{'), topdecls, ws('}'))
+    var body = choice(  sequence(ws('{'), impdecls, ws(';'), topdecls, optional(ws(';')), ws('}')),
+                        sequence(ws('{'), impdecls, optional(ws(';')), ws('}')),
+                        sequence(ws('{'), topdecls, optional(ws(';')), ws('}'))
                     );
 
     var module = choice(sequence(ws("module"), ws(modid), optional(exports), ws("where"), body),
                         body);
-                        
+    
     return module(ps(code));
 };

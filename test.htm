@@ -11,8 +11,15 @@
   <script type="text/javascript">
     var test1 = "module Test (asd,ysd) where { import Test }";
     var test2 = "import Test";
+    var test3 = <><![CDATA[
+    module Test (asd , ysd) where { 
+		import Test;
+		type Test a b = Test a -> Test -> (Type -> Type) -> (Int, Int) -> [(String, String)];
+    }
+    ]]></>.toString()
+    var test4 = "type Test = Test";
   
-    var res = haskell.parser.parse2(test1);
+    var res = haskell.parser.parse2(test3);
     console.log("%o", res);
     
     //var code = prompt("Enter teh code!");
