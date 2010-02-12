@@ -141,7 +141,7 @@ haskell.parser.parse2 = function(code) {
     
     var lpat = undefined;
     
-    var pat = undefined;
+    var pat = epsilon_p;
     
     var fbind = undefined;
     
@@ -171,9 +171,9 @@ haskell.parser.parse2 = function(code) {
     
     var gdrhs = undefined;
     
-    var rhs = undefined;
+    var rhs = epsilon_p;
     
-    var funlhs = undefined;
+    var funlhs = epsilon_p;
     
     var inst = undefined;
     
@@ -223,7 +223,7 @@ haskell.parser.parse2 = function(code) {
     
     var ops = undefined;
     
-    var gendecl = undefined;
+    var gendecl = epsilon_p;
     
     var idecl = undefined;
     
@@ -233,16 +233,19 @@ haskell.parser.parse2 = function(code) {
     
     var cdecls = epsilon_p;
     
-    var decl = undefined;
+    var decl = choice(  gendecl,
+                        sequence(ws(choice(funlhs, pat)), ws(rhs))
+                     );
     
-    var decls = undefined;
+    var decls = list(ws(decl), ws(';'));
     
     var topdecl = choice(   sequence(ws("type"), ws(simpletype), ws('='), ws(type)),
                             sequence(ws("data"), optional(sequence(context, "=>")), ws(simpletype), ws('='), constrs, optional(deriving)),
                             sequence(ws("newtype"), optional(sequence(context, "=>")), ws(simpletype), ws('='), newconstr, optional(deriving)),
                             sequence(ws("class"), optional(sequence(scontext, "=>")), tycls, tyvar, optional(sequence(ws("where"), cdecls))),
                             sequence(ws("instance"), optional(sequence(scontext, "=>")), qtycls, inst, optional(sequence(ws("where"), idecls))),
-                            sequence(ws("default"), ws('('), list(type, ','), ws(')'))
+                            sequence(ws("default"), ws('('), list(type, ','), ws(')')),
+                            decls
                         );
     
     var topdecls = list(topdecl, ';');
