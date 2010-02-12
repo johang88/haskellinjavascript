@@ -249,11 +249,17 @@ haskell.parser.parse2 = function(code) {
     
     var cname = choice(var_, con);
     
-    var import_ = undefined;
+    var import_ = choice(   var_,
+                            sequence(tycon, optional(choice(sequence(ws('('), ws(".."), ws(')')),
+                                                        sequence(ws('('), list(cname, ','), ws(')'))))),
+                            sequence(tycls, optional(choice(sequence(ws('('), ws(".."), ws(')')),
+                                                        sequence(ws('('), list(var_, ','), ws(')')))))
+                        );
     
-    var impspec = undefined;
-    
-    var impdecl = choice(sequence(ws("import"), optional(ws("qualified")), ws(modid)),
+    var impspec = choice(   sequence(ws('('), list(ws(import_), ws(',')), ws(')')),
+                            sequence(ws("hiding"), ws('('), list(ws(import_), ws(',')), ws(')'))
+                        );
+    var impdecl = choice(sequence(ws("import"), optional(ws("qualified")), ws(modid), optional(sequence(ws("as"), ws(modid))), optional(ws(impspec))),
                         '');
 
     var export_ = choice(   qvar,
@@ -266,7 +272,7 @@ haskell.parser.parse2 = function(code) {
 
     var exports = sequence(ws('('), list(ws(export_), ws(',')), ws(')'));
 
-    var impdecls = list(impdecl, ';');
+    var impdecls = list(ws(impdecl), ws(';'));
 
     var body = choice(  sequence(ws('{'), impdecls, ws(';'), topdecls, optional(ws(';')), ws('}')),
                         sequence(ws('{'), impdecls, optional(ws(';')), ws('}')),

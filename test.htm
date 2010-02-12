@@ -13,7 +13,9 @@
     var test2 = "import Test";
     var test3 = <><![CDATA[
     module Test (asd , ysd) where { 
-		import Test;
+		import qualified Test as Test hiding (asd , as);
+        import qualified Test;
+        
 		type Test a b = Test a -> Test -> (Type -> Type) -> (Int, Int) -> [(String, String)];
     }
     ]]></>.toString()
