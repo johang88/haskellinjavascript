@@ -17,9 +17,11 @@
         import qualified Test;
         
 		type Test a b = Test a -> Test -> (Type -> Type) -> (Int, Int) -> [(String, String)];
+        
+        test :: forall a => Int -> Int;
+        testar :: Int;
     }
     ]]></>.toString()
-    var test4 = "type Test = Test";
   
     var res = haskell.parser.parse(test3);
     console.log("%o", res);

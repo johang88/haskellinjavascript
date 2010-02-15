@@ -22,6 +22,8 @@
  * \return The ast
  */
 haskell.parser.parse = function(code) {
+    var integer = epsilon_p;
+
     var ident = action(repeat1(range('a', 'z')), function(ast) { return ast.join(""); });
     
     var modid = action(sequence(range('A', 'Z'), ident), function(ast) { return ast.join(""); });
@@ -128,11 +130,7 @@ haskell.parser.parse = function(code) {
     var simpleclass = undefined;
     
     var scontext = undefined;
-    
-    var class_ = undefined;
-    
-    var context = undefined;
-    
+
     var gtycon = choice(qtycon,
                         "()",
                         "[]",
@@ -151,13 +149,24 @@ haskell.parser.parse = function(code) {
     var btype = repeat1(ws(atype));
     var type = list(ws(btype), ws("->"));
     
-    var fixity = undefined;
+    var fixity = epsilon_p;
     
-    var vars = undefined;
+    var vars = list(ws(var_), ws(','));
     
-    var ops = undefined;
+    var ops = epsilon_p;
     
-    var gendecl = epsilon_p;
+    var class_ = choice(sequence(ws(qtycls), ws(tyvar)),
+                        sequence(ws(qtycls), ws('('), list(ws(atype), ws(',')) ,ws(')'))
+                        );
+    
+    var context = choice(   ws(class_), 
+                            sequence(ws('('), list(ws(class_), ws(',')) ,ws(')'))
+                        );
+    
+    var gendecl = choice(   sequence(ws(vars), ws("::"), optional(sequence(ws(context), ws("=>"))), ws(type)),
+                            sequence(ws(fixity), optional(ws(integer)), ws(ops)),
+                            epsilon_p
+                        );
     
     var idecl = undefined;
     
@@ -182,7 +191,7 @@ haskell.parser.parse = function(code) {
                             decls
                         );
     
-    var topdecls = list(topdecl, ';');
+    var topdecls = list(ws(topdecl), ws(';'));
     
     var cname = choice(var_, con);
     
