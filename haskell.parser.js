@@ -71,7 +71,7 @@ haskell.parser.parse = function(code) {
     
     var fpat = undefined;
     
-    var apat = undefined;
+    var apat = epsilon_p;
     
     var rpat = undefined;
     
@@ -83,33 +83,48 @@ haskell.parser.parse = function(code) {
     
     var stmt = undefined;
     
-    var stmts = undefined;
+    var stmts = epsilon_p;
     
     var gdpat = undefined;
     
     var alt = undefined;
     
-    var alts = undefined;
+    var alts = epsilon_p;
     
     var qval = undefined;
     
-    var aexp = undefined;
+    var aexp = epsilon_p;
     
-    var fexp = undefined;
+    var fexp = sequence(optional(ws(fexp)), ws(aexp));
     
     var rexp = undefined;
     
     var lexp = undefined;
     
-    var exp = undefined;
+    var exp_10 = choice(sequence(ws('\\'), repeat1(ws(apat)), ws("->"), ws(exp)),
+                        sequence(ws("let"), ws(decls), ws("in"), ws(exp)),
+                        sequence(ws("if"), ws(exp), ws("then"), ws(exp), ws("else"), ws(exp)),
+                        sequence(ws("case"), ws(exp), ws("of"), ws("{"), ws(alts), ws("}")),
+                        sequence(ws("do"), ws("{"), ws(stmts), ws("}")),
+                        ws(fexp)
+                        );
+    
+    var exp_0 = choice(ident, exp_10); // todo: exp operator precedence, hardcode common operators for now?
+    
+    var exp = choice(   sequence(ws(exp_0), ws("::"), optional(ws(context), ws("=>")), ws(type)),
+                        ws(exp_0)
+                    );
     
     var gd = undefined;
     
     var gdrhs = undefined;
     
-    var rhs = epsilon_p;
+    // todo: missing second choice
+    var rhs = sequence(ws('='), ws(exp), optional(sequence(ws("where"), ws(decls))));
     
-    var funlhs = epsilon_p;
+    // todo: Should be quite a lot of choices here, but those are for 
+    //       operators so it's not very important right now
+    var funlhs = sequence(repeat1(ws(var_)), repeat0(ws(apat)));
     
     var inst = undefined;
     
@@ -176,8 +191,11 @@ haskell.parser.parse = function(code) {
     
     var cdecls = epsilon_p;
     
-    var decl = choice(  gendecl,
-                        sequence(ws(choice(funlhs, pat)), ws(rhs))
+    // This choice sequence differs from the haskell specification
+    // gendecl and funlhs had to be swapped in order for it to parse
+    // but I have not been able to seen any side effects from this
+    var decl = choice(  sequence(ws(choice(funlhs, pat)), ws(rhs)),
+                        gendecl
                      );
     
     var decls = list(ws(decl), ws(';'));
@@ -227,6 +245,8 @@ haskell.parser.parse = function(code) {
 
     var module = choice(sequence(ws("module"), ws(modid), optional(exports), ws("where"), body),
                         body);
+    
+    var test = sequence(ws(choice(funlhs, pat)), ws(rhs));
     
     return module(ps(code));
 };

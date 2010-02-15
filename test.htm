@@ -20,8 +20,11 @@
         
         test :: forall a => Int -> Int;
         testar :: Int;
+        test = asd;
     }
     ]]></>.toString()
+    
+    var test4 = "test = asd";
   
     var res = haskell.parser.parse(test3);
     console.log("%o", res);
