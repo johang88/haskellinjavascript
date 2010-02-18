@@ -20,11 +20,11 @@
         
         test :: forall a => Int -> Int;
         testar :: Int;
-        test = asd;
+        test = asd + 2 * 4;
     }
     ]]></>.toString()
     
-    var test4 = "test = asd";
+    var test4 = "asd + 2 * 4";
   
     var res = haskell.parser.parse(test3);
     console.log("%o", res);

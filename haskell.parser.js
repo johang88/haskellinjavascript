@@ -22,9 +22,11 @@
  * \return The ast
  */
 haskell.parser.parse = function(code) {
-    var integer = epsilon_p;
+    var integer = action(repeat1(range('0', '9')), function(ast) { return ast.join(""); });
 
     var ident = action(repeat1(range('a', 'z')), function(ast) { return ast.join(""); });
+    
+    var literal = choice(ws(integer), ws(ident));
     
     var modid = action(sequence(range('A', 'Z'), ident), function(ast) { return ast.join(""); });
     
@@ -93,7 +95,7 @@ haskell.parser.parse = function(code) {
     
     var qval = undefined;
     
-    var aexp = epsilon_p;
+    var aexp = literal;
     
     var fexp = sequence(optional(ws(fexp)), ws(aexp));
     
@@ -108,8 +110,18 @@ haskell.parser.parse = function(code) {
                         sequence(ws("do"), ws("{"), ws(stmts), ws("}")),
                         ws(fexp)
                         );
+                        
+    var exp_2 = choice( sequence(ws(literal), ws('*'), ws(literal)),
+                        sequence(ws(literal), ws('/'), ws(literal)),
+                        literal
+                      );
     
-    var exp_0 = choice(ident, exp_10); // todo: exp operator precedence, hardcode common operators for now?
+    var exp_1 = choice( sequence(ws(exp_2), ws('+'), ws(exp_2)),
+                        sequence(ws(exp_2), ws('-'), ws(exp_2)),
+                        exp_2
+                      );
+    
+    var exp_0 = exp_1; // todo: exp operator precedence, hardcode common operators for now?
     
     var exp = choice(   sequence(ws(exp_0), ws("::"), optional(ws(context), ws("=>")), ws(type)),
                         ws(exp_0)
