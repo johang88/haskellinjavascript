@@ -95,9 +95,17 @@ haskell.parser.parse = function(code) {
     
     var qval = undefined;
     
-    var aexp = literal;
+    var aexp = choice(  ws(qvar),
+                        ws(qcon),
+                        ws(literal),
+                        sequence(ws('('), ws(exp), ws(')')), // todo: predefine exp
+                        sequence(ws('('), ws(exp), ws(','), list(ws(exp), ws(',')) , ws(')')), // todo: should be at least two repeats
+                        sequence(ws('['), list(ws(exp), ws(',')) , ws(']')) 
+                        // todo: need a list parser that parses at least n elements
+                        //       something like listk(parser, seperator, min_elements)
+                        // todo: more stuff
+                      );
     
-    var fexp = function(state) { return fexp(state); };
     var fexp = repeat1(ws(aexp));
     
     var rexp = undefined;
