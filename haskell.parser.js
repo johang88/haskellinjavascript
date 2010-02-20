@@ -61,7 +61,7 @@ haskell.parser.parse = function(code) {
     
     var varop = undefined;
     
-    var qcon = undefined;
+    var qcon = epsilon_p;
     
     var con = choice(conid, sequence(ws('('), consym, ws(')')));
     
