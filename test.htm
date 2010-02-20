@@ -12,15 +12,9 @@
     var test1 = "module Test (asd,ysd) where { import Test }";
     var test2 = "import Test";
     var test3 = <><![CDATA[
-    module Test (asd , ysd) where { 
-		import qualified Test as Test hiding (asd , as);
-        import qualified Test;
-        
-		type Test a b = Test a -> Test -> (Type -> Type) -> (Int, Int) -> [(String, String)];
-        
-        test :: forall a => Int -> Int;
-        testar :: Int;
-        test = asd + 2 * 4;
+    module Test where {
+        fib :: Integer -> Integer;
+        fib n = fib n - 1;
     }
     ]]></>.toString()
     

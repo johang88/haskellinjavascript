@@ -97,7 +97,8 @@ haskell.parser.parse = function(code) {
     
     var aexp = literal;
     
-    var fexp = sequence(optional(ws(fexp)), ws(aexp));
+    var fexp = function(state) { return fexp(state); };
+    var fexp = repeat1(ws(aexp));
     
     var rexp = undefined;
     
@@ -113,7 +114,7 @@ haskell.parser.parse = function(code) {
                         
     var exp_2 = choice( sequence(ws(literal), ws('*'), ws(literal)),
                         sequence(ws(literal), ws('/'), ws(literal)),
-                        literal
+                        ws(fexp)
                       );
     
     var exp_1 = choice( sequence(ws(exp_2), ws('+'), ws(exp_2)),
