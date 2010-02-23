@@ -22,6 +22,7 @@
  * \return The ast
  */
 haskell.parser.parse = function(code) {
+
     var integer = action(repeat1(range('0', '9')), function(ast) { return new haskell.ast.Num(parseInt(ast.join(""))); });
 
     var ident = action(repeat1(range('a', 'z')), function(ast) { return ast.join(""); });
