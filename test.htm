@@ -6,9 +6,24 @@
   <title>Haskelltolk i Javascript</title>
   <script src="lib/jsparse.js" type="text/javascript"></script>
   <script src="haskell.js" type="text/javascript"></script>
+  <script src="ast.js" type="text/javascript"></script>
   <script src="haskell.parser.js" type="text/javascript"></script>
   <script src="haskell.interpreter.js" type="text/javascript"></script>
   <script type="text/javascript">
+    var test1 = "module Test (asd,ysd) where { import Test }";
+    var test2 = "import Test";
+    var test3 = <><![CDATA[
+    module Test where {
+        fib :: Integer -> Integer;
+        fib n = n - 1;
+    }
+    ]]></>.toString()
+    
+    var test4 = "asd + 2 * 4";
+  
+    var res = haskell.parser.parse(test3);
+    console.log("%o", res);
+    
     //var code = prompt("Enter teh code!");
     //var result = haskell.eval(code);
     //console.log("%o", result);
