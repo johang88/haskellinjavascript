@@ -185,6 +185,6 @@ haskell.ast.FundDefGuard = function(identifier, patterns, guardExpressions, wher
     this.wheres = wheres==null ? [] : wheres;
 };
 
-haskell.ast.VarDef.prototype = hashell.ast.Declaration;
-haskell.ast.FunDef.prototype = hashell.ast.Declaration;
-haskell.ast.FunGuardDef.prototype = hashell.ast.Declaration;
+haskell.ast.VarDef.prototype = haskell.ast.Declaration;
+haskell.ast.FunDef.prototype = haskell.ast.Declaration;
+haskell.ast.FunGuardDef.prototype = haskell.ast.Declaration;
