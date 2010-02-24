@@ -249,10 +249,17 @@ haskell.parser.parse = function(code) {
                             sequence(ws("class"), optional(sequence(scontext, "=>")), tycls, tyvar, optional(sequence(ws("where"), cdecls))),
                             sequence(ws("instance"), optional(sequence(scontext, "=>")), qtycls, inst, optional(sequence(ws("where"), idecls))),
                             sequence(ws("default"), ws('('), list(type, ','), ws(')')),
-                            decls
+                            ws(decl)
                         );
     
-    var topdecls = list(ws(topdecl), ws(';'));
+    var topdecls_action = function(p) {
+        return action(p, function(ast) {
+            return ast.filter(function(element) {
+                return element instanceof haskell.ast.FunDef;
+            });
+        });
+    };
+    var topdecls = topdecls_action(list(ws(topdecl), ws(';')));
     
     var cname = choice(var_, con);
     
@@ -281,13 +288,32 @@ haskell.parser.parse = function(code) {
 
     var impdecls = list(ws(impdecl), ws(';'));
 
+    
+    var body_action = function(p) {
+        return action(p, function(ast) {
+            return ast[1];
+        });
+    };    
+
     var body = choice(  sequence(ws('{'), impdecls, ws(';'), topdecls, optional(ws(';')), ws('}')),
                         sequence(ws('{'), impdecls, optional(ws(';')), ws('}')),
-                        sequence(ws('{'), topdecls, optional(ws(';')), ws('}'))
+                        body_action(sequence(ws('{'), topdecls, optional(ws(';')), ws('}')))
                     );
 
-    var module = choice(sequence(ws("module"), ws(modid), optional(exports), ws("where"), body),
-                        body);
+    var module_action = function(p) {
+        return action(p, function(ast) {
+            var declarations = null;
+            
+            if (ast instanceof Array) {
+                return new haskell.ast.Module(ast[4]);
+            } else {
+                return new haskell.ast.Module(ast);
+            }
+        });
+    }
+
+    var module = module_action(choice(sequence(ws("module"), ws(modid), optional(exports), ws("where"), body),
+                        body));
     
     var test = sequence(ws(choice(funlhs, pat)), ws(rhs));
     
