@@ -179,6 +179,7 @@ haskell.parser.parse = function(code) {
     var scontext = undefined;
 
     var gtycon = choice(qtycon,
+                   sequence(repeat1(ws(var_)), repeat0(ws(apat))),
                         "()",
                         "[]",
                         "(->)",
@@ -223,10 +224,20 @@ haskell.parser.parse = function(code) {
     
     var cdecls = epsilon_p;
     
+    var fun_action = function(p) {
+        return action(p, function(ast) {
+            var patterns = ast[0][0];
+            var fun_ident = patterns[0];
+            patterns.shift();
+            
+            return new haskell.ast.FunDef(fun_ident, patterns, ast[1][1], null);
+        });
+    };
+    
     // This choice sequence differs from the haskell specification
     // gendecl and funlhs had to be swapped in order for it to parse
     // but I have not been able to seen any side effects from this
-    var decl = choice(  sequence(ws(choice(funlhs, pat)), ws(rhs)),
+    var decl = choice(  fun_action(sequence(ws(choice(funlhs, pat)), ws(rhs))),
                         gendecl
                      );
     
