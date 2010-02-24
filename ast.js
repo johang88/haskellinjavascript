@@ -34,7 +34,7 @@ data Pattern
 
 data Declaration 
     = VarDef Pattern Expression [Where]
-    | FunDef Identifier [Pattern] Expression [Where] // Ambiguous
+    | FunDef Identifier [Pattern] Expression [Where] // ambigious with the above line when Pattern is an identifier and lenght [Pattern] == 0
     | FunDefGuard Identifier [Pattern] [(Guard, Expression)] [Where] 
 
 Value 
@@ -155,3 +155,36 @@ haskell.ast.PatternVariableBinding.prototype = haskell.ast.Pattern;
 haskell.ast.PatternIgnored.prototype = haskell.ast.Pattern;
 haskell.ast.PatternCombined.prototype = haskell.ast.Pattern;
 haskell.ast.PatternConstant.prototype = haskell.ast.Pattern;
+
+haskell.ask.Decleration = function() {
+    
+};
+
+haskell.ast.VarDef = function(pattern, expression, wheres) {
+    if (wheres==null)
+    {
+        wheres=[];
+    }
+    this.pattern = pattern;
+    this.expression = expression;
+    this.wheres = wheres;
+};
+
+haskell.ast.FunDef = function(identifier, patterns, expression, wheres) {
+    this.identifier = identifier;
+    this.patterns = patterns;
+    this.expression = expression;
+    this.wheres = wheres==null ? [] : wheres;
+};
+
+
+haskell.ast.FundDefGuard = function(identifier, patterns, guardExpressions, wheres) {
+    this.identifier = identifier;
+    this.patterns = patterns;
+    this.expression = expression;
+    this.wheres = wheres==null ? [] : wheres;
+};
+
+haskell.ast.VarDef.prototype = hashell.ast.Declaration;
+haskell.ast.FunDef.prototype = hashell.ast.Declaration;
+haskell.ast.FunGuardDef.prototype = hashell.ast.Declaration;
