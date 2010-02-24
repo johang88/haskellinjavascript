@@ -156,7 +156,7 @@ haskell.ast.PatternIgnored.prototype = haskell.ast.Pattern;
 haskell.ast.PatternCombined.prototype = haskell.ast.Pattern;
 haskell.ast.PatternConstant.prototype = haskell.ast.Pattern;
 
-haskell.ask.Decleration = function() {
+haskell.ast.Declaration = function() {
     
 };
 
