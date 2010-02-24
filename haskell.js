@@ -1,7 +1,7 @@
 var haskell = {
 	parser: {},
 	interpreter: {},
-	abs: {}
+	ast: {}
 };
 
 haskell.env = function() {
