@@ -121,13 +121,23 @@ haskell.parser.parse = function(code) {
                         ws(fexp)
                         );
                         
-    var exp_2 = choice( sequence(ws(literal), ws('*'), ws(literal)),
-                        sequence(ws(literal), ws('/'), ws(literal)),
+    var op_action = function(p) {
+        return action(p, function(ast) {
+            // a + b ->
+            // + a b ->
+            // (+ a) b
+            var fun1 = new haskell.ast.Application(ast[1], ast[0]);
+            return new haskell.ast.Application(fun1, ast[2]);
+        });
+    };
+                        
+    var exp_2 = choice( op_action(sequence(ws(literal), ws('*'), ws(literal))),
+                        op_action(sequence(ws(literal), ws('/'), ws(literal))),
                         ws(fexp)
                       );
     
-    var exp_1 = choice( sequence(ws(exp_2), ws('+'), ws(exp_2)),
-                        sequence(ws(exp_2), ws('-'), ws(exp_2)),
+    var exp_1 = choice( op_action(sequence(ws(exp_2), ws('+'), ws(exp_2))),
+                        op_action(sequence(ws(exp_2), ws('-'), ws(exp_2))),
                         exp_2
                       );
     
