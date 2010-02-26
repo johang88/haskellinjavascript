@@ -89,9 +89,11 @@ haskell.ast.Lambda = function(patterns, expr){
     this.patterns = patterns;
     this.expr = expr;
 
-    this.patternsToString() {
-        return this.patterns.map(function(p) {return p.toString()}).join(" ");
-    }
+    this.patternsToString = function() {
+        return this.patterns.map(function(p) {
+								    return p.toString();
+	    }).join(" ");
+    };
 
     this.toString = function() {
         return "(\ " + this.patternsToString() + " -> " + this.expr.toString() + " )"
@@ -231,7 +233,7 @@ haskell.ast.FunDef = function(identifier, patterns, expression, wheres) {
 };
 
 
-haskell.ast.FundDefGuard = function(identifier, patterns, guardExpressions, wheres) {
+haskell.ast.FunDefGuard = function(identifier, patterns, guardExpressions, wheres) {
     this.identifier = identifier;
     this.patterns = patterns;
     this.expression = expression;
@@ -240,4 +242,4 @@ haskell.ast.FundDefGuard = function(identifier, patterns, guardExpressions, wher
 
 haskell.ast.VarDef.prototype = haskell.ast.Declaration;
 haskell.ast.FunDef.prototype = haskell.ast.Declaration;
-haskell.ast.FunGuardDef.prototype = haskell.ast.Declaration;
+haskell.ast.FunDefGuard.prototype = haskell.ast.Declaration;
