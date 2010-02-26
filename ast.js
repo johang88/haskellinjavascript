@@ -23,6 +23,7 @@ data Expression
     | If Expression Expression Expression
     | Case Expression [(Pattern,Expression)]
     | Let Decleration Expression
+				| 
 
 data Pattern
     = Constructor BigIdentifier [Pattern]
@@ -51,6 +52,14 @@ type Guard = Expression
 type Where = Expression
 
 */
+
+(function(haskell) {
+
+ var patternsToString = function(patterns) {
+					return patterns.map(function(p) {
+													return p.toString();
+									}).join(" ");
+	};
 
 haskell.ast.Value = function() {
 
@@ -89,14 +98,8 @@ haskell.ast.Lambda = function(patterns, expr){
     this.patterns = patterns;
     this.expr = expr;
 
-    this.patternsToString = function() {
-        return this.patterns.map(function(p) {
-								    return p.toString();
-	    }).join(" ");
-    };
-
     this.toString = function() {
-        return "(\ " + this.patternsToString() + " -> " + this.expr.toString() + " )"
+        return "(\ " + patternsToString(this.patterns) + " -> " + this.expr.toString() + " )"
     };
 };
 
@@ -110,7 +113,7 @@ haskell.ast.Lambda.prototype              = haskell.ast.Value;
 haskell.ast.Module = function(declarations) {
     this.declarations = declarations;
     this.toString = function() {
-        return this.declerations.map(function(d) {return d.toString()}).join("\n");
+        return this.declarations.map(function(d) {return d.toString()}).join("\n");
     };
 };
 
@@ -180,7 +183,7 @@ haskell.ast.PatternConstructor = function(constructor,patterns) {
 haskell.ast.PatternVariableBinding = function(identifier) {
     this.identifier = identifier;
     this.toString = function() {
-	return this.identifier;
+							 return this.identifier;
     }
 };
 
@@ -229,7 +232,12 @@ haskell.ast.FunDef = function(identifier, patterns, expression, wheres) {
     this.patterns = patterns;
     this.expression = expression;
     this.wheres = wheres==null ? [] : wheres;
-    
+    this.toString = function() {
+							 return this.identifier + " " + patternsToString(this.patterns) + " = " + this.expression.toString() +
+								"\n\twhere\n\t\t" + this.wheres.map(function(w) {
+																w.toString();
+												}).join("\n\t\t");
+				};
 };
 
 
@@ -243,3 +251,5 @@ haskell.ast.FunDefGuard = function(identifier, patterns, guardExpressions, where
 haskell.ast.VarDef.prototype = haskell.ast.Declaration;
 haskell.ast.FunDef.prototype = haskell.ast.Declaration;
 haskell.ast.FunDefGuard.prototype = haskell.ast.Declaration;
+
+})(haskell);

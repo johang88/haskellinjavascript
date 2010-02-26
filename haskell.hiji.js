@@ -1,7 +1,7 @@
 (function($){
     var evaluateHaskell = function(line, env)
     {
-        return haskell.eval(line);
+        return haskell.parser.parse(line);
     };
     var makeModules = function(modules){
         return "<ul class='modules'><li>" + modules.join("</li><li>") + "</li></ul>";
@@ -16,7 +16,8 @@
         return "<li class='input'>" + makeModules(modules) + "<input type='text'></li>";
     };
     var makeOutput = function(output) {
-        return $("<li class='output'></li>").text(output);
+	console.log("%o", output);
+        return $("<li class='output'></li>").text(output.ast.toString());
     };
     $.fn.startHiji = function() {
         var modules = new Array();
