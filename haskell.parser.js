@@ -130,26 +130,16 @@ haskell.parser.parse = function(code) {
                         sequence(ws("do"), ws("{"), ws(stmts), ws("}")),
                         ws(fexp)
                         );
-                        
-    var op_action = function(p) {
-        return action(p, function(ast) {
-            // a + b ->
-            // + a b ->
-            // (+ a) b
-            var fun1 = new haskell.ast.Application(ast[1], ast[0]);
-            return new haskell.ast.Application(fun1, ast[2]);
-        });
-    };
-                        
-    var exp_2 = choice( op_action(sequence(ws(fexp), ws('*'), ws(fexp))),
-                        op_action(sequence(ws(fexp), ws('/'), ws(fexp))),
-                        ws(fexp)
-                      );
     
-    var exp_1 = choice( op_action(sequence(ws(exp_2), ws('+'), ws(exp_2))),
-                        op_action(sequence(ws(exp_2), ws('-'), ws(exp_2))),
-                        exp_2
-                      );
+    var op_action = function(p) { return action(p, function(ast) {
+            return function(lhs, rhs) {
+                var fun1 = new haskell.ast.Application(ast, lhs);
+                return new haskell.ast.Application(fun1, rhs);
+            };
+    })};
+
+    var exp_2 = chainl(fexp, op_action(choice(ws('*'), ws('/'))));
+    var exp_1 = chainl(exp_2, op_action(choice(ws('+'), ws('-'))));
     
     var exp_0 = exp_1; // todo: exp operator precedence, hardcode common operators for now?
     
