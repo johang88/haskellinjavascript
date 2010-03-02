@@ -1,19 +1,11 @@
 // The parser
 
-/**
- **** Lambda Calculus Language Grammar ****
- * Program := [Func]
- * 
- * Func := "\\" [Ident] "->" Expr
- *
- * Expr := Ident
- * Expr := Ident([Expr])
- * Expr := Integer
- * Expr := Expr "+" Expr
- * Expr := Expr "-" Expr
- * Expr := Expr "*" Expr
- * Expr := Expr "/" Expr
- */
+/* 
+Todo:
+  - Pattern matching
+  - List comp.
+*/
+
 
 
 /**
@@ -106,8 +98,8 @@ haskell.parser.parse = function(code) {
     var aexp = aexp_action(choice(  ws(qvar),
                         //ws(qcon),
                         ws(literal),
-                        sequence(ws('('), ws(exp), ws(')')), // todo: predefine exp,  parans
-                        //sequence(ws('('), ws(exp), ws(','), list(ws(exp), ws(',')) , ws(')')), // todo: should be at least two repeats,  tuple
+                        sequence(ws('('), ws(exp), ws(')')), // parans
+                        sequence(ws('('), ws(exp), ws(','), ws(exp), repeat0(sequence(ws(','), ws(exp))) , ws(')')), // tuple
                         sequence(ws('['), list(ws(exp), ws(',')) , ws(']'))  // list constructor
                         // todo: need a list parser that parses at least n elements
                         //       something like listk(parser, seperator, min_elements)
@@ -118,6 +110,7 @@ haskell.parser.parse = function(code) {
                    if (ast.length == 1) {
                        return ast;
                    } else {
+                       // f x y -> (f x) y
                        var f = new haskell.ast.Application(ast[0], ast[1]);
                        for (var i = 2; i < ast.length; i ++) {
                            f = new haskell.ast.Application(f, ast[i]);
