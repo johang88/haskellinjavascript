@@ -96,18 +96,35 @@ haskell.parser.parse = function(code) {
     
     var qval = undefined;
     
-    var aexp = choice(  ws(qvar),
+    var aexp_action = function(p) {
+        return action(p, function(ast) {
+            return new haskell.ast.ConstantExpression(ast);
+        });
+    };
+    
+    var exp = function(state) { return exp(state); };
+    var aexp = aexp_action(choice(  ws(qvar),
                         //ws(qcon),
                         ws(literal),
                         sequence(ws('('), ws(exp), ws(')')), // todo: predefine exp,  parans
-                        sequence(ws('('), ws(exp), ws(','), list(ws(exp), ws(',')) , ws(')')), // todo: should be at least two repeats,  tuple
+                        //sequence(ws('('), ws(exp), ws(','), list(ws(exp), ws(',')) , ws(')')), // todo: should be at least two repeats,  tuple
                         sequence(ws('['), list(ws(exp), ws(',')) , ws(']'))  // list constructor
                         // todo: need a list parser that parses at least n elements
                         //       something like listk(parser, seperator, min_elements)
                         // todo: more stuff
-                      );
+                      ));
     
-    var fexp = action(ws(aexp), function(ast) { return new haskell.ast.ConstantExpression(ast) });
+    var fexp = action(repeat1(ws(aexp)), function(ast) {
+                   if (ast.length == 1) {
+                       return ast;
+                   } else {
+                       var f = new haskell.ast.Application(ast[0], ast[1]);
+                       for (var i = 2; i < ast.length; i ++) {
+                           f = new haskell.ast.Application(f, ast[i]);
+                       }
+                       return f;
+                   }
+               });
     
     var rexp = undefined;
     
@@ -131,8 +148,8 @@ haskell.parser.parse = function(code) {
         });
     };
                         
-    var exp_2 = choice( op_action(sequence(ws(literal), ws('*'), ws(literal))),
-                        op_action(sequence(ws(literal), ws('/'), ws(literal))),
+    var exp_2 = choice( op_action(sequence(ws(fexp), ws('*'), ws(fexp))),
+                        op_action(sequence(ws(fexp), ws('/'), ws(fexp))),
                         ws(fexp)
                       );
     
@@ -315,7 +332,7 @@ haskell.parser.parse = function(code) {
     var module = module_action(choice(sequence(ws("module"), ws(modid), optional(exports), ws("where"), body),
                         body));
     
-    var test = sequence(ws(choice(funlhs, pat)), ws(rhs));
+    var test = fexp;
     
     return module(ps(code));
 };

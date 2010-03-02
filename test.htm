@@ -14,12 +14,12 @@
     var test2 = "import Test";
     var test3 = <><![CDATA[
     module Test where {
-        fib :: Integer -> Integer;
-        fib n = n - 1;
+    	double x = x * 2;
+    	test = map double [1,2,3];
     }
     ]]></>.toString()
     
-    var test4 = "asd + 2 * 4";
+    var test4 = "asd 1";
   
     var res = haskell.parser.parse(test3);
     console.log("%o", res);
