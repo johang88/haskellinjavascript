@@ -2,13 +2,16 @@
     interpreter.eval = function(env, expr) {
 	if (expr instanceof (ast.Application)) {
 	    closure = interpreter.eval(env, expr.func);
-	    if (!(closure instanceof Closure)){
-		alert("Error: Closure not an instance of closure");
+	    if (closure instanceof Closure){
+		cl = closure.getEnv();
+		argname = closure.argName();
+		body = closure.body();
+		return interpreter.eval(interpreter.substitute(cl, argname, expr.expr), body);
 	    }
-	    cl = closure.getEnv();
-	    argname = closure.argName();
-	    body = closure.body();
-	    return interpreter.eval(interpreter.substitute(cl, argname, expr.expr), body);
+	    else {
+		return closure(expr.expr);
+	    }
+
 	}
 	else if (expr instanceof ast.ConstantExpression) {
 	    return expr.value;
@@ -53,6 +56,9 @@
 	for (i in ast.declarations) {
 	    expr = ast.declarations[i];
 	    env[expr.identifier] = new Closure(env, new haskell.ast.Lambda(expr.patterns, expr.expression));
+	};
+	env["+"] = function(r) {
+	    return function(l) { return new haskell.ast.Num(r[0].value.num+l[0].value.num); };
 	};
 	return interpreter.eval(env, env["main"]);
     }
