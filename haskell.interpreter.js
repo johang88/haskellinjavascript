@@ -1,68 +1,59 @@
-function isInteger(x) {
-	var y = parseInt(x);
-	if (isNaN(y)) {
-		return false;
+(function(interpreter, ast){
+    interpreter.eval = function(env, expr) {
+	if (expr instanceof (ast.Application)) {
+	    closure = interpreter.eval(env, expr.func);
+	    if (!(closure instanceof Closure)){
+		alert("Error: Closure not an instance of closure");
+	    }
+	    cl = closure.getEnv();
+	    argname = closure.argName();
+	    body = closure.body();
+	    return interpreter.eval(interpreter.substitute(cl, argname, expr.expr), body);
 	}
-	return x== y && x.toString() == y.toString();
-}
+	else if (expr instanceof ast.ConstantExpression) {
+	    return expr.value;
+	}
+	else if (expr instanceof ast.VariableLookup) {
+	    return interpreter.lookup(env, expr.identifier);
+	}
+	else if (expr instanceof Closure) {
+	    return interpreter.eval(expr.getEnv(), expr.body());
+	}
+	alert("Error: Unknown expr");
+	console.log("%o", expr);
+    };
+    
+    interpreter.substitute = function(env, v, expr) {
+	env[v] = expr;
+	return env;
+    };
+    
+    interpreter.lookup = function(env, identifier) {
+	return env[identifier];
+    };
 
-haskell.interpreter.interpret = function(env, ast) {	
-	var interpret = haskell.interpreter.interpret;
-	
-	if(ast.fun_name != undefined) {
-		// eval function
-		var f = env.get_symbol(ast.fun_name);
-		env.set_arg_list(ast.arguments);
-		var result = interpret(env, f.value);
-		return result;
-	} else if (ast.arguments != undefined) {
-		for (var i = 0; i < ast.arguments.length; i++) {
-			var arg = ast.arguments[i];
-			
-			if (env.arg_list.length > i) {
-				var value = env.arg_list[i];
-				value = value.toString();
-				value = haskell.parser.parse(value, true).ast;
-				env.set_symbol(arg, value, false);
-			} else if (!env.exists_symbol(arg)) {
-				var value = prompt("enter a value for " + arg);
-				value = haskell.parser.parse(value, false).ast;
-				env.set_symbol(arg, value, false);
-			}
-		}
-		
-		return interpret(env, ast.expr);
-	} else if (ast.symbol != undefined) {
-		switch (ast.symbol) {
-			case '+':
-				return interpret(env, ast.lhs) + interpret(env, ast.rhs);
-				break;
-			case '-':
-				return interpret(env, ast.lhs) - interpret(env, ast.rhs);
-				break;
-			case '*':
-				return interpret(env, ast.lhs) * interpret(env, ast.rhs);
-				break;
-			case '/':
-				return interpret(env, ast.lhs) / interpret(env, ast.rhs);
-				break;
-			default:
-				console.log("unknown symbol %o     ast: %o", ast.symbol, ast);
-				break;
-		}
-	} else {
-		if (isInteger(ast)) {
-			return ast;
-		} else { 
-			// ast is a symbol so look it up
-			var symbol = env.get_symbol(ast);
-			if (symbol.evaluated) {
-				return symbol.value;
-			} else {
-				var result = interpret(new haskell.env(), symbol.value);
-				env.set_symbol(ast, result, true);
-				return result;
-			}
-		}
-	}
-}
+
+    Closure = function(env, lambda) {
+	this.env = env;
+	this.lambda = lambda;
+	this.getEnv = function() {
+	    return this.env;
+	};
+	this.argName = function() {
+	    return this.lambda.patterns[0].identifier;
+	};
+	this.body = function() {
+	    return this.lambda.expr;
+	};
+    };
+
+    interpreter.execute = function(ast) {
+	env = {};
+	// Only fun defs atm
+	for (i in ast.declarations) {
+	    expr = ast.declarations[i];
+	    env[expr.identifier] = new Closure(env, new haskell.ast.Lambda(expr.patterns, expr.expression));
+	};
+	return interpreter.eval(env, env["main"]);
+    }
+})(haskell.interpreter, haskell.ast);
