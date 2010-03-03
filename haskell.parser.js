@@ -163,7 +163,7 @@ haskell.parser.parse = function(code) {
     
     var op_action = function(p) { return action(p, function(ast) {
             return function(lhs, rhs) {
-                var fun1 = new haskell.ast.Application(new haskell.ast.VariableLookup(ast), lhs);
+                var fun1 = new haskell.ast.Application(new haskell.ast.VariableLookup('(' + ast + ')'), lhs);
                 return new haskell.ast.Application(fun1, rhs);
             };
     })};
