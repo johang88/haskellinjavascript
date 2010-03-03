@@ -58,7 +58,7 @@
 	    env[expr.identifier] = new Closure(env, new haskell.ast.Lambda(expr.patterns, expr.expression));
 	};
 	env["+"] = function(r) {
-	    return function(l) { return ast.Num(r.num+l.num); };
+	    return function(l) { return new haskell.ast.Num(r[0].value.num+l[0].value.num); };
 	};
 	return interpreter.eval(env, env["main"]);
     }
