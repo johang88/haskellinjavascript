@@ -98,9 +98,9 @@ haskell.parser.parse = function(code) {
     var aexp = aexp_action(choice(  ws(qvar),
                         //ws(qcon),
                         ws(literal),
-                        sequence(ws('('), ws(exp), ws(')')), // parans
+                        sequence(expect(ws('(')), ws(exp), expect(ws(')'))), // parans
                         sequence(ws('('), ws(exp), ws(','), ws(exp), repeat0(sequence(ws(','), ws(exp))) , ws(')')), // tuple
-                        sequence(ws('['), list(ws(exp), ws(',')) , ws(']'))  // list constructor
+                        sequence(expect(ws('[')), list(ws(exp), ws(',')) , expect(ws(']')))  // list constructor
                         // todo: need a list parser that parses at least n elements
                         //       something like listk(parser, seperator, min_elements)
                         // todo: more stuff
