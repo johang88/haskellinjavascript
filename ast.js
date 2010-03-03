@@ -23,7 +23,8 @@ data Expression
     | If Expression Expression Expression
     | Case Expression [(Pattern,Expression)]
     | Let Decleration Expression
-				| 
+    | Lambda [Pattern] Expression
+    | VariableLookup Identifier
 
 data Pattern
     = Constructor BigIdentifier [Pattern]
@@ -43,7 +44,6 @@ Value
     | ConstantConstructor BigIdentifier
     | Num
     | Fraction
-    | Lambda [Pattern] Expression
 
 type Identifier = String
 type BigIdentifier = String
@@ -94,20 +94,12 @@ haskell.ast.Fraction = function(fraction) {
     };
 };
 
-haskell.ast.Lambda = function(patterns, expr){
-    this.patterns = patterns;
-    this.expr = expr;
 
-    this.toString = function() {
-        return "(\ " + patternsToString(this.patterns) + " -> " + this.expr.toString() + " )"
-    };
-};
 
 haskell.ast.Char.prototype                = haskell.ast.Value;
 haskell.ast.Num.prototype                 = haskell.ast.Value;
 haskell.ast.ConstantConstructor.prototype = haskell.ast.Value;
 haskell.ast.Fraction.prototype            = haskell.ast.Value;
-haskell.ast.Lambda.prototype              = haskell.ast.Value;
 
 
 haskell.ast.Module = function(declarations) {
@@ -162,11 +154,31 @@ haskell.ast.LetDeclaration = function(decleration,expression) {
     };
 };
 
+haskell.ast.Lambda = function(patterns, expr){
+    this.patterns = patterns;
+    this.expr = expr;
+
+    this.toString = function() {
+        return "(\ " + patternsToString(this.patterns) + " -> " + this.expr.toString() + " )"
+    };
+};
+
+haskell.ast.VariableLookup = function(identifier) {
+    this.identifier = identifier;
+
+    this.toString = function() {
+	return this.identifier;
+    };
+};
+
 haskell.ast.ConstantExpression.prototype = haskell.ast.Expression;
 haskell.ast.LetDeclaration.prototype = haskell.ast.Expression;
 haskell.ast.Application.prototype = haskell.ast.Expression;
 haskell.ast.IfExpression.prototype = haskell.ast.Expression;
 haskell.ast.CaseExpression.prototype = haskell.ast.Expression;
+haskell.ast.Lambda.prototype = haskell.ast.Expression;
+haskell.ast.VariableLookup.prototype = haskell.ast.Expression;
+
 
 haskell.ast.Pattern = function() {
 
