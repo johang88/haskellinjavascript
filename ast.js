@@ -95,13 +95,6 @@ haskell.ast.Fraction = function(fraction) {
 };
 
 
-
-haskell.ast.Char.prototype                = haskell.ast.Value;
-haskell.ast.Num.prototype                 = haskell.ast.Value;
-haskell.ast.ConstantConstructor.prototype = haskell.ast.Value;
-haskell.ast.Fraction.prototype            = haskell.ast.Value;
-
-
 haskell.ast.Module = function(declarations) {
     this.declarations = declarations;
     this.toString = function() {
@@ -171,15 +164,6 @@ haskell.ast.VariableLookup = function(identifier) {
     };
 };
 
-haskell.ast.ConstantExpression.prototype = haskell.ast.Expression;
-haskell.ast.LetDeclaration.prototype = haskell.ast.Expression;
-haskell.ast.Application.prototype = haskell.ast.Expression;
-haskell.ast.IfExpression.prototype = haskell.ast.Expression;
-haskell.ast.CaseExpression.prototype = haskell.ast.Expression;
-haskell.ast.Lambda.prototype = haskell.ast.Expression;
-haskell.ast.VariableLookup.prototype = haskell.ast.Expression;
-
-
 haskell.ast.Pattern = function() {
 
 };
@@ -220,11 +204,6 @@ haskell.ast.PatternConstant = function(value) {
     };
 };
 
-haskell.ast.PatternConstructor.prototype = haskell.ast.Pattern;
-haskell.ast.PatternVariableBinding.prototype = haskell.ast.Pattern;
-haskell.ast.PatternIgnored.prototype = haskell.ast.Pattern;
-haskell.ast.PatternCombined.prototype = haskell.ast.Pattern;
-haskell.ast.PatternConstant.prototype = haskell.ast.Pattern;
 
 haskell.ast.Declaration = function() {
     
@@ -259,9 +238,5 @@ haskell.ast.FunDefGuard = function(identifier, patterns, guardExpressions, where
     this.expression = expression;
     this.wheres = wheres==null ? [] : wheres;
 };
-
-haskell.ast.VarDef.prototype = haskell.ast.Declaration;
-haskell.ast.FunDef.prototype = haskell.ast.Declaration;
-haskell.ast.FunDefGuard.prototype = haskell.ast.Declaration;
 
 })(haskell);
