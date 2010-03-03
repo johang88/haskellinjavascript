@@ -16,17 +16,24 @@
     var test2 = "import Test";
     var test3 = <><![CDATA[
     module Test where {
-    	double x = x * 2;
+    	double x = x * 2  * 4;
     	test = map double [1,2,3];
-        main = 1+2
+        main = 1 + 2
     }
     ]]></>.toString()
     
     var test4 = "1 * 3 + 2 * (4 + 1)";
- 
-    var res = haskell.interpreter.execute(haskell.parser.parse(test3).ast);
+   
+   ast = haskell.ast;
+   tree = new ast.Module(
+   [
+   new ast.FunDef("main", [], new ast.ConstantExpression(new ast.Num(1)),[])
+   ]
+   );
+  
+    var res = haskell.parser.parse(test3);
     console.log("%o", res);
-    $("output").text(res);
+    $("#output").text(res);
    });
   </script>
 </head>

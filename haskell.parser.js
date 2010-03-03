@@ -138,7 +138,7 @@ haskell.parser.parse = function(code) {
     
     var fexp = action(repeat1(ws(aexp)), function(ast) {
                    if (ast.length == 1) {
-                       return ast;
+                       return ast[0];
                    } else {
                        // f x y -> (f x) y
                        var f = new haskell.ast.Application(new haskell.ast.VariableLookup(ast[0]), ast[1]);
