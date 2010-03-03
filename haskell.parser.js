@@ -98,7 +98,32 @@ haskell.parser.parse = function(code) {
     
     var list_action = function(p) {
         return action(p, function(ast) {
-        
+            // 0,1,2
+            // 0 : 1 : 2 : []
+            // ((: 0) 1)
+            
+            var cons = new haskell.ast.VariableLookup(':');
+            var empty = new haskell.ast.VariableLookup("[]");
+            
+            if (ast.length == 0) {
+                return empty;
+            }
+            
+            //1,2,3
+            // (: 1)
+            // : (: 1) 2
+            // (: (: (: 1) 2) 3) []
+            
+            var fun = new haskell.ast.Application(cons, ast[0]);
+            
+            for (var i = 1; i < ast.length; i++) {
+                fun = new haskell.ast.Application(cons, fun);
+                fun = new haskell.ast.Application(fun, ast[i]);
+            }
+            
+            fun = new haskell.ast.Application(fun, empty);
+            
+            return fun;
         });
     }
     
@@ -107,7 +132,7 @@ haskell.parser.parse = function(code) {
                         ws(literal),
                         sequence(expect(ws('(')), ws(exp), expect(ws(')'))), // parans
                         sequence(ws('('), ws(exp), ws(','), ws(exp), repeat0(sequence(ws(','), ws(exp))) , ws(')')), // tuple
-                        sequence(expect(ws('[')), list(ws(exp), ws(',')) , expect(ws(']')))  // list constructor
+                        list_action(sequence(expect(ws('[')), list(ws(exp), ws(',')) , expect(ws(']'))))  // list constructor
                         // todo: more stuff
                       ));
     
