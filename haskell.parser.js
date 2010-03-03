@@ -101,8 +101,6 @@ haskell.parser.parse = function(code) {
                         sequence(expect(ws('(')), ws(exp), expect(ws(')'))), // parans
                         sequence(ws('('), ws(exp), ws(','), ws(exp), repeat0(sequence(ws(','), ws(exp))) , ws(')')), // tuple
                         sequence(expect(ws('[')), list(ws(exp), ws(',')) , expect(ws(']')))  // list constructor
-                        // todo: need a list parser that parses at least n elements
-                        //       something like listk(parser, seperator, min_elements)
                         // todo: more stuff
                       ));
     
