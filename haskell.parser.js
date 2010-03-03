@@ -95,6 +95,13 @@ haskell.parser.parse = function(code) {
     };
     
     var exp = function(state) { return exp(state); };
+    
+    var list_action = function(p) {
+        return action(p, function(ast) {
+        
+        });
+    }
+    
     var aexp = aexp_action(choice(  ws(qvar),
                         //ws(qcon),
                         ws(literal),
@@ -109,7 +116,7 @@ haskell.parser.parse = function(code) {
                        return ast;
                    } else {
                        // f x y -> (f x) y
-                       var f = new haskell.ast.Application(ast[0], ast[1]);
+                       var f = new haskell.ast.Application(new haskell.ast.VariableLookup(ast[0]), ast[1]);
                        for (var i = 2; i < ast.length; i ++) {
                            f = new haskell.ast.Application(f, ast[i]);
                        }
@@ -131,7 +138,7 @@ haskell.parser.parse = function(code) {
     
     var op_action = function(p) { return action(p, function(ast) {
             return function(lhs, rhs) {
-                var fun1 = new haskell.ast.Application(ast, lhs);
+                var fun1 = new haskell.ast.Application(new haskell.ast.VariableLookup(ast), lhs);
                 return new haskell.ast.Application(fun1, rhs);
             };
     })};
