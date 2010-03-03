@@ -102,26 +102,20 @@ haskell.parser.parse = function(code) {
             // 0 : 1 : 2 : []
             // ((: 0) 1)
             
-            var cons = new haskell.ast.VariableLookup(':');
+            ast = ast[0];
+            
+            var cons = new haskell.ast.VariableLookup('(:)');
             var empty = new haskell.ast.VariableLookup("[]");
             
             if (ast.length == 0) {
                 return empty;
             }
             
-            //1,2,3
-            // (: 1)
-            // : (: 1) 2
-            // (: (: (: 1) 2) 3) []
-            
-            var fun = new haskell.ast.Application(cons, ast[0]);
-            
-            for (var i = 1; i < ast.length; i++) {
-                fun = new haskell.ast.Application(cons, fun);
-                fun = new haskell.ast.Application(fun, ast[i]);
+            var fun = empty;
+            for (var i = ast.length - 1; i >= 0; i--) {
+            	var f = new haskell.ast.Application(cons, ast[i]);
+            	fun = new haskell.ast.Application(f, fun);
             }
-            
-            fun = new haskell.ast.Application(fun, empty);
             
             return fun;
         });
@@ -345,7 +339,7 @@ haskell.parser.parse = function(code) {
     var module = module_action(choice(sequence(ws("module"), ws(modid), optional(exports), ws("where"), body),
                         body));
     
-    var test = fexp;
+    var test = list_action(sequence(expect(ws('[')), list(ws(exp), ws(',')) , expect(ws(']'))));
     
-    return module(ps(code));
+    return test(ps(code));
 };
