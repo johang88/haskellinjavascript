@@ -4,6 +4,7 @@
 Todo:
   - Pattern matching
   - List comp.
+  - Action for lambda functions
 */
 
 
@@ -67,7 +68,8 @@ haskell.parser.parse = function(code) {
     var fpat = undefined;
     
     var apat = function(state) { return apat(state) };
-    var apat = choice(  ws(literal),
+    var apat = choice(  sequence(expect(ws('@')), ws(apat)),
+                        ws(literal),
                         ws(ident)
                         );
     
@@ -341,7 +343,7 @@ haskell.parser.parse = function(code) {
     var module = module_action(choice(sequence(ws("module"), ws(modid), optional(exports), ws("where"), body),
                         body));
     
-    var test = list_action(sequence(expect(ws('[')), list(ws(exp), ws(',')) , expect(ws(']'))));
+    var test = sequence(ws(literal), optional(ws(literal)));
     
     return module(ps(code));
 };
