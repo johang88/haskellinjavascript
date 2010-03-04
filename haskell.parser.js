@@ -99,7 +99,8 @@ haskell.parser.parse = function(code) {
                         ws('_'), // wildcard
                         sequence(expect(ws('(')), apat, expect(ws(')'))), // parans
                         sequence(expect(ws('(')), ws(apat), repeat1(sequence(ws(','), ws(apat))), expect(ws(')'))), // tuple
-                        list_action(sequence(expect(ws('[')), optional(wlist(apat, ',')), expect(ws(']')))) // list
+                        list_action(sequence(expect(ws('[')), optional(wlist(apat, ',')), expect(ws(']')))), // list
+                        sequence(expect(ws('(')), chainl(ws(apat), action(ws(':'), function(ast) { return function(lhs, rhs) { return '(' + lhs + ':' + rhs + ')'; }; } )), expect(ws(')')))
                         );
     
     var rpat = undefined;
@@ -174,7 +175,7 @@ haskell.parser.parse = function(code) {
     var exp_2 = chainl(fexp, op_action(choice(ws('*'), ws('/'))));
     var exp_1 = chainl(exp_2, op_action(choice(ws('+'), ws('-'))));
     
-    var exp_0 = exp_1; // todo: exp operator precedence, hardcode common operators for now?
+    var exp_0 = chainl(exp_2, op_action(ws(':'))); // todo: need a chainr parser?
     
     var exp = choice(   sequence(ws(exp_0), ws("::"), optional(ws(context), ws("=>")), ws(type)),
                         ws(exp_0)
