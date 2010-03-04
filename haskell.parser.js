@@ -66,7 +66,10 @@ haskell.parser.parse = function(code) {
     
     var fpat = undefined;
     
-    var apat = epsilon_p;
+    var apat = function(state) { return apat(state) };
+    var apat = choice(  ws(literal),
+                        ws(ident)
+                        );
     
     var rpat = undefined;
     
@@ -180,7 +183,7 @@ haskell.parser.parse = function(code) {
     
     // todo: Should be quite a lot of choices here, but those are for 
     //       operators so it's not very important right now
-    var funlhs = sequence(repeat1(ws(var_)), repeat0(ws(apat)));
+    var funlhs = sequence(ws(var_), repeat0(ws(apat)));
     
     var inst = undefined;
     
@@ -250,9 +253,8 @@ haskell.parser.parse = function(code) {
     
     var fun_action = function(p) {
         return action(p, function(ast) {
-            var patterns = ast[0][0];
-            var fun_ident = patterns[0];
-            patterns.shift();
+            var patterns = ast[0][1];
+            var fun_ident = ast[0][0];
             
             return new haskell.ast.FunDef(fun_ident, patterns, ast[1][1], null);
         });
@@ -341,5 +343,5 @@ haskell.parser.parse = function(code) {
     
     var test = list_action(sequence(expect(ws('[')), list(ws(exp), ws(',')) , expect(ws(']'))));
     
-    return test(ps(code));
+    return module(ps(code));
 };
