@@ -67,10 +67,39 @@ haskell.parser.parse = function(code) {
     
     var fpat = undefined;
     
+    var list_action = function(p) {
+        return action(p, function(ast) {
+            // 0,1,2
+            // 0 : 1 : 2 : []
+            // ((: 0) 1)
+            
+            ast = ast[0];
+            
+            var cons = new haskell.ast.VariableLookup('(:)');
+            var empty = new haskell.ast.VariableLookup("[]");
+            
+            if (ast.length == 0 || ast == false) {
+                return empty;
+            }
+            
+            var fun = empty;
+            for (var i = ast.length - 1; i >= 0; i--) {
+            	var f = new haskell.ast.Application(cons, ast[i]);
+            	fun = new haskell.ast.Application(f, fun);
+            }
+            
+            return fun;
+        });
+    }
+    
     var apat = function(state) { return apat(state) };
     var apat = choice(  sequence(expect(ws('@')), ws(apat)),
                         ws(literal),
-                        ws(ident)
+                        ws(ident),
+                        ws('_'), // wildcard
+                        sequence(expect(ws('(')), apat, expect(ws(')'))), // parans
+                        sequence(expect(ws('(')), ws(apat), repeat1(sequence(ws(','), ws(apat))), expect(ws(')'))), // tuple
+                        list_action(sequence(expect(ws('[')), optional(wlist(apat, ',')), expect(ws(']')))) // list
                         );
     
     var rpat = undefined;
@@ -101,37 +130,12 @@ haskell.parser.parse = function(code) {
     
     var exp = function(state) { return exp(state); };
     
-    var list_action = function(p) {
-        return action(p, function(ast) {
-            // 0,1,2
-            // 0 : 1 : 2 : []
-            // ((: 0) 1)
-            
-            ast = ast[0];
-            
-            var cons = new haskell.ast.VariableLookup('(:)');
-            var empty = new haskell.ast.VariableLookup("[]");
-            
-            if (ast.length == 0) {
-                return empty;
-            }
-            
-            var fun = empty;
-            for (var i = ast.length - 1; i >= 0; i--) {
-            	var f = new haskell.ast.Application(cons, ast[i]);
-            	fun = new haskell.ast.Application(f, fun);
-            }
-            
-            return fun;
-        });
-    }
-    
     var aexp = aexp_action(choice(  ws(qvar),
                         //ws(qcon),
                         ws(literal),
                         sequence(expect(ws('(')), ws(exp), expect(ws(')'))), // parans
                         sequence(ws('('), ws(exp), ws(','), ws(exp), repeat0(sequence(ws(','), ws(exp))) , ws(')')), // tuple
-                        list_action(sequence(expect(ws('[')), list(ws(exp), ws(',')) , expect(ws(']'))))  // list constructor
+                        list_action(sequence(expect(ws('[')), optional(wlist(exp, ',')), expect(ws(']'))))  // list constructor
                         // todo: more stuff
                       ));
     
