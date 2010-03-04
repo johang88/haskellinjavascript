@@ -16,13 +16,12 @@
     var test2 = "import Test";
     var test3 = <><![CDATA[
     module Test where {
-    	double x = x * 2  * 4;
-    	test = map double [1,2,3];
-        main = 1 + 2
+    	map _ [] = [];
+    	map f (x:xs) = f x : map f xs;
     }
     ]]></>.toString()
     
-    var test4 = "1 * 3 + 2 * (4 + 1)";
+    var test4 = "1";
    
    ast = haskell.ast;
    tree = new ast.Module(
