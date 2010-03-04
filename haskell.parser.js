@@ -92,6 +92,8 @@ haskell.parser.parse = function(code) {
         });
     }
     
+    // todo: implement rpat, lpat and pat
+    // should make cons (:) work as expected
     var apat = function(state) { return apat(state) };
     var apat = choice(  sequence(expect(ws('@')), ws(apat)),
                         ws(literal),
