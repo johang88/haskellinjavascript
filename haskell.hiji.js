@@ -32,6 +32,9 @@
         this.html("<ol>" + makeInput(modules) + "</ol>");
 
         
+
+        $("input:text:visible:first").focus();
+        
         // pressing keyUP and keyDown
         // history-related
         document.onkeydown = function(e){
@@ -55,6 +58,10 @@
                 var output = makeOutput(evaluateHaskell(line,{}));
                 $('.input', this).after(output).replaceWith(newLine);
                 $("ol",this).append(makeInput(modules));
+                
+                //set focus
+                $("input:text:visible:first").focus();
+
 
                 hiss.addHistory(line);
             }
@@ -84,7 +91,7 @@ historry = function (){
     this.newer = function(){
         this.pointer--;
         if(this.pointer < 0){
-            this.pointer = 0
+            this.pointer = -1
             return "";
         }
         return this.history_array[this.pointer];
