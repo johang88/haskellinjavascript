@@ -139,7 +139,7 @@ haskell.parser.parse = function(code) {
         });
     }
     
-    var wildcarn_pattern_action = function(p) {
+    var wildcard_pattern_action = function(p) {
         return action(p, function(ast) {
             return new haskell.ast.PatternIgnored();
         });
@@ -151,7 +151,7 @@ haskell.parser.parse = function(code) {
     var apat = choice(  combined_pattern_action(sequence(var_, expect(ws('@')), ws(apat))),
                         constant_pattern_action(ws(literal)),
                         ident_pattern_action(ws(ident)),
-                        wildcarn_pattern_action (ws('_')), // wildcard
+                        wildcard_pattern_action (ws('_')), // wildcard
                         sequence(expect(ws('(')), apat, expect(ws(')'))), // parans
                         sequence(expect(ws('(')), ws(apat), repeat1(sequence(ws(','), ws(apat))), expect(ws(')'))), // tuple
                         list_pattern_action(sequence(expect(ws('[')), optional(wlist(apat, ',')), expect(ws(']')))), // list
