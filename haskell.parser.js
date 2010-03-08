@@ -145,6 +145,14 @@ haskell.parser.parse = function(code) {
         });
     }
     
+    var cons_pattern_action = function(ast) {
+        return function(lhs, rhs) {
+            // lhs : rhs
+            var cons = ':';
+            return new haskell.ast.PatternConstructor(cons, [lhs, rhs]);
+        };
+    }
+    
     // todo: implement rpat, lpat and pat
     // should make cons (:) work as expected
     var apat = function(state) { return apat(state) };
@@ -155,7 +163,7 @@ haskell.parser.parse = function(code) {
                         sequence(expect(ws('(')), apat, expect(ws(')'))), // parans
                         sequence(expect(ws('(')), ws(apat), repeat1(sequence(ws(','), ws(apat))), expect(ws(')'))), // tuple
                         list_pattern_action(sequence(expect(ws('[')), optional(wlist(apat, ',')), expect(ws(']')))), // list
-                        sequence(expect(ws('(')), chainl(ws(apat), action(ws(':'), function(ast) { return function(lhs, rhs) { return '(' + lhs + ':' + rhs + ')'; }; } )), expect(ws(')')))
+                        sequence(expect(ws('(')), chainl(ws(apat), action(ws(':'), cons_pattern_action)), expect(ws(')')))
                         );
     
     var rpat = undefined;
@@ -196,7 +204,6 @@ haskell.parser.parse = function(code) {
                         sequence(expect(ws('(')), ws(infixexp), ws(qop), expect(ws(')'))), // left section
                         sequence(expect(ws('(')), ws(qop), ws(infixexp), expect(ws(')'))) // right section
                         // Todo:
-                        //  Right section
                         //  Arithmetic sequence
                         //  List comprehension
                         //  Labeled construction
