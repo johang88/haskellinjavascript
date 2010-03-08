@@ -238,12 +238,12 @@ haskell.parser.parse = function(code) {
     var infixexp_action = function(p) {
         return action(p, function(ast) {
         	if (ast[2] instanceof Array) {
-        	    var arrrr = ast[2];
+        	    var inner = ast[2];
         	    ast.pop();
         	
-        	    for (i in arrrr) {
-        	        if (!arrrr[i].need_resolve)
-        	            ast.push(arrrr[i]);
+        	    for (i in inner) {
+        	        if (!inner[i].need_resolve)
+        	            ast.push(inner[i]);
         	    }
         	    
         	    ast.info = new function() { 
@@ -268,7 +268,7 @@ haskell.parser.parse = function(code) {
     
     var exp_action = function(p) {
         return action(p, function(ast) {
-            if (ast.info == undefined && ast.info.need_resolve) {
+            if (ast.info != undefined && ast.info.need_resolve) {
                 return resolve_op(ast);
             } else {
                 return ast;
