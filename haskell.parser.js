@@ -268,7 +268,7 @@ haskell.parser.parse = function(code) {
     
     var exp_action = function(p) {
         return action(p, function(ast) {
-            if (typeof(ast.info) != "undefined" && ast.info.need_resolve) {
+            if (ast.info == undefined && ast.info.need_resolve) {
                 return resolve_op(ast);
             } else {
                 return ast;
