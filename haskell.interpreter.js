@@ -1,63 +1,63 @@
 (function(interpreter, ast){
-    interpreter.eval = function(closure) {
-	closure.force();
-    };
-    
-    interpreter.substitute = function(env, v, expr) {
-	env[v] = expr;
-	return env;
-    };
-    
-    interpreter.lookup = function(env, identifier) {
-	return env[identifier];
-    };
-
-    Closure = function(env, expr) {
-	this.env = env;
-	this.expr = expr;
-	this.force = function()
-	{
-	    if (this.expr instanceof ast.Application) {
-		closure = interpreter.eval(new Closure(env, expr.func));
-		if (closure instanceof Closure){
-		    cl = closure.getEnv();
-		    argname = closure.argName();
-		    body = closure.body();
-		    return interpreter.eval(interpreter.substitute(cl, argname, expr.expr), body);
-		}
-		else {
-		    return closure(expr.expr);
-		}
-		
-	    }
-	    else if (expr instanceof ast.ConstantExpression) {
-		return new Constant(expr.value);
-	    }
-	    else if (expr instanceof ast.VariableLookup) {
-		return interpreter.lookup(env, expr.identifier);
-	    }
-	    else if (expr instanceof Closure) {
-		return interpreter.eval(expr.getEnv(), expr.body());
-	    }
-	};
-    };
-
-    Constant = function(constant) {
-	this.constant = constant;
-    };
-
     interpreter.execute = function(ast) {
-	env = {};
+	env = new RootEnv();
 	// Only fun defs atm
 	for (i in ast.declarations) {
-	    expr = ast.declarations[i];
-	    env[expr.identifier] = new Closure(env, new haskell.ast.Lambda(expr.patterns, expr.expression));
+	    decl = ast.declarations[i];
+	    env.patternBind(decl.pattern, new Closure(env, decl.expression));
 	};
-	env["+"] = function(r) {
-	    return function(l) { return ast.Num(r.num+l.num); };
+	env.bind("+", createPrimitive(env, ["a", "b"],
+				      function(env) {
+					  a = forceTo(env.lookup("a"), "ConstantThunk");
+					  b = forceTo(env.lookup("b"), "ConstantThunk");
+					  return new ConstantThunk(new Num(a.value.num+b.value.num));
+				      }));
+	env.bind("alert", createPrimitive(env, ["l"],
+					  function(env) {
+					      l = forceTo(env.lookup("l"), "ConstantThunk");
+					      alert(l.value.num);
+					      return new Data("()", []);
+					  }));
+	return env.lookup("main").force();
+    };
+    function createPrimitive(env, args, func) {
+	expr = new Primitive(func);
+	argsR = args.reverse();
+	for (i in argsR) {
+	    expr = new Lambda(new VariableBinding(argsR[i]), expr);
 	};
-	return interpreter.eval(env, env["main"]);
-    }
+	return new Closure(env, expr);
+    };
+    function forceTo(thunk, type) {
+	while(thunk.type!=type) {
+	    thunk=thunk.force();
+	};
+	return thunk;
+    };
+
+
+    interpreter.test = function() {
+	// inc  = \x -> x + 1
+	// inc2 = \x -> inc (inc x)
+	// main = print (inc2 2)
+	ast = new Module([
+			  new Variable(new VariableBinding("inc"),
+				       new Lambda(new VariableBinding("x"),
+						  new Application(new Application(new VariableLookup("+"),
+										  new VariableLookup("x")),
+								  new Constant(new Num(1))))),
+			  new Variable(new VariableBinding("inc2"),
+				       new Lambda(new VariableBinding("x"),
+						  new Application(new VariableLookup("inc"),
+								  new Application(new VariableLookup("inc"),
+										  new VariableLookup("x"))))),
+			  new Variable(new VariableBinding("main"),
+				       new Application(new VariableLookup("alert"),
+						       new Application(new VariableLookup("inc2"),
+								       new Constant(new Num(2)))))
+			   ]);
+	interpreter.execute(ast);
+    };
 
     /*
       data Module = Module [Declaration]
@@ -65,14 +65,15 @@
     Module = function(declarations) {
 	this.declarations = declarations;
     };
-
+	
     /*
       data Expression = Constant Value
                       | Lambda Pattern Expression
                       | Application Expression Expression
-		      | Let Pattern Expression Expression
-		      | Case Expression [(Pattern, Expression)]
-		      | VariableLookup Identifier
+        	      | Let Pattern Expression Expression
+        	      | Case Expression [(Pattern, Expression)]
+                      | VariableLookup Identifier
+        	      | PrimitiveExpr Function
     */
     Constant = function(value) {
 	this.type ="Constant";
@@ -97,10 +98,9 @@
 	this.arg = arg;
 	this.eval = function(env) {
 	    clos = this.func.eval(env);
-	    x = clos.arg();
-	    body = clos.body();
-	    env = clos.env();
-	    return body.eval(env.substitute(x, this.arg));
+	    x = clos.expression.pattern;
+	    body = clos.expression.expression;
+	    return body.eval(clos.env.substitute(x, new Closure(env, this.arg)));
 	};
     };
     Let = function(pattern, def, expr) {
@@ -108,6 +108,9 @@
 	this.pattern = pattern;
 	this.def = def;
 	this.expr = expr;
+	this.eval = function(env) {
+	    return this.expr.eval(env.substitute(this.pattern, new Closure(env, this.def)));
+	};
     };
     Case = function(expr, cases) {
 	this.type = "Case";
@@ -117,6 +120,16 @@
     VariableLookup = function(identifier) {
 	this.type = "VariableLookup";
 	this.identifier = identifier;
+	this.eval = function(env) {
+	    return env.lookup(this.identifier);
+	};
+    };
+    Primitive = function(func) {
+	this.type="Primitive";
+	this.func = func;
+	this.eval = function(env) {
+	    return this.func(env);
+	};
     };
 
     /*
@@ -146,19 +159,62 @@
 	this.type = "Constructor";
 	this.identifier = identifier;
 	this.patterns = patterns;
+	this.match = function(env, expr) {
+	    while(expr.type!="Data") {
+		expr=expr.force();
+	    };
+	    if (this.identifier!=expr.identifier) {
+		return false;
+	    };
+	    for (i in this.patterns) {
+		if (!this.patterns[i].match(env, expr.thunks[i])) {
+		    return false;
+		};
+	    };
+	    return true;
+	};
+	this.vars = function() {
+	    vars=[];
+	    for (i in this.patterns) {
+		vars=vars.concat(this.patterns[i].vars());
+	    };
+	};
     };
     VariableBinding = function(identifier) {
 	this.type = "VariableBinding";
 	this.identifier = identifier;
+	this.match = function(env, expr) {
+	    env.bind(this.identifier, expr);
+	    return true;
+	};
+	this.vars = function() {
+	    return [this.identifier];
+	};
     };
     Combined = function(identifier, pattern) {
 	this.type = "Combined";
 	this.identifier = identifier;
-	this.pattern = pattern;	
+	this.pattern = pattern;
+	this.match = function(env, expr) {
+	    env.bind(this.identifier, expr);
+	    return this.pattern.match(env, expr);
+	};
+	this.vars = function() {
+	    return [this.identifier].concat(this.pattern.vars());
+	};
     };
     ConstantPattern = function(value) {
 	this.type = "ConstantPattern";
 	this.value = value;
+	this.match = function(env, expr) {
+	    while(expr.type!="Constant") {
+		expr = expr.force();
+	    };
+	    return (this.value==expr.value);
+	};
+	this.vars = function() {
+	    return [];
+	};
     };
 
      // Live data
@@ -170,11 +226,9 @@
 	this.type = "RootEnv";
 	this.env = {};
 	this.substitute = function(pattern, expression) {
-	    vars = pattern.vars();
-	    for (i in vars) {
-		this.env[vars[i]] = [pattern, expression];
-		this.env[vars[i]].type = "unforced";
-	    }
+	    newEnv = this.derive();
+	    newEnv.patternBind(pattern, expression);
+	    return newEnv;
 	};
 	this.derive = function() {
 	    return new ChildEnv(this);
@@ -191,20 +245,38 @@
 	    };
 	    return this.env[identifier];
 	};
+	this.patternBind = function(pattern, expression) {
+	    vars = pattern.vars();
+	    for (i in vars) {
+		this.env[vars[i]] = [pattern, expression];
+		this.env[vars[i]].type = "unforced";
+	    }
+	};
+	this.bind = function(identifier, expr) {
+	    this.env[identifier] = expr;
+	};
     };
     ChildEnv = function(parent) {
 	this.type = "ChildEnv";
 	this.parent = parent;
 	this.env = {};
 	this.substitute = function(pattern, expression) {
+	    newEnv = this.derive();
+	    newEnv.patternBind(pattern, expression);
+	    return newEnv;
+	};
+	this.derive = function() {
+	    return new ChildEnv(this);
+	};
+	this.patternBind = function(pattern, expression) {
 	    vars = pattern.vars();
 	    for (i in vars) {
 		this.env[vars[i]] = [pattern, expression];
 		this.env[vars[i]].type = "unforced";
-	    };
+	    }
 	};
-	this.derive = function() {
-	    return new ChildEnv(this);
+	this.bind = function(identifier, expr) {
+	    this.env[identifier] = expr;
 	};
 	this.lookup = function(identifier) {
 	    if (this.env[identifier]==undefined) {
@@ -219,6 +291,7 @@
 	    return this.env[identifier];
 	};
     };
+
     /*
      data Thunk = Closure Env Expression
                 | ConstantThunk Value
@@ -234,17 +307,9 @@
 	    // Forcing a closure is the same as evaluating it's expression under the closures env
 	    return this.expression.eval(this.env);
 	};
-
-	this.arg = function() {
-	    return this.expression.pattern;
-	};
-
-	this.body = function() {
-	    return this.expression.expression;
-	};
     };
     ConstantThunk = function(value) {
-	this.type = "Constant";
+	this.type = "ConstantThunk";
 	this.value = value;
 	this.force = function() {
 	    return this;
@@ -259,14 +324,14 @@
 	    // Data is already forced...
 	    return this;
 	};
-    };
-    Primitive = function(env, function) {
-	this.type = "Primitive";
-	this.env = env;
-	this.function = function;
+    }; 
+    /*    Primitive = function(env, function) {
+        this.type = "Primitive";
+        this.env = env;
+        this.function = function;
 
-	this.force = function() {
-	    return this.function(env);
+        this.force = function() {
+            return this.function(env);
 	};
-    };
+	};*/
 })(haskell.interpreter, haskell.ast);
