@@ -242,10 +242,13 @@ haskell.parser.parse = function(code) {
         	    ast.pop();
         	
         	    for (i in arrrr) {
-        	        ast.push(arrrr[i]);
+        	        if (!arrrr[i].need_resolve)
+        	            ast.push(arrrr[i]);
         	    }
         	    
-        	    ast.need_resolve = true;
+        	    ast.info = new function() { 
+        	        this.need_resolve = true;
+        	    };
         	}
         	
         	return ast;
@@ -265,8 +268,10 @@ haskell.parser.parse = function(code) {
     
     var exp_action = function(p) {
         return action(p, function(ast) {
-            if (ast.need_resolve == true) {
+            if (typeof(ast.info) != "undefined" && ast.info.need_resolve) {
                 return resolve_op(ast);
+            } else {
+                return ast;
             }
         });
     };
