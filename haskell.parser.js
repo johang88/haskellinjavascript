@@ -5,6 +5,7 @@ Todo:
   - Pattern matching
   - List comp.
   - Action for lambda functions
+  - User defined operators
 */
 
 
@@ -18,11 +19,12 @@ haskell.parser.parse = function(code) {
 
     var integer = action(repeat1(range('0', '9')), function(ast) { return new haskell.ast.Num(parseInt(ast.join(""))); });
 
-    var ident = action(repeat1(choice(range('a', 'z'), range('0', '1'), '\'')), function(ast) { return ast.join(""); });
+    var ident_ = action(repeat1(choice(range('a', 'z'), range('0', '1'), '\'')), function(ast) { return ast.join(""); });
+    var ident = action(sequence(range('a', 'z'), ident_), function(ast) { return ast.join(""); });
     
     var literal = ws(integer);
     
-    var modid = action(sequence(range('A', 'Z'), ident), function(ast) { return ast.join(""); });
+    var modid = action(sequence(range('A', 'Z'), ident_), function(ast) { return ast.join(""); });
     
     var varid = ident;
     var varsym = ident;
@@ -30,7 +32,7 @@ haskell.parser.parse = function(code) {
     var qvarid = ident;
     var qvarsym = ident;
     
-    var qtycon = action(sequence(range('A', 'Z'), ident), function(ast) { return ast.join(""); });
+    var qtycon = action(sequence(range('A', 'Z'), ident_), function(ast) { return ast.join(""); });
     
     var qtycls = ident;
     
@@ -75,7 +77,7 @@ haskell.parser.parse = function(code) {
             
             ast = ast[0];
             
-            var cons = new haskell.ast.VariableLookup('(:)');
+            var cons = new haskell.ast.VariableLookup("(:)");
             var empty = new haskell.ast.VariableLookup("[]");
             
             if (ast.length == 0 || ast == false) {
@@ -92,16 +94,61 @@ haskell.parser.parse = function(code) {
         });
     }
     
+    var list_pattern_action = function(p) {
+        return action(p, function(ast) {
+            ast = ast[0];
+            
+            var cons = "(:)";
+            var empty = "[]";
+            
+            if (ast.length == 0 || ast == false) {
+                return new haskell.ast.PatternConstructor(empty);
+            }
+            
+            var fun = empty;
+            for (var i = ast.length - 1; i >= 0; i--) {
+                var f = new haskell.ast.PatternConstructor(cons, ast[i]);
+                fun = new haskell.ast.PatternConstructor(f, fun);
+            }
+            
+            return fun;
+        });
+    }
+    
+    var ident_pattern_action = function(p) {
+        return action(p, function(ast) {
+            return new haskell.ast.PatternVariableBinding(ast);
+        });
+    }
+    
+    var constant_pattern_action = function(p) {
+        return action(p, function(ast) {
+            return new haskell.ast.PatternConstant(ast);
+        });
+    }
+    
+    var combined_pattern_action = function(p) {
+        return action(p, function(ast) {
+            return new haskell.ast.PatternCombined(ast[0], ast[1]);
+        });
+    }
+    
+    var wildcarn_pattern_action = function(p) {
+        return action(p, function(ast) {
+            return new haskell.ast.PatternIgnored();
+        });
+    }
+    
     // todo: implement rpat, lpat and pat
     // should make cons (:) work as expected
     var apat = function(state) { return apat(state) };
-    var apat = choice(  sequence(expect(ws('@')), ws(apat)),
-                        ws(literal),
-                        ws(ident),
-                        ws('_'), // wildcard
+    var apat = choice(  combined_pattern_action(sequence(var_, expect(ws('@')), ws(apat))),
+                        constant_pattern_action(ws(literal)),
+                        ident_pattern_action(ws(ident)),
+                        wildcarn_pattern_action (ws('_')), // wildcard
                         sequence(expect(ws('(')), apat, expect(ws(')'))), // parans
                         sequence(expect(ws('(')), ws(apat), repeat1(sequence(ws(','), ws(apat))), expect(ws(')'))), // tuple
-                        list_action(sequence(expect(ws('[')), optional(wlist(apat, ',')), expect(ws(']')))), // list
+                        list_pattern_action(sequence(expect(ws('[')), optional(wlist(apat, ',')), expect(ws(']')))), // list
                         sequence(expect(ws('(')), chainl(ws(apat), action(ws(':'), function(ast) { return function(lhs, rhs) { return '(' + lhs + ':' + rhs + ')'; }; } )), expect(ws(')')))
                         );
     
