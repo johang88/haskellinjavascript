@@ -26,44 +26,40 @@
         
         // history
         var hiss = new historry;
+        // load history from cookie
+        hiss.history_array = $.cookie("hiss").split(",");
+
         
         modules[0] = "Prelude";
         modules[1] = "Control.Monad";
         this.html("<ol>" + makeInput(modules) + "</ol>");
 
-        
-
         $("input:text:visible:first").focus();
         
-        // pressing keyUP and keyDown
-        // history-related
-        document.onkeydown = function(e){
+        this.keydown(function(e){
             var input = $('input', this);
             var line = input.attr("value");
-            // keyUp
             if(e.keyCode=='38'){
                 input.attr("value", hiss.older());
             }
             if(e.keyCode=='40'){
                 input.attr("value", hiss.newer());
             }
-        }
-
-        this.keypress(function(e){
             if (e.keyCode=='13'){
-                var input = $('input', this);
-                var line = input.attr("value");
                 input.attr("value","");
                 var newLine = makeEntered(modules, line);
                 var output = makeOutput(evaluateHaskell(line,{}));
                 $('.input', this).after(output).replaceWith(newLine);
                 $("ol",this).append(makeInput(modules));
-                
+                 
                 //set focus
                 $("input:text:visible:first").focus();
 
-
                 hiss.addHistory(line);
+
+                // save history to cookie
+                $.cookie("hiss", hiss.history_array.toString(), {expires: 3 });              
+
             }
         });
     };
@@ -96,4 +92,5 @@ historry = function (){
         }
         return this.history_array[this.pointer];
     };
+
 };
