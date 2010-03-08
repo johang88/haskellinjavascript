@@ -24,6 +24,8 @@ haskell.parser.parse = function(code) {
     
     var literal = ws(integer);
     
+    var symbol = choice('!', '#', '$', '%', '&', '*', '+', '.', '/', '<', '=', '>', '?', '@', '\\', '^', '|', '-', '~');
+    
     var modid = action(sequence(range('A', 'Z'), ident_), function(ast) { return ast.join(""); });
     
     var varid = ident;
@@ -36,24 +38,28 @@ haskell.parser.parse = function(code) {
     
     var qtycls = ident;
     
-    var conid = ident;
-    var consym = ident;
+    var conid = action(sequence(range('A', 'Z'), ident_), function(ast) { return ast.join(""); });
+    var consym = action(repeat1(symbol), function(ast) { return ast.join(""); }); // should not allow reserved symbols
+    
+    var qconsym = consym;
+    var qconid = conid;
 
     var tycon = qtycon;
     var tyvar = ident;
     
     var tycls = epsilon_p;	
-    var gconsym = undefined;
+    var gconsym = choice(':', qconsym);
     
-    var qop = undefined;
+    // Todo: qconid
+    var qconop = choice(gconsym, sequence(expect(ws('`')), qconid, expect(ws('`'))));
+    
+    var qvarop = choice(qvarsym, sequence(expect(ws('`')), qvarid, expect(ws('`'))));
+    
+    var qop = choice(qvarop, qconop);
     
     var op = undefined;
     
-    var qconop = undefined;
-    
     var conop = undefined;
-    
-    var qvarop = undefined;
     
     var varop = undefined;haskell.ast.Num
     
@@ -179,14 +185,22 @@ haskell.parser.parse = function(code) {
     };
     
     var exp = function(state) { return exp(state); };
+    var infixexp = function(state) { return infixexp(state); };
     
     var aexp = aexp_action(choice(  ws(qvar),
                         //ws(qcon),
                         ws(literal),
                         sequence(expect(ws('(')), ws(exp), expect(ws(')'))), // parans
                         sequence(ws('('), ws(exp), ws(','), ws(exp), repeat0(sequence(ws(','), ws(exp))) , ws(')')), // tuple
-                        list_action(sequence(expect(ws('[')), optional(wlist(exp, ',')), expect(ws(']'))))  // list constructor
-                        // todo: more stuff
+                        list_action(sequence(expect(ws('[')), optional(wlist(exp, ',')), expect(ws(']')))),  // list constructor
+                        sequence(expect(ws('(')), ws(infixexp), ws(qop), expect(ws(')'))), // left section
+                        sequence(expect(ws('(')), ws(qop), ws(infixexp), expect(ws(')'))) // right section
+                        // Todo:
+                        //  Right section
+                        //  Arithmetic sequence
+                        //  List comprehension
+                        //  Labeled construction
+                        //  Labeled update
                       ));
     
     var fexp = action(repeat1(ws(aexp)), function(ast) {
@@ -220,15 +234,45 @@ haskell.parser.parse = function(code) {
                 return new haskell.ast.Application(fun1, rhs);
             };
     })};
-
-    var exp_2 = chainl(fexp, op_action(choice(ws('*'), ws('/'))));
-    var exp_1 = chainl(exp_2, op_action(choice(ws('+'), ws('-'))));
     
-    var exp_0 = chainl(exp_1, op_action(ws(':'))); // todo: need a chainr parser?
+    var infixexp_action = function(p) {
+        return action(p, function(ast) {
+        	if (ast[2] instanceof Array) {
+        	    var arrrr = ast[2];
+        	    ast.pop();
+        	
+        	    for (i in arrrr) {
+        	        ast.push(arrrr[i]);
+        	    }
+        	    
+        	    ast.need_resolve = true;
+        	}
+        	
+        	return ast;
+        });
+    };
     
-    var exp = choice(   sequence(ws(exp_0), ws("::"), optional(ws(context), ws("=>")), ws(type)),
-                        ws(exp_0)
-                    );
+    var infixexp = choice( infixexp_action(sequence(ws(exp_10), ws(qop), ws(infixexp))),
+                           sequence(ws('-'), ws(infixexp)),
+                           ws(exp_10)
+                         );
+    
+    var resolve_op = function(ast) {
+        // Todo: Resolve fixity
+    
+        return ast;
+    };
+    
+    var exp_action = function(p) {
+        return action(p, function(ast) {
+            if (ast.need_resolve == true) {
+                return resolve_op(ast);
+            }
+        });
+    };
+    
+    var exp = choice(sequence(ws(infixexp), ws("::"), optional(ws(context), ws("=>")), ws(type)),
+                        exp_action(ws(infixexp)));
     
     var gd = undefined;
     
