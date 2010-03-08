@@ -18,7 +18,7 @@ haskell.parser.parse = function(code) {
 
     var integer = action(repeat1(range('0', '9')), function(ast) { return new haskell.ast.Num(parseInt(ast.join(""))); });
 
-    var ident = action(repeat1(range('a', 'z')), function(ast) { return ast.join(""); });
+    var ident = action(repeat1(choice(range('a', 'z'), range('0', '1'), '\'')), function(ast) { return ast.join(""); });
     
     var literal = ws(integer);
     
@@ -177,7 +177,7 @@ haskell.parser.parse = function(code) {
     var exp_2 = chainl(fexp, op_action(choice(ws('*'), ws('/'))));
     var exp_1 = chainl(exp_2, op_action(choice(ws('+'), ws('-'))));
     
-    var exp_0 = chainl(exp_2, op_action(ws(':'))); // todo: need a chainr parser?
+    var exp_0 = chainl(exp_1, op_action(ws(':'))); // todo: need a chainr parser?
     
     var exp = choice(   sequence(ws(exp_0), ws("::"), optional(ws(context), ws("=>")), ws(type)),
                         ws(exp_0)
@@ -352,5 +352,5 @@ haskell.parser.parse = function(code) {
     
     var test = sequence(ws(literal), optional(ws(literal)));
     
-    return module(ps(code));
+    return choice(module, exp)(ps(code));
 };
