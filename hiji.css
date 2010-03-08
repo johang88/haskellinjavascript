@@ -15,7 +15,7 @@
     overflow-x:auto;
     overflow-y:scroll;
     list-style-type:none;
-
+    overflow: hidden;
     color: #fff;
 }
 
