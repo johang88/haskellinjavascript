@@ -198,7 +198,7 @@ haskell.parser.parse = function(code) {
             // (+ x)
             // \y -> y + x
             
-            var op_name = '(' + ast[0] + ')';
+            var op_name = ast[0];
             var fun_exp = new haskell.ast.Application(new haskell.ast.VariableLookup(op_name), new haskell.ast.VariableLookup('__y'));
             fun_exp = new haskell.ast.Application(fun_exp, ast[1]);
             
@@ -214,7 +214,7 @@ haskell.parser.parse = function(code) {
             // (x +)
             // \y -> x + y
             
-            var op_name = '(' + ast[1] + ')';
+            var op_name = ast[1];
             var fun_exp = new haskell.ast.Application(op_name, ast[0]);
             fun_exp = new haskell.ast.Application(fun_exp, new haskell.ast.VariableLookup('__x'));
             
