@@ -1,0 +1,58 @@
+﻿\section{Metod} 
+
+\subsection{Kodstandard} 
+För att få konsistens i koden för att underlätta att olika utvecklare kan läsa och arbeta på koden samtidigt har vi utformat en kodstandard.
+
+
+\subsection{Versionshantering} 
+Ett problem som alla mjukvaruprojekt av icke trivial storlek är att hantera den stora mängden filer, och distrubera uppdaterade kopior till samtliga utvecklare att arbeta på.
+För att lösa detta problemet brukar man använda sig utav en versionshanteringsmjukvara. 
+
+Under de första veckorna av projektet användes SVN. Valet berodde på att det var det som alla i medlemmar i projektet hade erfarenhet från tidigare. Tyvärr har SVN vissa problem när det kommer till att skapa nya förgreningar och sedan sammanfoga dem. Det är generellt sett svårt att sammanfoga olika grenar i SVN, medan i Git är designat för att med enkelhet skapa nya grenar och slå ihop dem.   
+
+
+
+\subsection{Javascript} 
+Javascript är ett programmeringsspråk som framförallt används på klientsidan på webben. Javascript är ett objektorienterat skriptspråk. Javascript är dynamiskt med ett dynamiskt typsystem. 
+
+Javascript är det programmeringsspråk som används uteslutande i detta projektet för att tolka och interpretera Haskell.
+Detta valet är gjort tack vare att Javascript kan exekveras på klientsidan i en webbläsare.
+
+\subsection{Kodbibliotek} 
+
+För att snabba på utvecklingen har ett antal kodbibliotek används.
+
+ \subsubsection{JSparse} 
+JSparse är en parser combinator  utvecklat av Chris Double. 
+
+JSParse används i projektet för att skapa parsern till Haskell. 
+
+
+\subsubsection{JQuery} 
+
+JQuery är ett öppet kodbibliotek till javascript som är dubeellicenserat under MIT License och GPL version 2.  
+
+JQuery är designat för att underlätta för utvecklare att modifiera DOM-träd, HTML, och göra asynkrona javascript-anrop.
+
+
+I detta projekt har JQuery används för att utveckla HIJi, våran GHCi-liknande konsol.
+
+
+\subsection{Testning} 
+Vi gör inga fel så vi testar inte.. *skämt* *....seriously, we do not test..* ... yes, seriously 
+
+% FLYTTA DETTA TILL RESULTAT ELLER VAD SOM HELST
+
+\subsection{HIJi} 
+HIJi är ett ett GHCi-liknande gränssnitt. HIJi är fasaden in i hela programmet. 
+
+HIJi tar input genom att användaren skriver in haskellkod som kommer tolkas av parsern och därefter evalueras.
+
+\subsection{Parser} 
+todo
+
+\subsection{Abstrakt syntaxträd} 
+todo
+
+\subsection{Typcheckare} 
+todo

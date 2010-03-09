@@ -1,0 +1,52 @@
+\documentclass[a4paper, 12pt]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[swedish]{babel}
+\usepackage{graphicx}
+\usepackage{natbib} % ger Harvard-referenser
+
+
+\setlength{\parskip}{12pt}
+\setlength{\parindent}{0pt}
+
+\begin{document}
+    \title{Haskell in Javascript}
+    \author{Adam Bengtsson, Mikael Bung, Johan Gustafsson, Mattis Jeppsson}
+    \date{\today}
+    \maketitle
+    \newpage
+
+    \tableofcontents
+    \newpage
+
+    % include all parts
+    \newpage
+    \input{kapitel/forord.txt}
+
+    \newpage
+    \input{kapitel/sammanfattning.txt}
+    \newpage
+    \input{kapitel/abstract.txt}
+    \newpage
+    \input{kapitel/forkortningslista.txt}
+    \newpage
+    \input{kapitel/inledning.txt}
+    \newpage
+    \input{kapitel/teori.txt}
+    \newpage
+    \input{kapitel/metod.txt}
+    \newpage
+    \input{kapitel/resultat.txt}
+    \newpage
+    \input{kapitel/diskussion.txt}
+    \newpage
+    \input{kapitel/slutsatser.txt}
+    \newpage
+    
+
+    % källor 
+    \bibliographystyle{plainnat}
+    \bibliography{kallor} 
+
+    \end{document}

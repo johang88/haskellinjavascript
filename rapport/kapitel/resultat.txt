@@ -1,0 +1,23 @@
+\section{Resultat}
+todo
+
+\subsection{HIJi} 
+HIJi erbjuder användaren ett GHCi-liknande gränssnitt. HIJi fungerar som en fasad in i programmet. 
+HIJi tar input genom att användaren skriver in Haskellkod som därefter tolkas av parsern och slutligen evalueras uttrycket. Resultatet av uttrycket visas på raden under.
+
+HIJi är tänkt att erbjuda användaren liknande möjligheter som GHCi. 
+
+Fördelen med HIJi framför GHCi är att användaren ej behöver ladda ner den tunga GHC-kompilatorn på sin personliga dator för att testa enkla Haskelluttryck direkt i webbläsaren.
+
+Nackdelar gentemot GHCI är att HIJi är en nedbandat version utav GHCi. HIJi kan bara evaluera enklare uttryck. Det finns i dagsläget inga möjligheter att ladda upp hela Haskell-filer för att köra dem. Att som i GHCi på ett enkelt sätt kolla upp vilka typer en funktion stöds ej.
+
+HIJi använder sig utav JQuery för att få ett unisont stöd på alla moderna webbläsare.
+
+\subsection{Parser} 
+todo
+
+\subsection{Abstrakt syntaxträd} 
+todo
+
+\subsection{Typcheckare} 
+todo
