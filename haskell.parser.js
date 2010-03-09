@@ -300,7 +300,7 @@ haskell.parser.parse = function(code) {
                          );
     
     var resolve_op = function(ast) {
-        // Todo: Resolve fixityright_section_action
+        // Todo: Resolve fixity
     
         return ast;
     };
