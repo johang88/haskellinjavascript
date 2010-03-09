@@ -13,6 +13,9 @@ Todo:
 
 /**
  * Parses Haskell code
+ *
+ * Reserved variables in the form __name
+ *
  * \code Code to parse
  * \return The ast
  */
@@ -196,10 +199,10 @@ haskell.parser.parse = function(code) {
             // \y -> y + x
             
             var op_name = '(' + ast[0] + ')';
-            var fun_exp = new haskell.ast.Application(new haskell.ast.VariableLookup(op_name), new haskell.ast.VariableLookup('y'));
+            var fun_exp = new haskell.ast.Application(new haskell.ast.VariableLookup(op_name), new haskell.ast.VariableLookup('__y'));
             fun_exp = new haskell.ast.Application(fun_exp, ast[1]);
             
-            var arg = new haskell.ast.PatternVariableBinding('y');
+            var arg = new haskell.ast.PatternVariableBinding('__y');
             var fun = new haskell.ast.Lambda([arg], fun_exp);
             
             return fun;
@@ -213,9 +216,9 @@ haskell.parser.parse = function(code) {
             
             var op_name = '(' + ast[1] + ')';
             var fun_exp = new haskell.ast.Application(op_name, ast[0]);
-            fun_exp = new haskell.ast.Application(fun_exp, new haskell.ast.VariableLookup('x'));
+            fun_exp = new haskell.ast.Application(fun_exp, new haskell.ast.VariableLookup('__x'));
             
-            var arg = new haskell.ast.PatternVariableBinding('x');
+            var arg = new haskell.ast.PatternVariableBinding('__x');
             var fun = new haskell.ast.Lambda([arg], fun_exp);
             
             return fun;
