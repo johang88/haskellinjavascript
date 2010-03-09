@@ -266,7 +266,24 @@ haskell.parser.parse = function(code) {
     
     var lexp = undefined;
     
-    var exp_10 = choice(sequence(ws('\\'), repeat1(ws(apat)), ws("->"), ws(exp)),
+    var lambda_exp_action = function(p) {
+        return action(p, function(ast) {
+            // \x y -> exp
+            // \x -> \y -> exp
+            
+            var fun = ast[1];
+            var patterns = ast[0];
+            
+            for (var i = patterns.length - 1; i >= 0; i--) {
+                var arg = new haskell.ast.PatternVariableBinding(patterns[i]);
+                fun = new haskell.ast.Lambda([arg], fun);
+            }
+            
+            return fun;
+        });
+    };
+    
+    var exp_10 = choice(lambda_exp_action (sequence(expect(ws('\\')), repeat1(ws(apat)), expect(ws("->")), ws(exp))),
                         sequence(ws("let"), ws(decls), ws("in"), ws(exp)),
                         sequence(ws("if"), ws(exp), ws("then"), ws(exp), ws("else"), ws(exp)),
                         sequence(ws("case"), ws(exp), ws("of"), ws("{"), ws(alts), ws("}")),
