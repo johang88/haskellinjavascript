@@ -26,8 +26,10 @@
         
         // history
         var hiss = new historry;
-        // load history from cookie
-        hiss.history_array = $.cookie("hiss").split(",");
+            // load history from cookie
+            hiss_cookie = $.cookie("hiss");
+            if(hiss_cookie != null)
+                hiss.history_array = hiss_cookie.split(",");
 
         
         modules[0] = "Prelude";
