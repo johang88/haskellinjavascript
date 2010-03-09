@@ -9,7 +9,15 @@ Todo:
   - Data constructors in expressions
 */
 
+haskell.parser.lastInternalName = 0;
 
+haskell.parser.generateInternalName = function() {
+    var parser = haskell.parser;
+    
+    var name = "__v" + parser.lastInternalName.toString();
+    parser.lastInternalName++;
+    return name;
+};
 
 /**
  * Parses Haskell code
@@ -198,11 +206,13 @@ haskell.parser.parse = function(code) {
             // (+ x)
             // \y -> y + x
             
+            var arg_name = haskell.parser.generateInternalName();
             var op_name = ast[0];
-            var fun_exp = new haskell.ast.Application(new haskell.ast.VariableLookup(op_name), new haskell.ast.VariableLookup('__y'));
+            
+            var fun_exp = new haskell.ast.Application(new haskell.ast.VariableLookup(op_name), new haskell.ast.VariableLookup(arg_name));
             fun_exp = new haskell.ast.Application(fun_exp, ast[1]);
             
-            var arg = new haskell.ast.PatternVariableBinding('__y');
+            var arg = new haskell.ast.PatternVariableBinding(arg_name);
             var fun = new haskell.ast.Lambda([arg], fun_exp);
             
             return fun;
@@ -214,11 +224,13 @@ haskell.parser.parse = function(code) {
             // (x +)
             // \y -> x + y
             
+            var arg_name = haskell.parser.generateInternalName();
             var op_name = ast[1];
-            var fun_exp = new haskell.ast.Application(op_name, ast[0]);
-            fun_exp = new haskell.ast.Application(fun_exp, new haskell.ast.VariableLookup('__x'));
             
-            var arg = new haskell.ast.PatternVariableBinding('__x');
+            var fun_exp = new haskell.ast.Application(op_name, ast[0]);
+            fun_exp = new haskell.ast.Application(fun_exp, new haskell.ast.VariableLookup(arg_name));
+            
+            var arg = new haskell.ast.PatternVariableBinding(arg_name);
             var fun = new haskell.ast.Lambda([arg], fun_exp);
             
             return fun;
