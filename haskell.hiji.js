@@ -1,3 +1,7 @@
+var ENTER = '13';
+var UP    = '38';
+var DOWN  = '40';
+
 (function($){
     var evaluateHaskell = function(line, env)
     {
@@ -26,12 +30,11 @@
         
         // history
         var hiss = new historry;
-            // load history from cookie
-            hiss_cookie = $.cookie("hiss");
-            if(hiss_cookie != null)
-                hiss.history_array = hiss_cookie.split(",");
+        // load history from cookie
+        hiss_cookie = $.cookie("hiss");
+        if(hiss_cookie != null)
+            hiss.history_array = hiss_cookie.split(",");
 
-        
         modules[0] = "Prelude";
         modules[1] = "Control.Monad";
         this.html("<ol>" + makeInput(modules) + "</ol>");
@@ -41,13 +44,13 @@
         this.keydown(function(e){
             var input = $('input', this);
             var line = input.attr("value");
-            if(e.keyCode=='38'){
+            if(e.keyCode==UP){
                 input.attr("value", hiss.older());
             }
-            if(e.keyCode=='40'){
+            if(e.keyCode==DOWN){
                 input.attr("value", hiss.newer());
             }
-            if (e.keyCode=='13'){
+            if (e.keyCode==ENTER){
                 input.attr("value","");
                 var newLine = makeEntered(modules, line);
                 var output = makeOutput(evaluateHaskell(line,{}));
