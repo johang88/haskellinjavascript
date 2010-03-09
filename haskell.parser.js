@@ -154,7 +154,7 @@ haskell.parser.parse = function(code) {
     }
     
     // todo: implement rpat, lpat and pat
-    // should make cons (:) work as expected
+    // should make cons (:) work as expected, that is without parans
     var apat = function(state) { return apat(state) };
     var apat = choice(  combined_pattern_action(sequence(var_, expect(ws('@')), ws(apat))),
                         constant_pattern_action(ws(literal)),
@@ -195,14 +195,46 @@ haskell.parser.parse = function(code) {
     var exp = function(state) { return exp(state); };
     var infixexp = function(state) { return infixexp(state); };
     
+    var right_section_action = function(p) {
+        return action(p, function(ast) {
+            // (+ x)
+            // \y -> y + x
+            
+            var op_name = '(' + ast[0] + ')';
+            var fun_exp = new haskell.ast.Application(new haskell.ast.VariableLookup(op_name), new haskell.ast.VariableLookup('y'));
+            fun_exp = new haskell.ast.Application(fun_exp, ast[1]);
+            
+            var arg = new haskell.ast.PatternVariableBinding('y');
+            var fun = new haskell.ast.Lambda([arg], fun_exp);
+            
+            return fun;
+        });
+    };
+    
+    var left_section_action = function(p) {
+        return action(p, function(ast) {
+            // (x +)
+            // \y -> x + y
+            
+            var op_name = '(' + ast[1] + ')';
+            var fun_exp = new haskell.ast.Application(op_name, ast[0]);
+            fun_exp = new haskell.ast.Application(fun_exp, new haskell.ast.VariableLookup('x'));
+            
+            var arg = new haskell.ast.PatternVariableBinding('x');
+            var fun = new haskell.ast.Lambda([arg], fun_exp);
+            
+            return fun;
+        });
+    };
+    
     var aexp = aexp_action(choice(  ws(qvar),
                         //ws(qcon),
                         ws(literal),
                         sequence(expect(ws('(')), ws(exp), expect(ws(')'))), // parans
                         sequence(ws('('), ws(exp), ws(','), ws(exp), repeat0(sequence(ws(','), ws(exp))) , ws(')')), // tuple
                         list_action(sequence(expect(ws('[')), optional(wlist(exp, ',')), expect(ws(']')))),  // list constructor
-                        sequence(expect(ws('(')), ws(infixexp), ws(qop), expect(ws(')'))), // left section
-                        sequence(expect(ws('(')), ws(qop), ws(infixexp), expect(ws(')'))) // right section
+                        left_section_action(sequence(expect(ws('(')), ws(infixexp), ws(qop), expect(ws(')')))), // left section
+                        right_section_action(sequence(expect(ws('(')), ws(qop), ws(infixexp), expect(ws(')')))) // right section
                         // Todo:
                         //  Arithmetic sequence
                         //  List comprehension
@@ -268,7 +300,7 @@ haskell.parser.parse = function(code) {
                          );
     
     var resolve_op = function(ast) {
-        // Todo: Resolve fixity
+        // Todo: Resolve fixityright_section_action
     
         return ast;
     };
