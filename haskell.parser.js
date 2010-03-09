@@ -187,12 +187,6 @@ haskell.parser.parse = function(code) {
     
     var qval = undefined;
     
-    var aexp_action = function(p) {
-        return action(p, function(ast) {
-            return new haskell.ast.ConstantExpression(ast);
-        });
-    };
-    
     var exp = function(state) { return exp(state); };
     var infixexp = function(state) { return infixexp(state); };
     
@@ -228,12 +222,24 @@ haskell.parser.parse = function(code) {
         });
     };
     
-    var aexp = aexp_action(choice(  ws(qvar),
+    var qvar_exp_action = function(p) {
+        return action(p, function(ast) {
+            return new haskell.ast.VariableLookup(ast);
+        });
+    };
+    
+    var aexp_constant_action = function(p) {
+        return action(p, function(ast) {
+            return new haskell.ast.ConstantExpression(ast);
+        });
+    };
+    
+    var aexp = choice(  qvar_exp_action(ws(qvar)),
                         //ws(qcon),
-                        ws(literal),
+                        aexp_constant_action(ws(literal)),
                         sequence(expect(ws('(')), ws(exp), expect(ws(')'))), // parans
                         sequence(ws('('), ws(exp), ws(','), ws(exp), repeat0(sequence(ws(','), ws(exp))) , ws(')')), // tuple
-                        list_action(sequence(expect(ws('[')), optional(wlist(exp, ',')), expect(ws(']')))),  // list constructor
+                        aexp_constant_action(list_action(sequence(expect(ws('[')), optional(wlist(exp, ',')), expect(ws(']'))))),  // list constructor
                         left_section_action(sequence(expect(ws('(')), ws(infixexp), ws(qop), expect(ws(')')))), // left section
                         right_section_action(sequence(expect(ws('(')), ws(qop), ws(infixexp), expect(ws(')')))) // right section, todo: look into resolution of infixexp in this case, see Haskell Report Chapter 3
                         // Todo:
@@ -241,7 +247,7 @@ haskell.parser.parse = function(code) {
                         //  List comprehension
                         //  Labeled construction
                         //  Labeled update
-                      ));
+                      );
     
     var fexp = action(repeat1(ws(aexp)), function(ast) {
                    if (ast.length == 1) {
