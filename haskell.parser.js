@@ -6,12 +6,24 @@ Todo:
   - List comp.
   - Action for lambda functions
   - User defined operators
+  - Data constructors in expressions
 */
 
+haskell.parser.lastInternalName = 0;
 
+haskell.parser.generateInternalName = function() {
+    var parser = haskell.parser;
+    
+    var name = "__v" + parser.lastInternalName.toString();
+    parser.lastInternalName++;
+    return name;
+};
 
 /**
  * Parses Haskell code
+ *
+ * Reserved variables in the form __name
+ *
  * \code Code to parse
  * \return The ast
  */
@@ -19,7 +31,7 @@ haskell.parser.parse = function(code) {
 
     var integer = action(repeat1(range('0', '9')), function(ast) { return new haskell.ast.Num(parseInt(ast.join(""))); });
 
-    var ident_ = action(repeat1(choice(range('a', 'z'), range('0', '1'), '\'')), function(ast) { return ast.join(""); });
+    var ident_ = action(repeat0(choice(range('a', 'z'), range('0', '1'), '\'')), function(ast) { return ast.join(""); });
     var ident = action(sequence(range('a', 'z'), ident_), function(ast) { return ast.join(""); });
     
     var literal = ws(integer);
@@ -154,7 +166,7 @@ haskell.parser.parse = function(code) {
     }
     
     // todo: implement rpat, lpat and pat
-    // should make cons (:) work as expected
+    // should make cons (:) work as expected, that is without parans
     var apat = function(state) { return apat(state) };
     var apat = choice(  combined_pattern_action(sequence(var_, expect(ws('@')), ws(apat))),
                         constant_pattern_action(ws(literal)),
@@ -186,29 +198,71 @@ haskell.parser.parse = function(code) {
     
     var qval = undefined;
     
-    var aexp_action = function(p) {
+    var exp = function(state) { return exp(state); };
+    var infixexp = function(state) { return infixexp(state); };
+    
+    var right_section_action = function(p) {
+        return action(p, function(ast) {
+            // (+ x)
+            // \y -> y + x
+            
+            var arg_name = haskell.parser.generateInternalName();
+            var op_name = ast[0];
+            
+            var fun_exp = new haskell.ast.Application(new haskell.ast.VariableLookup(op_name), new haskell.ast.VariableLookup(arg_name));
+            fun_exp = new haskell.ast.Application(fun_exp, ast[1]);
+            
+            var arg = new haskell.ast.PatternVariableBinding(arg_name);
+            var fun = new haskell.ast.Lambda([arg], fun_exp);
+            
+            return fun;
+        });
+    };
+    
+    var left_section_action = function(p) {
+        return action(p, function(ast) {
+            // (x +)
+            // \y -> x + y
+            
+            var arg_name = haskell.parser.generateInternalName();
+            var op_name = ast[1];
+            
+            var fun_exp = new haskell.ast.Application(op_name, ast[0]);
+            fun_exp = new haskell.ast.Application(fun_exp, new haskell.ast.VariableLookup(arg_name));
+            
+            var arg = new haskell.ast.PatternVariableBinding(arg_name);
+            var fun = new haskell.ast.Lambda([arg], fun_exp);
+            
+            return fun;
+        });
+    };
+    
+    var qvar_exp_action = function(p) {
+        return action(p, function(ast) {
+            return new haskell.ast.VariableLookup(ast);
+        });
+    };
+    
+    var aexp_constant_action = function(p) {
         return action(p, function(ast) {
             return new haskell.ast.ConstantExpression(ast);
         });
     };
     
-    var exp = function(state) { return exp(state); };
-    var infixexp = function(state) { return infixexp(state); };
-    
-    var aexp = aexp_action(choice(  ws(qvar),
+    var aexp = choice(  qvar_exp_action(ws(qvar)),
                         //ws(qcon),
-                        ws(literal),
+                        aexp_constant_action(ws(literal)),
                         sequence(expect(ws('(')), ws(exp), expect(ws(')'))), // parans
                         sequence(ws('('), ws(exp), ws(','), ws(exp), repeat0(sequence(ws(','), ws(exp))) , ws(')')), // tuple
-                        list_action(sequence(expect(ws('[')), optional(wlist(exp, ',')), expect(ws(']')))),  // list constructor
-                        sequence(expect(ws('(')), ws(infixexp), ws(qop), expect(ws(')'))), // left section
-                        sequence(expect(ws('(')), ws(qop), ws(infixexp), expect(ws(')'))) // right section
+                        aexp_constant_action(list_action(sequence(expect(ws('[')), optional(wlist(exp, ',')), expect(ws(']'))))),  // list constructor
+                        left_section_action(sequence(expect(ws('(')), ws(infixexp), ws(qop), expect(ws(')')))), // left section
+                        right_section_action(sequence(expect(ws('(')), ws(qop), ws(infixexp), expect(ws(')')))) // right section, todo: look into resolution of infixexp in this case, see Haskell Report Chapter 3
                         // Todo:
                         //  Arithmetic sequence
                         //  List comprehension
                         //  Labeled construction
                         //  Labeled update
-                      ));
+                      );
     
     var fexp = action(repeat1(ws(aexp)), function(ast) {
                    if (ast.length == 1) {
@@ -227,7 +281,24 @@ haskell.parser.parse = function(code) {
     
     var lexp = undefined;
     
-    var exp_10 = choice(sequence(ws('\\'), repeat1(ws(apat)), ws("->"), ws(exp)),
+    var lambda_exp_action = function(p) {
+        return action(p, function(ast) {
+            // \x y -> exp
+            // \x -> \y -> exp
+            
+            var fun = ast[1];
+            var patterns = ast[0];
+            
+            for (var i = patterns.length - 1; i >= 0; i--) {
+                var arg = new haskell.ast.PatternVariableBinding(patterns[i]);
+                fun = new haskell.ast.Lambda([arg], fun);
+            }
+            
+            return fun;
+        });
+    };
+    
+    var exp_10 = choice(lambda_exp_action (sequence(expect(ws('\\')), repeat1(ws(apat)), expect(ws("->")), ws(exp))),
                         sequence(ws("let"), ws(decls), ws("in"), ws(exp)),
                         sequence(ws("if"), ws(exp), ws("then"), ws(exp), ws("else"), ws(exp)),
                         sequence(ws("case"), ws(exp), ws("of"), ws("{"), ws(alts), ws("}")),

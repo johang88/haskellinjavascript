@@ -152,7 +152,7 @@ haskell.ast.Lambda = function(patterns, expr){
     this.expr = expr;
 
     this.toString = function() {
-        return "(\ " + patternsToString(this.patterns) + " -> " + this.expr.toString() + " )"
+        return "(\\ " + patternsToString(this.patterns) + " -> " + this.expr.toString() + " )"
     };
 };
 
