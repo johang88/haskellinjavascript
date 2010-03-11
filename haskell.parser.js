@@ -75,7 +75,7 @@ haskell.parser.parse = function(code) {
     
     var varop = undefined;haskell.ast.Num
     
-    var qcon = epsilon_p;
+    var qcon = choice(qconid, sequence(expect(ws('(')), gconsym, expect(ws(')'))));
     
     var con = choice(conid, sequence(ws('('), consym, ws(')')));
     
@@ -83,7 +83,11 @@ haskell.parser.parse = function(code) {
     
     var var_ = choice(varid, sequence(ws('('), varsym, ws(')')));
     
-    var gcon = undefined;
+    var gcon = choice(  ws("()"),
+                        ws("[]"),
+                        sequence(ws('('), repeat1(ws(',')), ws(')')),
+                        ws(qcon)
+                     );
     
     var fpat = undefined;
     
@@ -250,7 +254,7 @@ haskell.parser.parse = function(code) {
     };
     
     var aexp = choice(  qvar_exp_action(ws(qvar)),
-                        //ws(qcon),
+                        qvar_exp_action(ws(gcon)),
                         aexp_constant_action(ws(literal)),
                         sequence(expect(ws('(')), ws(exp), expect(ws(')'))), // parans
                         sequence(ws('('), ws(exp), ws(','), ws(exp), repeat0(sequence(ws(','), ws(exp))) , ws(')')), // tuple
