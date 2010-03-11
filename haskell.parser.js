@@ -60,7 +60,6 @@ haskell.parser.parse = function(code) {
     var tycls = epsilon_p;	
     var gconsym = choice(':', qconsym);
     
-    // Todo: qconid
     var qconop = choice(gconsym, sequence(expect(ws('`')), qconid, expect(ws('`'))));
     
     var qvarop = choice(qvarsym, sequence(expect(ws('`')), qvarid, expect(ws('`'))));
