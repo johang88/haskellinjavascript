@@ -1,7 +1,9 @@
 (function($){
     var evaluateHaskell = function(line, env)
     {
-        return haskell.parser.parse(line);
+	ast = haskell.parser.parse(line).ast;
+	console.log("%o", ast);
+        return haskell.interpreter.eval(ast, env);
     };
     var makeModules = function(modules){
         return "<ul class='modules'><li>" + modules.join("</li><li>") + "</li></ul>";
@@ -17,7 +19,7 @@
     };
     var makeOutput = function(output) {
 	console.log("%o", output);
-        return $("<li class='output'></li>").text(output.ast.toString());
+        return $("<li class='output'></li>").text(output.toString());
     };
 
     $.fn.startHiji = function() {
@@ -31,6 +33,8 @@
             if(hiss_cookie != null)
                 hiss.history_array = hiss_cookie.split(",");
 
+	var env = new haskell.interpreter.RootEnv();
+	haskell.interpreter.primitives(env);
         
         modules[0] = "Prelude";
         modules[1] = "Control.Monad";
@@ -50,7 +54,7 @@
             if (e.keyCode=='13'){
                 input.attr("value","");
                 var newLine = makeEntered(modules, line);
-                var output = makeOutput(evaluateHaskell(line,{}));
+                var output = makeOutput(evaluateHaskell(line, env));
                 $('.input', this).after(output).replaceWith(newLine);
                 $("ol",this).append(makeInput(modules));
                  

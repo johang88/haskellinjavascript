@@ -1,11 +1,5 @@
 (function(interpreter, ast){
-    interpreter.execute = function(astt) {
-	env = new interpreter.RootEnv();
-	// Only fun defs atm
-	for (i in astt.declarations) {
-	    decl = astt.declarations[i];
-	    env.patternBind(decl.pattern, new interpreter.Closure(env, decl.expression));
-	};
+    interpreter.primitives = function(env) {
 	env.bind("+", createPrimitive(env, ["a", "b"],
 				      function(env) {
 					  a = forceTo(env.lookup("a"), "ConstantThunk");
@@ -18,8 +12,24 @@
 					      alert(l.value.num);
 					      return new interpreter.Data("()", []);
 					  }));
+    };
+
+    interpreter.execute = function(astt) {
+	env = new interpreter.RootEnv();
+	// Only fun defs atm
+	for (i in astt.declarations) {
+	    decl = astt.declarations[i];
+	    env.patternBind(decl.pattern, new interpreter.Closure(env, decl.expression));
+	};
+	interpreter.primitives(env);
 	return env.lookup("main").force();
     };
+
+
+    interpreter.eval = function(astt, env) {
+	return (new interpreter.Closure(env, astt)).force();
+    };
+
     function createPrimitive(env, args, func) {
 	expr = new ast.Primitive(func);
 	argsR = args.reverse();
