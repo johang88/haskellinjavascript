@@ -4,9 +4,7 @@
 Todo:
   - Pattern matching
   - List comp.
-  - Action for lambda functions
   - User defined operators
-  - Data constructors in expressions
 */
 
 haskell.parser.lastInternalName = 0;
