@@ -187,6 +187,7 @@
 	    };
 	    return true;
 	};
+
 	this.vars = function() {
 	    vars=[];
 	    for (i in this.patterns) {

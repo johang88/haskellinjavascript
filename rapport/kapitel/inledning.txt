@@ -1,0 +1,48 @@
+﻿\section{Inledning}
+
+\subsection{Bakgrund}
+På vissa av Chalmers och Göteborgs Universitets program så är den första programmeringskursen i Haskell och för en del av de nya eleverna är inlärningströskeln relativt hög. Vi tror att ett interaktivt webbverktyg skulle kunna sänka den här tröskeln och underlätta undervisningen. Ett webbverktyg medför även att man slipper installera och lära sig extra verktyg så som Glasgow Haskell Compiler. Webbens stöd för interaktivitet gör det möjligt att snabbt visa funktionsdeklarationerna för de inbyggda funktionerna och att enkelt evaluera funktionerna och testa sig fram till olika resultat.
+
+En stor fördel med att ha tolken på webben är att det enda som behövs för att använda den är en javascriptkompatibel webbläsare, något som följer med i princip i alla moderna operativsystem.
+
+Det är även så att många programmerare inte kommer i kontakt med funktionell programmering  och med hjälp utav ett enkelt interaktivt webbverktyg så är våran förhoppning att fler människor ska komma i kontakt med funktionell programmering, och i synnerhet Haskell. Då flera moderna objektorienterade programmeringsspråk börjar ta begrepp och funktionalitet ifrån funktionella programmeringsspråk så är det extra viktigt att programmerare kommer i kontakt med funktionell programering. Ett exempel på detta är C\# som i senare versioner har fått stöd för bland annat lambdafunktioner \citep{csharp}. Vår förhoppning är att våran Haskelltolk i Javascript ska vara en inkörsport för programmerare till funktionell programmering.
+
+Haskell är ett starkt statiskt typcheckat och funktionellt programeringsspråk med icke-strikt semantik . Detta innebär bland annat att funktioner är "first-class citizens" och kan därmed användas som parametrar och retuneras från andra funktioner precis som vilken annan typ som helst. 
+
+\subsection{Syfte}
+Syftet är en implementera en fungerande implementation av en haskkeltolk i javascript. Den ska kunna tolka en delmängd utav Haskell-specifikationen så att den kan användas för att göra exempelvis interaktiva tutorials för nybörjare.
+Meningen är att dessa ska kunna köras i en vanlig webbläsare utan att ladda ner en haskellkompilator eller behöva lära sig krångliga kommandon.
+Ett antal exempel kommer skapas för att demonstrera vad tolken kan åtsakomma. 
+
+\subsection{Problem} 
+
+
+
+\subsection{Metod} 
+Det normala tillvägagångssättet när man skriver en tolk är att man först
+skapar en parser för den aktuella syntaxen, sedan en typcheckare med 
+hjälp av de för språket definierade typereglerna och sist en interpreter
+som tolkar språket utefter dess specifikation.
+
+Vi hade tänkt följa den här planen genom varje milstolpe genom att utöka parsern, typecheckaren och interpretern med ny funktionalitet.
+
+Ett lämpligt delmål är att först göra en enkel implementation utav lambda calculus då mer avancerade funktionella programspråksegenskaper kan implementeras som detta \citep{jones87}
+
+ Parsern implementeras med hjälp av ett parser combinator bibliotek kallat \emph{JSParser}. Detta ger oss möjlighet att implementera den del av Haskells syntax som inte är context free relativt enkelt.
+
+  Vi kommer även att använda det biblioteket för att bygga ett eget syntaxträd som skickas vidare till typcheckaren och interpretern. I typcheckaren dekoreras syntaxträdet med typinformation.
+
+   Vi kommer att integrera JQuery för att få unisont stöd över samtliga webbläsare utan att behöva tänka på det. JQuery kommer också hjälpa oss med att få till ett enkelt och stilrent interaktivt gränssnitt.
+
+\subsubsection{Avgränsningar}
+Endast en delmängd av Haskell98 specifikationen kommer att implementeras. De delar som prioriterades är
+        \begin{enumerate}
+            \item{lambda-funktioner, namngivna funktioner}
+            \item{typer, generella typer, algebraiska datatyper}
+            \item{typklasser}
+            \item{pattern matching}
+            \item{Guards}
+        \end{enumerate}
+    Med dessa delar implementerade kan de flesta enklare haskellprogram köras och borde vara tillräckligt för de flesta nybörjare. Att utöka projektet till att stödja hela Haskell98 specifikationen, eller att lägga till stöd för något av de alla tillägg som finns bör vara möjligt.
+
+

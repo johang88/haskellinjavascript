@@ -11,15 +11,21 @@
 .ghci-look ol{
     width:800px;
     height:400px;
+    background-color: #000;
     overflow-x:auto;
     overflow-y:scroll;
     list-style-type:none;
+    overflow: hidden;
+    color: #fff;
 }
 
 .ghci-look .input input {
     border:none;
     display:inline-block;
     margin-left:-1px;
+    background-color: #000;
+
+    color: #fff;
 }
 
 .ghci-look .modules {
