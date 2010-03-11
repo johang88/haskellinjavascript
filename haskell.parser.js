@@ -68,7 +68,7 @@ haskell.parser.parse = function(code) {
     
     var op = undefined;
     
-    var conop = undefined;
+    var conop = choice(consym, sequence(expect(ws('`')), conid, expect(ws('`'))));
     
     var varop = undefined;
     
@@ -379,9 +379,11 @@ haskell.parser.parse = function(code) {
     
     var newconstr = epsilon_p;
     
-    var constr = undefined;
+    var constr = choice(sequence(ws(con), repeat0(sequence(optional(ws('!')), ws(atype)))),
+                        sequence(choice(ws(btype), sequence(optional(ws('!')), ws(atype))), ws(conop), choice(ws(btype), sequence(optional(ws('!')), ws(atype))))
+                       ); // Todo: fielddecl stuffz
     
-    var constrs = epsilon_p;
+    var constrs = list(ws(constr), ws('|'));
     
     var simpletype = sequence(ws(tycon), optional(ws(list(tyvar, ' '))));
     
