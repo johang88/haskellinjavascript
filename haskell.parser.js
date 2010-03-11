@@ -71,7 +71,7 @@ haskell.parser.parse = function(code) {
     
     var conop = undefined;
     
-    var varop = undefined;haskell.ast.Num
+    var varop = undefined;
     
     var qcon = choice(qconid, sequence(expect(ws('(')), gconsym, expect(ws(')'))));
     
