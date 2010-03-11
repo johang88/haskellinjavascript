@@ -15,7 +15,7 @@ haskell.parser.generateInternalName = function() {
     var name = "__v" + parser.lastInternalName.toString();
     parser.lastInternalName++;
     return name;
-};
+};fixity
 
 haskell.parser.fixity = {};
 haskell.parser.fixity.left = 0;
@@ -27,7 +27,7 @@ haskell.parser.Operator = function(prec, fixity) {
     this.fixity = fixity;
 };
 
-haskell.parser.opTable = new Array();
+haskell.parser.opTable = {};
 
 /**
  * Parses Haskell code
@@ -352,7 +352,27 @@ haskell.parser.parse = function(code) {
                          );
     
     var resolve_op = function(ast) {
-        // Todo: Resolve fixity
+        // Todo: Resolve fixity, maybe it would be easier to make the recursive version?
+        var ops = haskell.parser.opTable;
+        
+        var op1 = new haskell.parser.Operator(-1, haskell.parser.fixity.none);
+        
+        for (int i = 0; i < ast.length; i += 3) {
+            var op2 = ops[ast[i + 1]];
+            
+            // Case 1: check for illegal expression
+            if (op1.prec == op2.prec && (op1.fixity == op2.fixity || op1.fixity = haskell.parser.fixity.none)) {
+                alert("faaiiilz");
+            }
+            // Case 2: op1 and op2 should associate to the left
+            else if (op1.prec > op2.prec || (op1.prec == op2.prec && op1.fixity = haskell.parser.fixity.left)) {
+                
+            }
+            // Case 3: op1 and op2 should assoicate to the right
+            else {
+                
+            }
+        };
     
         return ast;
     };
