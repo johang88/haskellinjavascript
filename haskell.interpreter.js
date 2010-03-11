@@ -40,6 +40,10 @@
 	// inc  = \x -> x + 1
 	// inc2 = \x -> inc (inc x)
 	// main = print (inc2 2)
+	// map = (\f -> let map' = (\l -> case l of
+        //                                (x:xs) -> f x : map' xs
+	//                                []     -> []
+	//                          ) in map')
 	ast = new Module([
 			  new Variable(new VariableBinding("inc"),
 				       new Lambda(new VariableBinding("x"),
@@ -116,6 +120,16 @@
 	this.type = "Case";
 	this.expr = expr;
 	this.cases = cases;
+	this.eval = function(env) {
+	    expr = new Closure(env, this.expr);
+	    for (i in this.cases) {
+		newEnv = env.derive();
+		if (this.cases[i][0].match(newEnv, expr)) {
+		    return new Closure(this.cases[i][1], newEnv);
+		};
+	    };
+	};
+	alert("No matching clause");
     };
     VariableLookup = function(identifier) {
 	this.type = "VariableLookup";
@@ -304,7 +318,7 @@
 	this.expression = expression;
 	
 	this.force = function() {
-	    // Forcing a closure is the same as evaluating it's expression under the closures env
+	    // Forcing a closure is the same as evaluating its expression under the closures env
 	    return this.expression.eval(this.env);
 	};
     };
@@ -325,13 +339,4 @@
 	    return this;
 	};
     }; 
-    /*    Primitive = function(env, function) {
-        this.type = "Primitive";
-        this.env = env;
-        this.function = function;
-
-        this.force = function() {
-            return this.function(env);
-	};
-	};*/
 })(haskell.interpreter, haskell.ast);
