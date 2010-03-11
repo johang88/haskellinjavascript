@@ -17,6 +17,18 @@ haskell.parser.generateInternalName = function() {
     return name;
 };
 
+haskell.parser.fixity = {};
+haskell.parser.fixity.left = 0;
+haskell.parser.fixity.right = 1;
+haskell.parser.fixity.none = 2;
+
+haskell.parser.Operator = function(prec, fixity) {
+    this.prec = prec;
+    this.fixity = fixity;
+};
+
+haskell.parser.opTable = new Array();
+
 /**
  * Parses Haskell code
  *
