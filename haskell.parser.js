@@ -15,7 +15,19 @@ haskell.parser.generateInternalName = function() {
     var name = "__v" + parser.lastInternalName.toString();
     parser.lastInternalName++;
     return name;
+};fixity
+
+haskell.parser.fixity = {};
+haskell.parser.fixity.left = 0;
+haskell.parser.fixity.right = 1;
+haskell.parser.fixity.none = 2;
+
+haskell.parser.Operator = function(prec, fixity) {
+    this.prec = prec;
+    this.fixity = fixity;
 };
+
+haskell.parser.opTable = {};
 
 /**
  * Parses Haskell code
@@ -60,7 +72,6 @@ haskell.parser.parse = function(code) {
     var tycls = epsilon_p;	
     var gconsym = choice(':', qconsym);
     
-    // Todo: qconid
     var qconop = choice(gconsym, sequence(expect(ws('`')), qconid, expect(ws('`'))));
     
     var qvarop = choice(qvarsym, sequence(expect(ws('`')), qvarid, expect(ws('`'))));
@@ -69,7 +80,7 @@ haskell.parser.parse = function(code) {
     
     var op = undefined;
     
-    var conop = undefined;
+    var conop = choice(consym, sequence(expect(ws('`')), conid, expect(ws('`'))));
     
     var varop = undefined;
     
@@ -343,7 +354,27 @@ haskell.parser.parse = function(code) {
                          );
     
     var resolve_op = function(ast) {
-        // Todo: Resolve fixity
+        // Todo: Resolve fixity, maybe it would be easier to make the recursive version?
+        var ops = haskell.parser.opTable;
+        
+        var op1 = new haskell.parser.Operator(-1, haskell.parser.fixity.none);
+        
+        for (int i = 0; i < ast.length; i += 3) {
+            var op2 = ops[ast[i + 1]];
+            
+            // Case 1: check for illegal expression
+            if (op1.prec == op2.prec && (op1.fixity == op2.fixity || op1.fixity = haskell.parser.fixity.none)) {
+                alert("faaiiilz");
+            }
+            // Case 2: op1 and op2 should associate to the left
+            else if (op1.prec > op2.prec || (op1.prec == op2.prec && op1.fixity = haskell.parser.fixity.left)) {
+                
+            }
+            // Case 3: op1 and op2 should assoicate to the right
+            else {
+                
+            }
+        };
     
         return ast;
     };
@@ -382,9 +413,11 @@ haskell.parser.parse = function(code) {
     
     var newconstr = epsilon_p;
     
-    var constr = undefined;
+    var constr = choice(sequence(ws(con), repeat0(sequence(optional(ws('!')), ws(atype)))),
+                        sequence(choice(ws(btype), sequence(optional(ws('!')), ws(atype))), ws(conop), choice(ws(btype), sequence(optional(ws('!')), ws(atype))))
+                       ); // Todo: fielddecl stuffz
     
-    var constrs = epsilon_p;
+    var constrs = list(ws(constr), ws('|'));
     
     var simpletype = sequence(ws(tycon), optional(ws(list(tyvar, ' '))));
     
