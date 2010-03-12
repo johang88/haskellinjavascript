@@ -1,4 +1,9 @@
 (function(ast, interpreter) {
+    function expectType(o,t) {
+	if (! o instanceof t) {
+	    throw "Expected " + t + " " + typeof o + " given.";
+	};
+    };
 
    /*
       data Module = Module [Declaration]
@@ -17,9 +22,9 @@
         	      | PrimitiveExpr Function
     */
     ast.Constant = function(value) {
+	expectType(value, ast.Value);
 	this.type ="Constant";
 	this.value = value;
-
 	this.eval = function(env) {
 	    return new interpreter.ConstantThunk(this.value);
 	};
@@ -86,10 +91,13 @@
     /*
       data Value = Num Int
     */
+    ast.Value = function(){};
+
     ast.Num = function(num) {
 	this.type = "Num";
 	this.num = num;
     };
+    ast.Num.prototype = new ast.Value();
 
     /*
       data Declaration = Variable Pattern Expression
