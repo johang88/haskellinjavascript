@@ -5,6 +5,12 @@
 	};
     };
 
+    function expectTypeOf(o, t) {
+	if ((typeof o) != t) {
+	    throw "Expected " + t + " " + typeof o + " given.";
+	};
+    };
+
     function expectTypeArray(os, t) {
 	for (i in os) {
 	    if (!(os[i] instanceof t)) {
@@ -97,7 +103,7 @@
 	alert("No matching clause");
     };
     ast.VariableLookup = function(identifier) {
-	// TODO: expect type
+	expectTypeOf(identifier, "string");
 	this.type = "VariableLookup";
 	this.identifier = identifier;
 	this.eval = function(env) {
@@ -105,7 +111,7 @@
 	};
     };
     ast.Primitive = function(func) {
-	// TODO: expect type
+	expectTypeOf(func, "function");
 	this.type="Primitive";
 	this.func = func;
 	this.eval = function(env) {
@@ -128,7 +134,7 @@
     ast.Value = function(){};
 
     ast.Num = function(num) {
-	// TODO: expect type
+	expectTypeOf(num, "number");
 	this.type = "Num";
 	this.num = num;
     };
@@ -160,7 +166,7 @@
     ast.Pattern = function(){};
 
     ast.Constructor = function(identifier, patterns) {
-	// TODO: expect type identifier
+	expectTypeOf(identifier, "string");
 	expectArrayType(patterns, ast.Pattern);
 	this.type = "Constructor";
 	this.identifier = identifier;
@@ -188,7 +194,7 @@
 	};
     };
     ast.VariableBinding = function(identifier) {
-	// TODO: Expect type identifier
+	expectTypeOf(identifier, "string");
 	this.type = "VariableBinding";
 	this.identifier = identifier;
 	this.match = function(env, expr) {
@@ -200,7 +206,7 @@
 	};
     };
     ast.Combined = function(identifier, pattern) {
-	// TODO: expect type identifier
+	expectTypeOf(identifier, "string");
 	expectType(pattern, ast.Pattern);
 	this.type = "Combined";
 	this.identifier = identifier;
