@@ -7,7 +7,7 @@
 
     function expectTypeArray(os, t) {
 	for (i in os) {
-	    if (! os[i] instanceof t) {
+	    if (!(os[i] instanceof t)) {
 		throw "Expected " + typeof t + " " + typeof o[i] + " at index " + i;
 	    };
 	};
@@ -154,7 +154,7 @@
       Pattern = Constructor Identifier [Pattern]
               | VariableBinding Identifier
 	      | Combined Identifier Pattern
-	      | Constant Value
+	      | ConstantPattern Value
     */
 
     ast.Pattern = function(){};
@@ -231,6 +231,6 @@
     ast.Constructor.prototype     = new ast.Pattern();
     ast.VariableBinding.prototype = new ast.Pattern();
     ast.Combined.prototype        = new ast.Pattern();
-    ast.Constant.prototype        = new ast.Pattern();
+    ast.ConstantPattern.prototype        = new ast.Pattern();
 
 })(haskell.ast,haskell.interpreter);
