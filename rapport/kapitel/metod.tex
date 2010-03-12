@@ -1,4 +1,4 @@
-﻿\sertion{Metod} 
+﻿\section{Metod} 
 
 \subsection{Kodstandard} 
 För att få konsistens i koden och för att underlätta att olika utvecklare kan läsa och arbeta på koden samtidigt har vi utformat en intärn kodstandard kodstandard som alla ska följa.
@@ -14,15 +14,22 @@ Under de första veckorna av projektet användes SVN. Valet berodde på att det 
 
 
 \subsection{Javascript} 
-Javascript är ett programmeringsspråk som framförallt används på klientsidan på webben. Javascript är ett dynamiskt objektorienterat skriptspråk.
+Javascript \citep{javascript} är ett programmeringsspråk som framförallt används på klientsidan på webben. Javascript är ett dynamiskt objektorienterat skriptspråk.
 
 Javascript är det programmeringsspråk som används uteslutande i detta projektet för att tolka och interpretera Haskell.
 Detta valet är gjort tack vare att Javascript kan exekveras på klientsidan i en webbläsare.
 
-\subsection{Kodbibliotek} 
+\subsection{Kodbibliotek}
+
+\emph{Standing on the Shoulder of Giants}
+
 Detta projektet följer en fin tradition inom datorvetenskapen att om ett problem redan är löst så ska det inte behöva lösas igen. Att återuppfinna hjulet varje gång är både tidsödande och onödigt. 
-Därför har ett antal kodbibliotek används i projektet.
+Därför har ett antal kodbibliotek används i projektet. Ett kodbibliotek
+
+
 Genom att använda dessa kodbibliotek kan fokus läggas på implementeringen av de kärnområden som projektet behandlar.
+
+Nedan följer en kort beskrivning av de olika kodbibliotek som vi användt genom projektet
 
  \subsubsection{JSparse}  
 Parsern implementeras med hjälp av ett parser combinator bibliotek kallat JSParser.
@@ -32,15 +39,19 @@ implementera den del av  Haskells syntax som inte är context free.
 
 \subsubsection{JQuery} 
 
-JQuery är ett öppet kodbibliotek till javascript som är dubeellicenserat under MIT License och GPL version 2.  
+JQuery är ett öppet kodbibliotek till Javascript som är dubeellicenserat under MIT License och GPL version 2.  
 JQuery är designat för att underlätta för utvecklare att modifiera DOM-träd, HTML, och göra asynkrona javascript-anrop.
 
-Vi använder JQuery för att få enkelt cross browser stöd utan att behöva tänka på det. 
-JQuery kommer också hjälpa oss med att få ett enkelt och stilrent interaktivt gränssnitt.
+JQuery används i projektet för att få enkelt cross browser stöd utan att behöva tänka på det. 
+JQuery ger även möjlighet att skapa ett enkelt och stilrent interaktivt gränssnitt utan att behöva göra allt från grunden.
+
+Ett tillägg till JQuery som heter JQuery.cookie används också. Som namnet antyder ger det ett till JQuery syntaxliknande sätt att hantera kakor på websidor.  
 
 
-%\subsection{Testning} 
-%Vi gör inga fel så vi testar inte.. *skämt* *....seriously, we do not test..* ... yes, seriously 
+% \subsection{Testning} 
+% Vi gör inga fel så vi testar inte.. *skämt* *....seriously, we do not test..* ... yes, seriously 
+
+
 
 
 

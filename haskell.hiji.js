@@ -1,3 +1,6 @@
+// TODO :: FOKUS NÄR MAN KLICKAR I DEN SVARTA RUTAN!!!
+
+
 var ENTER = '13';
 var UP    = '38';
 var DOWN  = '40';
