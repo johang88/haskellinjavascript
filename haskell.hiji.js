@@ -53,11 +53,15 @@
             }
             if (e.keyCode=='13'){
                 input.attr("value","");
-                var newLine = makeEntered(modules, line);
-                var output = makeOutput(evaluateHaskell(line, env));
-                $('.input', this).after(output).replaceWith(newLine);
-                $("ol",this).append(makeInput(modules));
-                 
+		try {
+		    var newLine = makeEntered(modules, line);
+		    var output = makeOutput(evaluateHaskell(line, env));
+		    $('.input', this).after(output).replaceWith(newLine);
+		    $("ol",this).append(makeInput(modules));
+		}
+		catch(e) {
+		    console.log("%o", e);
+		};
                 //set focus
                 $("input:text:visible:first").focus();
 
