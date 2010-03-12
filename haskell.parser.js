@@ -240,7 +240,7 @@ haskell.parser.parse = function(code) {
             var arg_name = haskell.parser.generateInternalName();
             var op_name = ast[1];
             
-            var fun_exp = new haskell.ast.Application(op_name, ast[0]);
+            var fun_exp = new haskell.ast.Application(new haskell.ast.VariableLookup(op_name), ast[0]);
             fun_exp = new haskell.ast.Application(fun_exp, new haskell.ast.VariableLookup(arg_name));
             
             var arg = new haskell.ast.VariableBinding(arg_name);
@@ -352,6 +352,22 @@ haskell.parser.parse = function(code) {
                          );
     
     var resolve_op = function(ast) {
+        /*var ops = haskell.parser.opTable;
+        
+        var parse = function() {
+        
+        };
+        
+        var parseNeg = function(op1, tokens, i) {
+            var op2;
+            
+            if (tokens[i] == '-') {
+                // todo: fix neg
+            } else {
+                return parse(op1, tokens[i], i + 1);
+            }
+        };*/
+        
         // Todo: Resolve fixity, maybe it would be easier to make the recursive version?
         /*var ops = haskell.parser.opTable;
         
