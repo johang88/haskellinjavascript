@@ -1,7 +1,15 @@
 (function(ast, interpreter) {
     function expectType(o,t) {
-	if (! o instanceof t) {
-	    throw "Expected " + t + " " + typeof o + " given.";
+	if (!(o instanceof t)) {
+	    throw "Expected " + typeof t + " " + typeof o + " given.";
+	};
+    };
+
+    function expectTypeArray(os, t) {
+	for (i in os) {
+	    if (! os[i] instanceof t) {
+		throw "Expected " + typeof t + " " + typeof o[i] + " at index " + i;
+	    };
 	};
     };
 
@@ -9,6 +17,7 @@
       data Module = Module [Declaration]
     */
     ast.Module = function(declarations) {
+	expectTypeArray(declarations, ast.Declaration);
 	this.declarations = declarations;
     };
 	
@@ -30,6 +39,8 @@
 	};
     };
     ast.Lambda = function(pattern, expression) {
+	expectType(pattern, ast.Pattern);
+	expectType(expression, ast.Expression);
 	this.type = "Lambda";
 	this.pattern = pattern;
 	this.expression = expression;
@@ -39,6 +50,8 @@
 	};
     };
     ast.Application = function(func, arg) {
+	expectType(func, ast.Expression);
+	expectType(arg, ast.Expression);
 	this.type = "Application";
 	this.func = func;
 	this.arg = arg;
@@ -50,6 +63,9 @@
 	};
     };
     ast.Let = function(pattern, def, expr) {
+	expectType(pattern, ast.Pattern);
+	expectType(def, ast.Expression);
+	expectType(expr, ast.Expression);
 	this.type = "Let";
 	this.pattern = pattern;
 	this.def = def;
@@ -59,6 +75,8 @@
 	};
     };
     ast.Case = function(expr, cases) {
+	expectType(expr, ast.Expression);
+	// TODO: Expect cases [(Pattern, Expression)]
 	this.type = "Case";
 	this.expr = expr;
 	this.cases = cases;
@@ -74,6 +92,7 @@
 	alert("No matching clause");
     };
     ast.VariableLookup = function(identifier) {
+	// TODO: expect type
 	this.type = "VariableLookup";
 	this.identifier = identifier;
 	this.eval = function(env) {
@@ -81,6 +100,7 @@
 	};
     };
     ast.Primitive = function(func) {
+	// TODO: expect type
 	this.type="Primitive";
 	this.func = func;
 	this.eval = function(env) {
@@ -94,6 +114,7 @@
     ast.Value = function(){};
 
     ast.Num = function(num) {
+	// TODO: expect type
 	this.type = "Num";
 	this.num = num;
     };
@@ -103,6 +124,8 @@
       data Declaration = Variable Pattern Expression
     */
     ast.Variable = function(pattern, expression) {
+	expectType(pattern, ast.Pattern);
+	expectType(expression, ast.Expression);
 	this.type = "Variable";
 	this.pattern = pattern;
 	this.expression = expression;
@@ -115,6 +138,8 @@
 	      | Constant Value
     */
     ast.Constructor = function(identifier, patterns) {
+	// TODO: expect type identifier
+	expectArrayType(patterns, ast.Pattern);
 	this.type = "Constructor";
 	this.identifier = identifier;
 	this.patterns = patterns;
@@ -141,6 +166,7 @@
 	};
     };
     ast.VariableBinding = function(identifier) {
+	// TODO: Expect type identifier
 	this.type = "VariableBinding";
 	this.identifier = identifier;
 	this.match = function(env, expr) {
@@ -152,6 +178,8 @@
 	};
     };
     ast.Combined = function(identifier, pattern) {
+	// TODO: expect type identifier
+	expectType(pattern, ast.Pattern);
 	this.type = "Combined";
 	this.identifier = identifier;
 	this.pattern = pattern;
@@ -164,6 +192,7 @@
 	};
     };
     ast.ConstantPattern = function(value) {
+	expectType(value, ast.Value);
 	this.type = "ConstantPattern";
 	this.value = value;
 	this.match = function(env, expr) {
