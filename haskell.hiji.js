@@ -67,11 +67,15 @@ var DOWN  = '40';
                 $.cookie("hiss", hiss.history_array.toString(), {expires: 3 });              
 
                 input.attr("value","");
-                var newLine = makeEntered(modules, line);
-                var output = makeOutput(evaluateHaskell(line, env));
-                $('.input', this).after(output).replaceWith(newLine);
-                $("ol",this).append(makeInput(modules));
-                 
+		try {
+		    var newLine = makeEntered(modules, line);
+		    var output = makeOutput(evaluateHaskell(line, env));
+		    $('.input', this).after(output).replaceWith(newLine);
+		    $("ol",this).append(makeInput(modules));
+		}
+		catch(e) {
+		    console.log("%o", e);
+		};
                 //set focus
                 $("input:text:visible:first").focus();
 

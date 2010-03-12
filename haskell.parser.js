@@ -304,8 +304,7 @@ haskell.parser.parse = function(code) {
             var patterns = ast[0];
             
             for (var i = patterns.length - 1; i >= 0; i--) {
-                var arg = new haskell.ast.VariableBinding(patterns[i]);
-                fun = new haskell.ast.Lambda(arg, fun);
+                fun = new haskell.ast.Lambda(patterns[i], fun);
             }
             
             return fun;

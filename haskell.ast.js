@@ -1,9 +1,29 @@
 (function(ast, interpreter) {
+    function expectType(o,t) {
+	if (!(o instanceof t)) {
+	    throw "Expected " + typeof t + " " + typeof o + " given.";
+	};
+    };
+
+    function expectTypeOf(o, t) {
+	if ((typeof o) != t) {
+	    throw "Expected " + t + " " + typeof o + " given.";
+	};
+    };
+
+    function expectTypeArray(os, t) {
+	for (i in os) {
+	    if (!(os[i] instanceof t)) {
+		throw "Expected " + typeof t + " " + typeof o[i] + " at index " + i;
+	    };
+	};
+    };
 
    /*
       data Module = Module [Declaration]
     */
     ast.Module = function(declarations) {
+	expectTypeArray(declarations, ast.Declaration);
 	this.declarations = declarations;
     };
 	
@@ -11,20 +31,27 @@
       data Expression = Constant Value
                       | Lambda Pattern Expression
                       | Application Expression Expression
-        	      | Let Pattern Expression Expression
-        	      | Case Expression [(Pattern, Expression)]
+            	      | Let Pattern Expression Expression
+               	      | Case Expression [(Pattern, Expression)]
                       | VariableLookup Identifier
-        	      | PrimitiveExpr Function
+        	          | Primitive Function
     */
+    
+    ast.Expression = function(){};
+
+
+
     ast.Constant = function(value) {
+	expectType(value, ast.Value);
 	this.type ="Constant";
 	this.value = value;
-
 	this.eval = function(env) {
 	    return new interpreter.ConstantThunk(this.value);
 	};
     };
     ast.Lambda = function(pattern, expression) {
+	expectType(pattern, ast.Pattern);
+	expectType(expression, ast.Expression);
 	this.type = "Lambda";
 	this.pattern = pattern;
 	this.expression = expression;
@@ -34,6 +61,8 @@
 	};
     };
     ast.Application = function(func, arg) {
+	expectType(func, ast.Expression);
+	expectType(arg, ast.Expression);
 	this.type = "Application";
 	this.func = func;
 	this.arg = arg;
@@ -45,6 +74,9 @@
 	};
     };
     ast.Let = function(pattern, def, expr) {
+	expectType(pattern, ast.Pattern);
+	expectType(def, ast.Expression);
+	expectType(expr, ast.Expression);
 	this.type = "Let";
 	this.pattern = pattern;
 	this.def = def;
@@ -54,6 +86,8 @@
 	};
     };
     ast.Case = function(expr, cases) {
+	expectType(expr, ast.Expression);
+	// TODO: Expect cases [(Pattern, Expression)]
 	this.type = "Case";
 	this.expr = expr;
 	this.cases = cases;
@@ -69,6 +103,7 @@
 	alert("No matching clause");
     };
     ast.VariableLookup = function(identifier) {
+	expectTypeOf(identifier, "string");
 	this.type = "VariableLookup";
 	this.identifier = identifier;
 	this.eval = function(env) {
@@ -76,6 +111,7 @@
 	};
     };
     ast.Primitive = function(func) {
+	expectTypeOf(func, "function");
 	this.type="Primitive";
 	this.func = func;
 	this.eval = function(env) {
@@ -83,30 +119,55 @@
 	};
     };
 
+    ast.Constant.prototype          = new ast.Expression();
+    ast.Lambda.prototype           = new ast.Expression();
+    ast.Application.prototype       = new ast.Expression();
+    ast.Let.prototype               = new ast.Expression();
+    ast.Case.prototype              = new ast.Expression();
+    ast.VariableLookup.prototype    = new ast.Expression();
+    ast.Primitive.prototype     = new ast.Expression();
+
+
     /*
       data Value = Num Int
     */
+    ast.Value = function(){};
+
     ast.Num = function(num) {
+	expectTypeOf(num, "number");
 	this.type = "Num";
 	this.num = num;
     };
-
+       
+    ast.Num.prototype = new ast.Value();
     /*
       data Declaration = Variable Pattern Expression
     */
+
+    ast.Declaration = function(){};
+
     ast.Variable = function(pattern, expression) {
+	expectType(pattern, ast.Pattern);
+	expectType(expression, ast.Expression);
 	this.type = "Variable";
 	this.pattern = pattern;
 	this.expression = expression;
     };
 
+    ast.Variable.prototype = new ast.Declaration();
+
     /*
       Pattern = Constructor Identifier [Pattern]
               | VariableBinding Identifier
 	      | Combined Identifier Pattern
-	      | Constant Value
+	      | ConstantPattern Value
     */
+
+    ast.Pattern = function(){};
+
     ast.Constructor = function(identifier, patterns) {
+	expectTypeOf(identifier, "string");
+	expectArrayType(patterns, ast.Pattern);
 	this.type = "Constructor";
 	this.identifier = identifier;
 	this.patterns = patterns;
@@ -133,6 +194,7 @@
 	};
     };
     ast.VariableBinding = function(identifier) {
+	expectTypeOf(identifier, "string");
 	this.type = "VariableBinding";
 	this.identifier = identifier;
 	this.match = function(env, expr) {
@@ -144,6 +206,8 @@
 	};
     };
     ast.Combined = function(identifier, pattern) {
+	expectTypeOf(identifier, "string");
+	expectType(pattern, ast.Pattern);
 	this.type = "Combined";
 	this.identifier = identifier;
 	this.pattern = pattern;
@@ -156,6 +220,7 @@
 	};
     };
     ast.ConstantPattern = function(value) {
+	expectType(value, ast.Value);
 	this.type = "ConstantPattern";
 	this.value = value;
 	this.match = function(env, expr) {
@@ -168,5 +233,10 @@
 	    return [];
 	};
     };
+
+    ast.Constructor.prototype     = new ast.Pattern();
+    ast.VariableBinding.prototype = new ast.Pattern();
+    ast.Combined.prototype        = new ast.Pattern();
+    ast.ConstantPattern.prototype        = new ast.Pattern();
 
 })(haskell.ast,haskell.interpreter);
