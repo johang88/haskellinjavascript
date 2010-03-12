@@ -361,6 +361,10 @@ haskell.parser.parse = function(code) {
             this.e2 = e2;
         };
         
+        var NegOp = function(e1) {
+            this.e1 = e1;
+        };
+        
         var parseNeg = function(op1, rest) { return parseNeg(op1, rest); };
         var parse = function(op1, e1, rest) { return parse(op1, e1, rest); };
         
@@ -389,7 +393,8 @@ haskell.parser.parse = function(code) {
             var e1 = rest.shift();
             
             if (e1 == '-') {
-                // todo
+                var res = parseNeg(new haskell.parser.Operator(6, haskell.parser.fixity.left, '-'), rest);
+                return parse(op1, new NegOp(res.exp), res.rest);
             } else {
                 return parse(op1, e1, rest);
             }
