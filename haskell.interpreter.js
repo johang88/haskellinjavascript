@@ -6,6 +6,12 @@
 					  b = forceTo(env.lookup("b"), "ConstantThunk");
 					  return new interpreter.ConstantThunk(new ast.Num(a.value.num+b.value.num));
 				      }));
+    env.bind("*", createPrimitive(env, ["a", "b"],
+				      function(env) {
+					  a = forceTo(env.lookup("a"), "ConstantThunk");
+					  b = forceTo(env.lookup("b"), "ConstantThunk");
+					  return new interpreter.ConstantThunk(new ast.Num(a.value.num*b.value.num));
+				      }));
 	env.bind("alert", createPrimitive(env, ["l"],
 					  function(env) {
 					      l = forceTo(env.lookup("l"), "ConstantThunk");
