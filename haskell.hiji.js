@@ -6,6 +6,8 @@ var UP    = '38';
 var DOWN  = '40';
 
 (function($){
+
+
     var evaluateHaskell = function(line, env)
     {
         return haskell.parser.parse(line);
@@ -20,7 +22,7 @@ var DOWN  = '40';
 
     };
     var makeInput = function(modules){
-        return "<li class='input'>" + makeModules(modules) + "<input type='text' name='inputBox'></li>";
+        return "<li class='input'>" + makeModules(modules) + "<input type='text' name='inputBox' id='inbox'></li>";
     };
     var makeOutput = function(output) {
 	console.log("%o", output);
@@ -54,6 +56,11 @@ var DOWN  = '40';
                 input.attr("value", hiss.newer());
             }
             if (e.keyCode==ENTER){
+                
+                // history
+                hiss.addHistory(line);
+                $.cookie("hiss", hiss.history_array.toString(), {expires: 3 });              
+
                 input.attr("value","");
                 var newLine = makeEntered(modules, line);
                 var output = makeOutput(evaluateHaskell(line,{}));
@@ -62,11 +69,6 @@ var DOWN  = '40';
                  
                 //set focus
                 $("input:text:visible:first").focus();
-
-                hiss.addHistory(line);
-
-                // save history to cookie
-                $.cookie("hiss", hiss.history_array.toString(), {expires: 3 });              
 
             }
         });
