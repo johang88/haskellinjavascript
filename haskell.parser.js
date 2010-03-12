@@ -22,9 +22,10 @@ haskell.parser.fixity.left = 0;
 haskell.parser.fixity.right = 1;
 haskell.parser.fixity.none = 2;
 
-haskell.parser.Operator = function(prec, fixity) {
+haskell.parser.Operator = function(prec, fixity, op) {
     this.prec = prec;
     this.fixity = fixity;
+    this.op = op;
 };
 
 haskell.parser.opTable = {};
@@ -240,7 +241,7 @@ haskell.parser.parse = function(code) {
             var arg_name = haskell.parser.generateInternalName();
             var op_name = ast[1];
             
-            var fun_exp = new haskell.ast.Application(op_name, ast[0]);
+            var fun_exp = new haskell.ast.Application(new haskell.ast.VariableLookup(op_name), ast[0]);
             fun_exp = new haskell.ast.Application(fun_exp, new haskell.ast.VariableLookup(arg_name));
             
             var arg = new haskell.ast.VariableBinding(arg_name);
@@ -336,11 +337,11 @@ haskell.parser.parse = function(code) {
         	        if (!inner[i].need_resolve)
         	            ast.push(inner[i]);
         	    }
-        	    
-        	    ast.info = new function() { 
-        	        this.need_resolve = true;
-        	    };
         	}
+            
+            ast.info = new function() { 
+                this.need_resolve = true;
+            };
         	
         	return ast;
         });
@@ -352,29 +353,74 @@ haskell.parser.parse = function(code) {
                          );
     
     var resolve_op = function(ast) {
-        // Todo: Resolve fixity, maybe it would be easier to make the recursive version?
-        var ops = haskell.parser.opTable;
+        // todo: lookup all op's before calling parse
         
-        var op1 = new haskell.parser.Operator(-1, haskell.parser.fixity.none);
+        var OpApp = function(e1, op, e2) {
+            this.e1 = e1;
+            this.op = op;
+            this.e2 = e2;
+        };
         
-        for (var i = 0; i < ast.length; i += 3) {
-            var op2 = ops[ast[i + 1]];
+        var parseNeg = function(op1, rest) { return parseNeg(op1, rest); };
+        var parse = function(op1, e1, rest) { return parse(op1, e1, rest); };
+        
+        var parse = function(op1, e1, rest) {
+            if (rest == null || rest.length == 0) {
+                return { exp: e1, rest: null };
+            }
             
-            // Case 1: check for illegal expression
-            if (op1.prec == op2.prec && (op1.fixity == op2.fixity || op1.fixity == haskell.parser.fixity.none)) {
-                alert("faaiiilz");
+            var op2 = rest.shift();
+            
+            if (op1.prec == op2.prec && (op1.fixity != op2.fixity || op1.fixity == haskell.parser.fixity.none)) {
+                alert("invalid operator precedence stuff!");
+                return null;
             }
-            // Case 2: op1 and op2 should associate to the left
-            else if (op1.prec > op2.prec || (op1.prec == op2.prec && op1.fixity == haskell.parser.fixity.left)) {
-                
+            
+            if (op1.prec > op2.prec || (op1.prec == op2.prec && op1.fixity == haskell.parser.fixity.left)) {
+                rest.unshift(op2);
+                return { exp: e1, rest: rest };
             }
-            // Case 3: op1 and op2 should assoicate to the right
-            else {
-                
+            
+            var res = parseNeg(op2, rest);
+            return parse(op1, new OpApp(e1, op2, res.exp), res.rest);
+        };
+        
+        var parseNeg = function(op1, rest) {
+            var e1 = rest.shift();
+            
+            if (e1 == '-') {
+                // todo
+            } else {
+                return parse(op1, e1, rest);
             }
         };
-    
-        return ast;
+        
+        for (var i in ast) {
+            if (ast[i] == '+') {
+                ast[i] = new haskell.parser.Operator(6, haskell.parser.fixity.left, ast[i]);
+            } else if (ast[i] == '*') {
+                ast[i] = new haskell.parser.Operator(7, haskell.parser.fixity.left, ast[i]);
+            }
+        }
+        
+        ast = parseNeg(new haskell.parser.Operator(-1, haskell.parser.fixity.none, ''), ast);
+        
+        var translate = function(op) { return translate(op); };
+        var translate = function(op) {
+            var lhs = op.e1;
+            var rhs = op.e2;
+            
+            if (lhs instanceof OpApp)
+                lhs = translate(lhs);
+            
+            if (rhs instanceof OpApp)
+                rhs = translate(rhs);
+            
+            var fun1 = new haskell.ast.Application(new haskell.ast.VariableLookup(op.op.op), lhs);
+            return new haskell.ast.Application(fun1, rhs);
+        };
+        
+        return translate(ast.exp);
     };
     
     var exp_action = function(p) {
