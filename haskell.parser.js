@@ -252,8 +252,7 @@ haskell.parser.parse = function(code) {
     
     var qvar_exp_action = function(p) {
         return action(p, function(ast) {
-			// TODO: Why is ast sometimes an array?
-			return new haskell.ast.VariableLookup(ast instanceof Array ? ast[0] : ast);
+			return new haskell.ast.VariableLookup(ast);
         });
     };
     
@@ -266,7 +265,7 @@ haskell.parser.parse = function(code) {
     var aexp = choice(  qvar_exp_action(ws(qvar)),
                         qvar_exp_action(ws(gcon)),
                         aexp_constant_action(ws(literal)),
-                        sequence(expect(ws('(')), ws(exp), expect(ws(')'))), // parans
+                        action(sequence(expect(ws('(')), ws(exp), expect(ws(')')), function(ast) { return ast[0]; })), // parans
                         sequence(ws('('), ws(exp), ws(','), ws(exp), repeat0(sequence(ws(','), ws(exp))) , ws(')')), // tuple
                         aexp_constant_action(list_action(sequence(expect(ws('[')), optional(wlist(exp, ',')), expect(ws(']'))))),  // list constructor
                         left_section_action(sequence(expect(ws('(')), ws(infixexp), ws(qop), expect(ws(')')))), // left section
@@ -283,8 +282,7 @@ haskell.parser.parse = function(code) {
                        return ast[0];
                    } else {
                        // f x y -> (f x) y
-					   // TODO: Why is ast[1] sometimes an array?
-                       var f = new haskell.ast.Application(ast[0], ast[1] instanceof Array ? ast[1][0] : ast[1]);
+                       var f = new haskell.ast.Application(ast[0], ast[1]);
                        for (var i = 2; i < ast.length; i ++) {
                            f = new haskell.ast.Application(f, ast[i]);
                        }
