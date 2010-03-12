@@ -15,7 +15,7 @@ haskell.parser.generateInternalName = function() {
     var name = "__v" + parser.lastInternalName.toString();
     parser.lastInternalName++;
     return name;
-};fixity
+};
 
 haskell.parser.fixity = {};
 haskell.parser.fixity.left = 0;
@@ -353,11 +353,11 @@ haskell.parser.parse = function(code) {
     
     var resolve_op = function(ast) {
         // Todo: Resolve fixity, maybe it would be easier to make the recursive version?
-        var ops = haskell.parser.opTable;
+        /*var ops = haskell.parser.opTable;
         
         var op1 = new haskell.parser.Operator(-1, haskell.parser.fixity.none);
         
-        for (int i = 0; i < ast.length; i += 3) {
+        /or (var i = 0; i < ast.length; i += 3) {
             var op2 = ops[ast[i + 1]];
             
             // Case 1: check for illegal expression
@@ -372,7 +372,7 @@ haskell.parser.parse = function(code) {
             else {
                 
             }
-        };
+        }*/
     
         return ast;
     };
