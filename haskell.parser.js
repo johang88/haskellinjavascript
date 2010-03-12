@@ -108,7 +108,7 @@ haskell.parser.parse = function(code) {
             
             ast = ast[0];
             
-            var cons = new haskell.ast.VariableLookup("(:)");
+            var cons = new haskell.ast.VariableLookup(":");
             var empty = new haskell.ast.VariableLookup("[]");
             
             if (ast.length == 0 || ast == false) {
@@ -148,7 +148,7 @@ haskell.parser.parse = function(code) {
     
     var ident_pattern_action = function(p) {
         return action(p, function(ast) {
-            return new haskell.ast.PatternVariableBinding(ast);
+            return new haskell.ast.VariableBinding(ast);
         });
     }
     
@@ -225,8 +225,8 @@ haskell.parser.parse = function(code) {
             var fun_exp = new haskell.ast.Application(new haskell.ast.VariableLookup(op_name), new haskell.ast.VariableLookup(arg_name));
             fun_exp = new haskell.ast.Application(fun_exp, ast[1]);
             
-            var arg = new haskell.ast.PatternVariableBinding(arg_name);
-            var fun = new haskell.ast.Lambda([arg], fun_exp);
+            var arg = new haskell.ast.VariableBinding(arg_name);
+            var fun = new haskell.ast.Lambda(arg, fun_exp);
             
             return fun;
         });
@@ -243,8 +243,8 @@ haskell.parser.parse = function(code) {
             var fun_exp = new haskell.ast.Application(op_name, ast[0]);
             fun_exp = new haskell.ast.Application(fun_exp, new haskell.ast.VariableLookup(arg_name));
             
-            var arg = new haskell.ast.PatternVariableBinding(arg_name);
-            var fun = new haskell.ast.Lambda([arg], fun_exp);
+            var arg = new haskell.ast.VariableBinding(arg_name);
+            var fun = new haskell.ast.Lambda(arg, fun_exp);
             
             return fun;
         });
@@ -252,20 +252,20 @@ haskell.parser.parse = function(code) {
     
     var qvar_exp_action = function(p) {
         return action(p, function(ast) {
-            return new haskell.ast.VariableLookup(ast);
+			return new haskell.ast.VariableLookup(ast);
         });
     };
     
     var aexp_constant_action = function(p) {
         return action(p, function(ast) {
-            return new haskell.ast.ConstantExpression(ast);
+            return new haskell.ast.Constant(ast);
         });
     };
     
     var aexp = choice(  qvar_exp_action(ws(qvar)),
                         qvar_exp_action(ws(gcon)),
                         aexp_constant_action(ws(literal)),
-                        sequence(expect(ws('(')), ws(exp), expect(ws(')'))), // parans
+                        action(sequence(expect(ws('(')), ws(exp), expect(ws(')')), function(ast) { return ast[0]; })), // parans
                         sequence(ws('('), ws(exp), ws(','), ws(exp), repeat0(sequence(ws(','), ws(exp))) , ws(')')), // tuple
                         aexp_constant_action(list_action(sequence(expect(ws('[')), optional(wlist(exp, ',')), expect(ws(']'))))),  // list constructor
                         left_section_action(sequence(expect(ws('(')), ws(infixexp), ws(qop), expect(ws(')')))), // left section
@@ -282,7 +282,7 @@ haskell.parser.parse = function(code) {
                        return ast[0];
                    } else {
                        // f x y -> (f x) y
-                       var f = new haskell.ast.Application(new haskell.ast.VariableLookup(ast[0]), ast[1]);
+                       var f = new haskell.ast.Application(ast[0], ast[1]);
                        for (var i = 2; i < ast.length; i ++) {
                            f = new haskell.ast.Application(f, ast[i]);
                        }
@@ -303,8 +303,8 @@ haskell.parser.parse = function(code) {
             var patterns = ast[0];
             
             for (var i = patterns.length - 1; i >= 0; i--) {
-                var arg = new haskell.ast.PatternVariableBinding(patterns[i]);
-                fun = new haskell.ast.Lambda([arg], fun);
+                var arg = new haskell.ast.VariableBinding(patterns[i]);
+                fun = new haskell.ast.Lambda(arg, fun);
             }
             
             return fun;
@@ -321,7 +321,7 @@ haskell.parser.parse = function(code) {
     
     var op_action = function(p) { return action(p, function(ast) {
             return function(lhs, rhs) {
-                var fun1 = new haskell.ast.Application(new haskell.ast.VariableLookup('(' + ast + ')'), lhs);
+                var fun1 = new haskell.ast.Application(new haskell.ast.VariableLookup(ast), lhs);
                 return new haskell.ast.Application(fun1, rhs);
             };
     })};
@@ -473,7 +473,7 @@ haskell.parser.parse = function(code) {
         return action(p, function(ast) {
             var patterns = ast[0][1];
             var fun_ident = ast[0][0];
-            
+
             return new haskell.ast.FunDef(fun_ident, patterns, ast[1][1], null);
         });
     };
