@@ -265,7 +265,7 @@ haskell.parser.parse = function(code) {
     var aexp = choice(  qvar_exp_action(ws(qvar)),
                         qvar_exp_action(ws(gcon)),
                         aexp_constant_action(ws(literal)),
-                        action(sequence(expect(ws('(')), ws(exp), expect(ws(')')), function(ast) { return ast[0]; })), // parans
+                        action(sequence(expect(ws('(')), ws(exp), expect(ws(')'))), function(ast) { return ast[0]; }), // parans
                         sequence(ws('('), ws(exp), ws(','), ws(exp), repeat0(sequence(ws(','), ws(exp))) , ws(')')), // tuple
                         aexp_constant_action(list_action(sequence(expect(ws('[')), optional(wlist(exp, ',')), expect(ws(']'))))),  // list constructor
                         left_section_action(sequence(expect(ws('(')), ws(infixexp), ws(qop), expect(ws(')')))), // left section
