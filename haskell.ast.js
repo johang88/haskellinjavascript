@@ -16,11 +16,16 @@
       data Expression = Constant Value
                       | Lambda Pattern Expression
                       | Application Expression Expression
-        	      | Let Pattern Expression Expression
-        	      | Case Expression [(Pattern, Expression)]
+            	      | Let Pattern Expression Expression
+               	      | Case Expression [(Pattern, Expression)]
                       | VariableLookup Identifier
-        	      | PrimitiveExpr Function
+        	          | Primitive Function
     */
+    
+    ast.Expression = function(){};
+
+
+
     ast.Constant = function(value) {
 	expectType(value, ast.Value);
 	this.type ="Constant";
@@ -88,6 +93,15 @@
 	};
     };
 
+    ast.Constant.prototype          = new ast.Expression();
+    ast.Lambda.prototype           = new ast.Expression();
+    ast.Application.prototype       = new ast.Expression();
+    ast.Let.prototype               = new ast.Expression();
+    ast.Case.prototype              = new ast.Expression();
+    ast.VariableLookup.prototype    = new ast.Expression();
+    ast.Primitive.prototype     = new ast.Expression();
+
+
     /*
       data Value = Num Int
     */
@@ -97,16 +111,21 @@
 	this.type = "Num";
 	this.num = num;
     };
+       
     ast.Num.prototype = new ast.Value();
-
     /*
       data Declaration = Variable Pattern Expression
     */
+
+    ast.Declaration = function(){};
+
     ast.Variable = function(pattern, expression) {
 	this.type = "Variable";
 	this.pattern = pattern;
 	this.expression = expression;
     };
+
+    ast.Variable.prototype = new ast.Declaration();
 
     /*
       Pattern = Constructor Identifier [Pattern]
@@ -114,6 +133,9 @@
 	      | Combined Identifier Pattern
 	      | Constant Value
     */
+
+    ast.Pattern = function(){};
+
     ast.Constructor = function(identifier, patterns) {
 	this.type = "Constructor";
 	this.identifier = identifier;
@@ -176,5 +198,10 @@
 	    return [];
 	};
     };
+
+    ast.Constructor.prototype     = new ast.Pattern();
+    ast.VariableBinding.prototype = new ast.Pattern();
+    ast.Combined.prototype        = new ast.Pattern();
+    ast.Constant.prototype        = new ast.Pattern();
 
 })(haskell.ast,haskell.interpreter);
