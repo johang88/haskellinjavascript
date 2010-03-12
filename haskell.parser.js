@@ -412,17 +412,26 @@ haskell.parser.parse = function(code) {
         
         var translate = function(op) { return translate(op); };
         var translate = function(op) {
-            var lhs = op.e1;
-            var rhs = op.e2;
-            
-            if (lhs instanceof OpApp)
-                lhs = translate(lhs);
-            
-            if (rhs instanceof OpApp)
-                rhs = translate(rhs);
-            
-            var fun1 = new haskell.ast.Application(new haskell.ast.VariableLookup(op.op.op), lhs);
-            return new haskell.ast.Application(fun1, rhs);
+            if (op instanceof NegOp) {
+                var exp = op.e1;
+                
+                if (exp instanceof OpApp || exp instanceof NegOp)
+                    exp = translate(exp);
+                
+                return new haskell.ast.Application(new haskell.ast.VariableLookup('-'), exp);
+            } else {            
+                var lhs = op.e1;
+                var rhs = op.e2;
+                
+                if (lhs instanceof OpApp || lhs instanceof NegOp)
+                    lhs = translate(lhs);
+                
+                if (rhs instanceof OpApp || rhs instanceof NegOp)
+                    rhs = translate(rhs);
+                
+                var fun1 = new haskell.ast.Application(new haskell.ast.VariableLookup(op.op.op), lhs);
+                return new haskell.ast.Application(fun1, rhs);
+            }
         };
         
         return translate(ast.exp);
