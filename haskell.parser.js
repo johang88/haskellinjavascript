@@ -352,44 +352,48 @@ haskell.parser.parse = function(code) {
                          );
     
     var resolve_op = function(ast) {
-        /*var ops = haskell.parser.opTable;
+        // todo: lookup all op's before calling parse
         
-        var parse = function() {
-        
+        var OpApp = function(e1, op, e2) {
+            this.e1 = e1;
+            this.op = op;
+            this.e2 = e2;
         };
         
-        var parseNeg = function(op1, tokens, i) {
-            var op2;
+        var parseNeg = function(op1, rest) { return parseNeg(op1, rest); };
+        var parse = function(op1, e1, rest) { return parse(op1, e1, rest); };
+        
+        var parse = function(op1, e1, rest) {
+            if (rest.length == 0) {
+                return { exp: e1, rest: null };
+            }
             
-            if (tokens[i] == '-') {
-                // todo: fix neg
+            var op2 = rest.shift();
+            
+            if (op1.prec == op2.prec && (op.fixity != op2.fixity || op1.fixity == haskell.parser.fixity.none)) {
+                alert("invalid operator precedence stuff!");
+                return null;
+            }
+            
+            if (op1.prec > op2.prec || (op1.prec == op2.prec && op1.prec == haskell.parser.fixity.left)) {
+                rest.unshift(e1);
+                return { exp: e1, rest: rest };
+            }
+            
+            var res = parseNeg(op2, rest);
+            return parse(op1, new OpApp(e1, op2, res.exp), res.rest);
+        };
+        
+        var parseNeg = function(op1, rest) {
+            var e1 = rest.shift();
+            
+            if (e1 == '-') {
+                // todo
             } else {
-                return parse(op1, tokens[i], i + 1);
+                return parse(op1, e1, rest);
             }
-        };*/
+        };
         
-        // Todo: Resolve fixity, maybe it would be easier to make the recursive version?
-        /*var ops = haskell.parser.opTable;
-        
-        var op1 = new haskell.parser.Operator(-1, haskell.parser.fixity.none);
-        
-        for (var i = 0; i < ast.length; i += 3) {
-            var op2 = ops[ast[i + 1]];
-            
-            // Case 1: check for illegal expression
-            if (op1.prec == op2.prec && (op1.fixity == op2.fixity || op1.fixity == haskell.parser.fixity.none)) {
-                alert("faaiiilz");
-            }
-            // Case 2: op1 and op2 should associate to the left
-            else if (op1.prec > op2.prec || (op1.prec == op2.prec && op1.fixity == haskell.parser.fixity.left)) {
-                
-            }
-            // Case 3: op1 and op2 should assoicate to the right
-            else {
-                
-            }
-        }*/
-    
         return ast;
     };
     
