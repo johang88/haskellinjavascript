@@ -42,8 +42,8 @@ var DOWN  = '40';
         if(hiss_cookie != null)
             hiss.history_array = hiss_cookie.split(",");
 
-	var env = new haskell.interpreter.RootEnv();
-	haskell.interpreter.primitives(env);
+        var env = new haskell.interpreter.RootEnv();
+        haskell.interpreter.primitives(env);
         
         modules[0] = "Prelude";
         modules[1] = "Control.Monad";
@@ -67,18 +67,20 @@ var DOWN  = '40';
                 $.cookie("hiss", hiss.history_array.toString(), {expires: 3 });              
 
                 input.attr("value","");
-		try {
-		    var newLine = makeEntered(modules, line);
-		    var output = makeOutput(evaluateHaskell(line, env));
-		    $('.input', this).after(output).replaceWith(newLine);
-		    $("ol",this).append(makeInput(modules));
-		}
-		catch(e) {
-		    console.log("%o", e);
-		};
+                try {
+                    var newLine = makeEntered(modules, line);
+                    var output = makeOutput(evaluateHaskell(line, env));
+                    $('.input', this).after(output).replaceWith(newLine);
+                    $("ol",this).append(makeInput(modules));
+                }
+                catch(e) {
+                    console.log("%o", e);
+                };
                 //set focus
                 $("input:text:visible:first").focus();
 
+            }else{
+             //   document.write(e.keyCode);
             }
         });
     };
