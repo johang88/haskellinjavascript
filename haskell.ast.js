@@ -83,7 +83,7 @@
 	this.declr = declr;
 	this.expr = expr;
 	this.eval = function(env) {
-	    return this.expr.eval(env.substitute(this.declr.pattern, new Closure(env, this.declr.expression)));
+	    return this.expr.eval(env.substitute(this.declr.pattern, new interpreter.Closure(env, this.declr.expression)));
 	};
     };
     ast.Case = function(expr, cases) {
