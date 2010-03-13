@@ -43,7 +43,7 @@ haskell.parser.parse = function(code) {
     var integer = action(repeat1(range('0', '9')), function(ast) { return new haskell.ast.Num(parseInt(ast.join(""))); });
 
     var ident_ = action(repeat0(choice(range('a', 'z'), range('0', '1'), '\'')), function(ast) { return ast.join(""); });
-    var ident = action(sequence(range('a', 'z'), ident_), function(ast) { return ast.join(""); });
+    var ident = action(butnot(sequence(range('a', 'z'), ident_), choice("of", "case", "if")), function(ast) { return ast.join(""); });
     
     var literal = ws(integer);
     
@@ -197,7 +197,7 @@ haskell.parser.parse = function(code) {
     
     var lpat = undefined;
     
-    var pat = epsilon_p;
+    var pat = apat;
     
     var fbind = undefined;
     
@@ -207,13 +207,21 @@ haskell.parser.parse = function(code) {
     
     var gdpat = undefined;
     
-    var alt = undefined;
+    // todo: fix all alternatives !!!!1 and where!
+    var alt_action = function(p) {
+        return action(p, function(ast) {
+            return ast;
+        });
+    };
     
-    var alts = epsilon_p;
+    var exp = function(state) { return exp(state); };
+    
+    var alt = sequence(ws(pat), expect(ws("->")), ws(exp));
+    
+    var alts = repeat1(action(sequence(ws(alt), ws(';')), function(ast) { return ast[0]; }));
     
     var qval = undefined;
     
-    var exp = function(state) { return exp(state); };
     var infixexp = function(state) { return infixexp(state); };
     
     var right_section_action = function(p) {
@@ -323,10 +331,19 @@ haskell.parser.parse = function(code) {
         });
     };
     
+    var case_action = function(p) {
+        return action(p, function(ast) {
+            var cond = ast[0];
+            var alts = ast[1];
+            
+            return new haskell.ast.Case(cond, alts);
+        });
+    }
+    
     var exp_10 = choice(lambda_exp_action (sequence(expect(ws('\\')), repeat1(ws(apat)), expect(ws("->")), ws(exp))),
                         let_action(sequence(expect(ws("let")), ws(decls), expect(ws("in")), ws(exp))),
                         sequence(ws("if"), ws(exp), ws("then"), ws(exp), ws("else"), ws(exp)),
-                        sequence(ws("case"), ws(exp), ws("of"), ws("{"), ws(alts), ws("}")),
+                        case_action(sequence(expect(ws("case")), ws(exp), expect(ws("of")), expect(ws("{")), ws(alts), expect(ws("}")))),
                         sequence(ws("do"), ws("{"), ws(stmts), ws("}")),
                         ws(fexp)
                         );
@@ -645,7 +662,7 @@ haskell.parser.parse = function(code) {
     var module = module_action(choice(sequence(ws("module"), ws(modid), optional(exports), ws("where"), body),
                         body));
     
-    var test = sequence(ws(literal), optional(ws(literal)));
+    var test = case_action(sequence(expect(ws("case")), ws(exp), expect(ws("of")), expect(ws("{")), alts));
     
     return choice(module, exp)(ps(code));
 };
