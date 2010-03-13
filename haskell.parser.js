@@ -48,11 +48,12 @@ haskell.parser.parse = function(code) {
     var literal = ws(integer);
     
     var symbol = choice('!', '#', '$', '%', '&', '*', '+', '.', '/', '<', '=', '>', '?', '@', '\\', '^', '|', '-', '~');
+    var sym = action(repeat1(symbol), function(ast) { return ast.join(""); });
     
     var modid = action(sequence(range('A', 'Z'), ident_), function(ast) { return ast.join(""); });
     
     var varid = ident;
-    var varsym = ident;
+    var varsym = sym;
     
     var qvarid = ident;
     var qvarsym = ident;
@@ -62,9 +63,9 @@ haskell.parser.parse = function(code) {
     var qtycls = ident;
     
     var conid = action(sequence(range('A', 'Z'), ident_), function(ast) { return ast.join(""); });
-    var consym = action(repeat1(symbol), function(ast) { return ast.join(""); }); // should not allow reserved symbols
+    var consym = sym; // should not allow reserved symbols
     
-    var qconsym = consym;
+    var qconsym = sym;
     var qconid = conid;
 
     var tycon = qtycon;
@@ -91,7 +92,7 @@ haskell.parser.parse = function(code) {
     
     var qvar = choice(qvarid, sequence(ws('('), qvarsym, ws(')')));
     
-    var var_ = choice(varid, sequence(ws('('), varsym, ws(')')));
+    var var_ = choice(varid, action(sequence(expect(ws('(')), varsym, expect(ws(')'))), function(ast) { return ast [0]; }));
     
     var gcon = choice(  ws("()"),
                         ws("[]"),
@@ -404,6 +405,8 @@ haskell.parser.parse = function(code) {
                 ast[i] = new haskell.parser.Operator(6, haskell.parser.fixity.left, ast[i]);
             } else if (ast[i] == '*') {
                 ast[i] = new haskell.parser.Operator(7, haskell.parser.fixity.left, ast[i]);
+            } else if (ast[i] == '$') {
+                ast[i] = new haskell.parser.Operator(0, haskell.parser.fixity.right, ast[i]);
             }
         }
         
