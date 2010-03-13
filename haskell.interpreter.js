@@ -88,50 +88,51 @@
     */
     interpreter.Env = function() {
 	this.env = {};
-	this.substitute = function(pattern, expression) {
-	    var newEnv = this.derive();
-	    newEnv.patternBind(pattern, expression);
-	    return newEnv;
-	};
-	this.derive = function() {
-	    return new interpreter.ChildEnv(this);
-	};
-	this.patternBind = function(pattern, expression) {
-	    var vars = pattern.vars();
-	    for (i in vars) {
-		this.env[vars[i]] = [pattern, expression];
-		this.env[vars[i]].type = "unforced";
-	    }
-	};
-	this.bind = function(identifier, expr) {
-	    this.env[identifier] = expr;
-	};
-	this.lookup = function(identifier) {
-	    if (this.env[identifier]==undefined) {
-		return this.onUndefined(identifier);
-	    };
-	    var found = this.env[identifier];
-	    if (found.type == "unforced") {
-		if (!found[0].match(this, found[1])) {
-		    alert("Unrefutable pattern failed");
-		};
-	    };
-	    return this.env[identifier];
-	};
-	this.onUndefined = function(identifier) {
-	    return undefined;
-	};
     };
 
+    interpreter.Env.prototype.substitute = function(pattern, expression) {
+	var newEnv = this.derive();
+	newEnv.patternBind(pattern, expression);
+	return newEnv;
+    };
+    interpreter.Env.prototype.derive = function() {
+	return new interpreter.ChildEnv(this);
+    };
+    interpreter.Env.prototype.patternBind = function(pattern, expression) {
+	var vars = pattern.vars();
+	for (i in vars) {
+	    this.env[vars[i]] = [pattern, expression];
+	    this.env[vars[i]].type = "unforced";
+	}
+    };
+    interpreter.Env.prototype.bind = function(identifier, expr) {
+	this.env[identifier] = expr;
+    };
+    interpreter.Env.prototype.lookup = function(identifier) {
+	if (this.env[identifier]==undefined) {
+	    return this.onUndefined(identifier);
+	};
+	var found = this.env[identifier];
+	if (found.type == "unforced") {
+	    if (!found[0].match(this, found[1])) {
+		alert("Unrefutable pattern failed");
+	    };
+	};
+	return this.env[identifier];
+    };
+    interpreter.Env.prototype.onUndefined = function(identifier) {
+	return undefined;
+    };
+    
     interpreter.RootEnv = function() {
 	this.type = "RootEnv";
     };
     interpreter.ChildEnv = function(parent) {
 	this.type = "ChildEnv";
 	this.parent = parent;
-	this.onUndefined = function(identifier) {
-	    return this.parent.lookup(identifier);
-	};
+    };
+    interpreter.ChildEnv.prototype.onUndefined = function(identifier) {
+	return this.parent.lookup(identifier);
     };
 
     interpreter.RootEnv.prototype = new interpreter.Env();
@@ -148,27 +149,27 @@
 	this.type = "Closure";
 	this.env = env;
 	this.expression = expression;
-	
-	this.force = function() {
-	    // Forcing a closure is the same as evaluating its expression under the closures env
-	    return this.expression.eval(this.env);
-	};
     };
+    interpreter.Closure.prototype.force = function() {
+	// Forcing a closure is the same as evaluating its expression under the closures env
+	return this.expression.eval(this.env);
+    };
+
     interpreter.ConstantThunk = function(value) {
 	this.type = "ConstantThunk";
 	this.value = value;
-	this.force = function() {
-	    return this;
-	};
     };
+    interpreter.ConstantThunk.prototype.force = function() {
+	return this;
+    };
+
     interpreter.Data = function(identifier, thunks) {
 	this.type = "Data";
 	this.identifier = identifier;
 	this.thunks = thunks;
-	
-	this.force = function() {
-	    // Data is already forced...
-	    return this;
-	};
+    };
+    interpreter.Data.prototype.force = function() {
+	// Data is already forced...
+	return this;
     };
 })(haskell.interpreter, haskell.ast);
