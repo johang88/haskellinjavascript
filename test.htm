@@ -16,18 +16,22 @@
     var test2 = "import Test";
     var test3 = <><![CDATA[
     module Test where {
-    	map _ [] = [];
-    	map f (x:xs) = f x : map f xs;
+    	cons x y = \f -> f x y;
+        car f = f (\x y -> x);
+        cdr f = f (\x y -> y);
+
+        main = alert (car (cons 1 2))
     }
     ]]></>.toString()
     
 
     var test4 = "1 * 3 + 2 * (4 + 1)";
  
-    var res = haskell.interpreter.test(); // haskell.interpreter.execute(haskell.parser.parse(test3).ast);
+    var res = haskell.parser.parse(test3).ast;
+    var res2 = haskell.interpreter.execute(res);
 
-    console.log("%o", res);
-    $("#output").text(res);
+    console.log("%o", res2);
+    $("#output").text(res2);
    });
   </script>
 </head>
