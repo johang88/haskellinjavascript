@@ -76,16 +76,14 @@
 	    return body.eval(clos.env.substitute(x, new interpreter.Closure(env, this.arg)));
 	};
     };
-    ast.Let = function(pattern, def, expr) {
-	expectType(pattern, ast.Pattern);
-	expectType(def, ast.Expression);
+    ast.Let = function(declr, expr) {
+	expectType(declr, ast.Declaration);
 	expectType(expr, ast.Expression);
 	this.type = "Let";
-	this.pattern = pattern;
-	this.def = def;
+	this.declr = declr;
 	this.expr = expr;
 	this.eval = function(env) {
-	    return this.expr.eval(env.substitute(this.pattern, new Closure(env, this.def)));
+	    return this.expr.eval(env.substitute(this.declr.pattern, new Closure(env, this.declr.expression)));
 	};
     };
     ast.Case = function(expr, cases) {
