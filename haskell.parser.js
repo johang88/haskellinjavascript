@@ -530,10 +530,21 @@ haskell.parser.parse = function(code) {
     
     var fun_action = function(p) {
         return action(p, function(ast) {
-            var patterns = ast[0][1];
-            var fun_ident = ast[0][0];
+            try {
+                var patterns = ast[0][1];
+                var fun_ident = ast[0][0];
+                
+                var name = new haskell.ast.VariableBinding(fun_ident);
+                
+                var fun = ast[1][1];
+                for (var i = patterns.length - 1; i >= 0; i--) {
+                    fun = new haskell.ast.Lambda(patterns[i], fun);
+                }
 
-            return new haskell.ast.FunDef(fun_ident, patterns, ast[1][1], null);
+                return new haskell.ast.Variable(name, fun);
+            } catch (e) {
+                console.log("%o", e);
+            }
         });
     };
     
@@ -558,7 +569,7 @@ haskell.parser.parse = function(code) {
     var topdecls_action = function(p) {
         return action(p, function(ast) {
             return ast.filter(function(element) {
-                return element instanceof haskell.ast.FunDef;
+                return element instanceof haskell.ast.Variable;
             });
         });
     };
