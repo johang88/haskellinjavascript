@@ -87,7 +87,7 @@
               | ChildEnv [(Identifier, Pattern, Thunk)|(Identifier, Thunk)] Env
     */
     interpreter.Env = function() {
-	this.env = {};
+
     };
 
     interpreter.Env.prototype.substitute = function(pattern, expression) {
@@ -123,23 +123,27 @@
     interpreter.Env.prototype.onUndefined = function(identifier) {
 	return undefined;
     };
-    
+
+  
     interpreter.RootEnv = function() {
+	this.env = {};
 	this.type = "RootEnv";
     };
+    interpreter.RootEnv.prototype = new interpreter.Env();
+    interpreter.RootEnv.prototype.constructor = interpreter.RootEnv;
+
     interpreter.ChildEnv = function(parent) {
+	this.env = {};
 	this.type = "ChildEnv";
 	this.parent = parent;
     };
+    interpreter.ChildEnv.prototype = new interpreter.Env();
+    interpreter.ChildEnv.prototype.constructor = interpreter.ChildEnv;
+
     interpreter.ChildEnv.prototype.onUndefined = function(identifier) {
 	return this.parent.lookup(identifier);
     };
 
-    interpreter.RootEnv.prototype = new interpreter.Env();
-    interpreter.ChildEnv.prototype = new interpreter.Env();
-    
-    interpreter.RootEnv.prototype.constructor = interpreter.RootEnv;
-    interpreter.ChildEnv.prototype.constructor = interpreter.ChildEnv;
 
     /*
      data Thunk = Closure Env Expression

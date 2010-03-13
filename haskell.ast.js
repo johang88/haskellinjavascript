@@ -127,13 +127,13 @@
     ast.VariableLookup.prototype    = new ast.Expression();
     ast.Primitive.prototype     = new ast.Expression();
     
-    ast.Constant.prototype.constructor = ast.Constant; 
+    /*    ast.Constant.prototype.constructor = ast.Constant; 
     ast.Lambda.prototype.constructor = ast.Lambda; 
     ast.Application.prototype.constructor = ast.Application; 
     ast.Let.prototype.constructor = ast.Let; 
     ast.Case.prototype.constructor = ast.Case; 
     ast.VariableLookup.prototype.constructor = ast.VariableLookup; 
-    ast.Primitive.prototype.constructor = ast.Primitive; 
+    ast.Primitive.prototype.constructor = ast.Primitive; */
 
     /*
       data Value = Num Int
