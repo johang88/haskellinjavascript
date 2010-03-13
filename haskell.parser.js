@@ -418,6 +418,8 @@ haskell.parser.parse = function(code) {
                 ast[i] = new haskell.parser.Operator(7, haskell.parser.fixity.left, ast[i]);
             } else if (ast[i] == '$') {
                 ast[i] = new haskell.parser.Operator(0, haskell.parser.fixity.right, ast[i]);
+            } else if (ast[i] == '.') {
+                ast[i] = new haskell.parser.Operator(9, haskell.parser.fixity.right, ast[i]);
             }
         }
         
