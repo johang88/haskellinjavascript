@@ -137,6 +137,8 @@
     interpreter.RootEnv.prototype = new interpreter.Env();
     interpreter.ChildEnv.prototype = new interpreter.Env();
     
+    interpreter.RootEnv.prototype.constructor = interpreter.RootEnv;
+    interpreter.ChildEnv.prototype.constructor = interpreter.ChildEnv;
 
     /*
      data Thunk = Closure Env Expression
