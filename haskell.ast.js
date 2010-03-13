@@ -67,9 +67,12 @@
 	this.func = func;
 	this.arg = arg;
 	this.eval = function(env) {
-	    clos = this.func.eval(env);
-	    x = clos.expression.pattern;
-	    body = clos.expression.expression;
+	    var clos = this.func.eval(env);
+	    while (clos.expression.type!="Lambda") {
+		clos = clos.force();
+	    };
+	    var x = clos.expression.pattern;
+	    var body = clos.expression.expression;
 	    return body.eval(clos.env.substitute(x, new interpreter.Closure(env, this.arg)));
 	};
     };
