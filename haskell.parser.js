@@ -312,8 +312,19 @@ haskell.parser.parse = function(code) {
         });
     };
     
+    var decls = function(state) { return decls(state); };
+    
+    var let_action = function(p) {
+        return action(p, function(ast) {
+            var decl = ast[0][0];
+            var exp = ast[1];
+            
+            return new haskell.ast.Let(decl, exp);
+        });
+    };
+    
     var exp_10 = choice(lambda_exp_action (sequence(expect(ws('\\')), repeat1(ws(apat)), expect(ws("->")), ws(exp))),
-                        sequence(ws("let"), ws(decls), ws("in"), ws(exp)),
+                        let_action(sequence(expect(ws("let")), ws(decls), expect(ws("in")), ws(exp))),
                         sequence(ws("if"), ws(exp), ws("then"), ws(exp), ws("else"), ws(exp)),
                         sequence(ws("case"), ws(exp), ws("of"), ws("{"), ws(alts), ws("}")),
                         sequence(ws("do"), ws("{"), ws(stmts), ws("}")),
@@ -558,7 +569,7 @@ haskell.parser.parse = function(code) {
                         gendecl
                      );
     
-    var decls = list(ws(decl), ws(';'));
+    var decls = action(sequence(expect(ws('{')), list(ws(decl), ws(';')), expect(ws('}'))), function(ast) { return ast[0]; });
     
     var topdecl = choice(   sequence(ws("type"), ws(simpletype), ws('='), ws(type)),
                             sequence(ws("data"), optional(sequence(context, "=>")), ws(simpletype), ws('='), constrs, optional(deriving)),
