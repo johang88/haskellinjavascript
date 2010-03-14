@@ -550,7 +550,11 @@ haskell.parser.parse = function(code) {
     var fixity_op_action = function(p) {
         return action(p, function(ast) {
             var fixity = ast[0];
-            var prec = ast[1].value.num;
+            
+            var prec = 9;
+            if (ast[1].value != undefined)
+                prec = ast[1].value.num;
+                
             var ops = ast[2];
             
             if (fixity == "infixl")
@@ -563,7 +567,6 @@ haskell.parser.parse = function(code) {
             for (var i in ops) {
                 var op = ops;
                 haskell.parser.opTable[op] = new haskell.parser.Operator(prec, fixity, op);
-                console.log("%o", haskell.parser.opTable[op]);
             }
             
             return "fixity";
