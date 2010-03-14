@@ -27,13 +27,11 @@
     };
     
     // Creates env from an ast and returns it !
-    interpreter.prepare = function(astt) {
-        var env = new interpreter.RootEnv();
+    interpreter.prepare = function(astt, env) {
         for (i in astt.declarations) {
             var decl = astt.declarations[i];
             env.patternBind(decl.pattern, new interpreter.Closure(env, decl.expression));
         };
-        interpreter.primitives(env);
         return env;
     };
 
