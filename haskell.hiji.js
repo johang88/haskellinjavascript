@@ -1,5 +1,3 @@
-// TODO :: FOKUS NÄR MAN KLICKAR I DEN SVARTA RUTAN!!!
-
 var ENTER = '13';
 var UP    = '38';
 var DOWN  = '40';
@@ -39,7 +37,6 @@ var DOWN  = '40';
         hiss_cookie = $.cookie("hiss");
         if(hiss_cookie != null){
             hiss.history_array = hiss_cookie.split(",");
-            alert(hiss_cookie);
         }
 
         var env = new haskell.interpreter.RootEnv();
@@ -65,7 +62,6 @@ var DOWN  = '40';
                 // history
                 hiss.addHistory(line);
                 $.cookie("hiss", hiss.history_array.toString(), {expires: 3 });              
-                alert($.cookie("hiss"));
                 input.attr("value","");
                 try {
                     var newLine = makeEntered(modules, line);
@@ -115,3 +111,6 @@ historry = function (){
     };
 
 };
+
+
+
