@@ -1,12 +1,10 @@
 // TODO :: FOKUS NÄR MAN KLICKAR I DEN SVARTA RUTAN!!!
 
-
 var ENTER = '13';
 var UP    = '38';
 var DOWN  = '40';
 
 (function($){
-
 
     var evaluateHaskell = function(line, env)
     {
@@ -39,8 +37,10 @@ var DOWN  = '40';
         var hiss = new historry;
         // load history from cookie
         hiss_cookie = $.cookie("hiss");
-        if(hiss_cookie != null)
+        if(hiss_cookie != null){
             hiss.history_array = hiss_cookie.split(",");
+            alert(hiss_cookie);
+        }
 
         var env = new haskell.interpreter.RootEnv();
         haskell.interpreter.primitives(env);
@@ -65,7 +65,7 @@ var DOWN  = '40';
                 // history
                 hiss.addHistory(line);
                 $.cookie("hiss", hiss.history_array.toString(), {expires: 3 });              
-
+                alert($.cookie("hiss"));
                 input.attr("value","");
                 try {
                     var newLine = makeEntered(modules, line);
@@ -90,7 +90,7 @@ var DOWN  = '40';
 // historry-class with nice name
 // !!!WARNING!!! NICE NAME
 historry = function (){
-    this.pointer = 0;
+    this.pointer = -1;
     this.history_array = new Array();
     this.addHistory = function(input){
         this.history_array.unshift(input);
