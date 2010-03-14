@@ -241,10 +241,19 @@
 	    return [];
 	};
     };
+    ast.Wildcard = function() {
+	this.type = "Wildcard";
+	this.match = function(env, expr) {
+	    return true;
+	};
+	this.vars = function() {
+	    return [];
+	};
+    };
 
     ast.Constructor.prototype     = new ast.Pattern();
     ast.VariableBinding.prototype = new ast.Pattern();
     ast.Combined.prototype        = new ast.Pattern();
-    ast.ConstantPattern.prototype        = new ast.Pattern();
-
+    ast.ConstantPattern.prototype = new ast.Pattern();
+    ast.Wildcard.prototype        = new ast.Pattern();
 })(haskell.ast,haskell.interpreter);
