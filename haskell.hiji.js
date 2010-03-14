@@ -10,8 +10,13 @@ var DOWN  = '40';
 
     var evaluateHaskell = function(line, env)
     {
-	ast = haskell.parser.parse(line).ast;
-	console.log("%o", ast);
+        ast = haskell.parser.parse(line).ast;
+        console.log("%o", ast);
+        
+        if (ast == undefined) {
+            return "Syntax error";
+        }
+        
         return haskell.interpreter.eval(ast, env);
     };
     var makeModules = function(modules){
