@@ -34,7 +34,7 @@
             	      | Let Pattern Expression Expression
                	      | Case Expression [(Pattern, Expression)]
                       | VariableLookup Identifier
-        	          | Primitive Function
+		      | Primitive Function
     */
     
     ast.Expression = function(){};
@@ -83,7 +83,9 @@
 	this.declr = declr;
 	this.expr = expr;
 	this.eval = function(env) {
-	    return this.expr.eval(env.substitute(this.declr.pattern, new interpreter.Closure(env, this.declr.expression)));
+	    var newEnv = env.derive();
+	    newEnv.patternBind(this.declr.pattern, new interpreter.Closure(newEnv, this.declr.expression));
+	    return this.expr.eval(newEnv);
 	};
     };
     ast.Case = function(expr, cases) {
