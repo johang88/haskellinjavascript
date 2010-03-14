@@ -97,11 +97,11 @@
 	    for (i in this.cases) {
 		newEnv = env.derive();
 		if (this.cases[i][0].match(newEnv, expr)) {
-		    return new interpreter.Closure(this.cases[i][1], newEnv);
+		    return new interpreter.Closure(newEnv, this.cases[i][1]);
 		};
 	    };
+	    alert("No matching clause");
 	};
-	alert("No matching clause");
     };
     ast.VariableLookup = function(identifier) {
 	expectTypeOf(identifier, "string");
@@ -145,6 +145,10 @@
 	expectTypeOf(num, "number");
 	this.type = "Num";
 	this.num = num;
+
+	this.equals = function(n) {
+	    return this.num == n.num;
+	};
     };
        
     ast.Num.prototype = new ast.Value();
@@ -232,10 +236,19 @@
 	this.type = "ConstantPattern";
 	this.value = value;
 	this.match = function(env, expr) {
-	    while(expr.type!="Constant") {
+	    while(expr.type!="ConstantThunk") {
 		expr = expr.force();
 	    };
-	    return (this.value==expr.value);
+	    return (this.value.equals(expr.value));
+	};
+	this.vars = function() {
+	    return [];
+	};
+    };
+    ast.Wildcard = function() {
+	this.type = "Wildcard";
+	this.match = function(env, expr) {
+	    return true;
 	};
 	this.vars = function() {
 	    return [];
@@ -245,6 +258,6 @@
     ast.Constructor.prototype     = new ast.Pattern();
     ast.VariableBinding.prototype = new ast.Pattern();
     ast.Combined.prototype        = new ast.Pattern();
-    ast.ConstantPattern.prototype        = new ast.Pattern();
-
+    ast.ConstantPattern.prototype = new ast.Pattern();
+    ast.Wildcard.prototype        = new ast.Pattern();
 })(haskell.ast,haskell.interpreter);
