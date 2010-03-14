@@ -669,5 +669,8 @@ haskell.parser.parse = function(code) {
     
     var test = case_action(sequence(expect(ws("case")), ws(exp), expect(ws("of")), expect(ws("{")), alts));
     
-    return choice(module, exp)(ps(code));
+    var program = action(sequence(choice(module, exp), ws(end_p)), function(ast) { return ast[0]; });
+    var result = program(ps(code));
+    
+    return result;
 };
