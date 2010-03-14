@@ -201,10 +201,10 @@
 
     ast.Pattern = function(){};
 
-    ast.Constructor = function(identifier, patterns) {
+    ast.PatternConstructor = function(identifier, patterns) {
 	expectTypeOf(identifier, "string");
 	expectArrayType(patterns, ast.Pattern);
-	this.type = "Constructor";
+	this.type = "PatternConstructor";
 	this.identifier = identifier;
 	this.patterns = patterns;
 	this.match = function(env, expr) {
@@ -279,7 +279,7 @@
 	};
     };
 
-    ast.Constructor.prototype     = new ast.Pattern();
+    ast.PatternConstructor.prototype     = new ast.Pattern();
     ast.VariableBinding.prototype = new ast.Pattern();
     ast.Combined.prototype        = new ast.Pattern();
     ast.ConstantPattern.prototype = new ast.Pattern();

@@ -502,8 +502,17 @@ haskell.parser.parse = function(code) {
     
     var newconstr = epsilon_p;
     
-    var constr = choice(sequence(ws(con), repeat0(sequence(optional(ws('!')), ws(atype)))),
-                        sequence(choice(ws(btype), sequence(optional(ws('!')), ws(atype))), ws(conop), choice(ws(btype), sequence(optional(ws('!')), ws(atype))))
+    var constr_action = function(p) {
+        return action(p, function(ast) {
+            var name = ast[0];
+            var count = ast[0].length;
+            return new haskell.ast.Constructor(name, count);
+        });
+    };
+    
+    var atype = function(state) { return atype(state); };
+    var constr = choice(constr_action(sequence(ws(con), repeat0(sequence(optional(ws('!')), ws(atype)))))
+                      //  sequence(choice(ws(btype), sequence(optional(ws('!')), ws(atype))), ws(conop), choice(ws(btype), sequence(optional(ws('!')), ws(atype))))
                        ); // Todo: fielddecl stuffz
     
     var constrs = list(ws(constr), ws('|'));
@@ -515,7 +524,7 @@ haskell.parser.parse = function(code) {
     var scontext = undefined;
 
     var gtycon = choice(qtycon,
-                   sequence(repeat1(ws(var_)), repeat0(ws(apat))),
+                        sequence(repeat1(ws(var_)), repeat0(ws(apat))),
                         "()",
                         "[]",
                         "(->)",
@@ -552,7 +561,7 @@ haskell.parser.parse = function(code) {
             var fixity = ast[0];
             
             var prec = 9;
-            if (ast[1].value != undefined)
+            if (ast[1] != false)
                 prec = ast[1].value.num;
                 
             var ops = ast[2];
@@ -615,8 +624,16 @@ haskell.parser.parse = function(code) {
     
     var decls = action(sequence(expect(ws('{')), list(ws(decl), ws(';')), expect(ws('}'))), function(ast) { return ast[0]; });
     
+    var data_action = function(p) {
+        return action(p, function(ast) {
+            var ident = ast[1][0];
+            var constructors = ast[2];
+            return new haskell.ast.Data(ident, constructors);
+        });
+    };
+    
     var topdecl = choice(   sequence(ws("type"), ws(simpletype), ws('='), ws(type)),
-                            sequence(ws("data"), optional(sequence(context, "=>")), ws(simpletype), ws('='), constrs, optional(deriving)),
+                            data_action(sequence(expect(ws("data")), optional(sequence(context, expect("=>"))), ws(simpletype), expect(ws('=')), constrs, optional(deriving))),
                             sequence(ws("newtype"), optional(sequence(context, "=>")), ws(simpletype), ws('='), newconstr, optional(deriving)),
                             sequence(ws("class"), optional(sequence(scontext, "=>")), tycls, tyvar, optional(sequence(ws("where"), cdecls))),
                             sequence(ws("instance"), optional(sequence(scontext, "=>")), qtycls, inst, optional(sequence(ws("where"), idecls))),
@@ -627,7 +644,7 @@ haskell.parser.parse = function(code) {
     var topdecls_action = function(p) {
         return action(p, function(ast) {
             return ast.filter(function(element) {
-                return element instanceof haskell.ast.Variable;
+                return element instanceof haskell.ast.Variable || element instanceof haskell.ast.Data;
             });
         });
     };

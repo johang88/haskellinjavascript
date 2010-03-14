@@ -35,7 +35,7 @@
 	    }
 	    else if (decl.type=="Data") {
 		for (var i in decl.constructors) {
-		    constr = declr.constructors[i];
+		    constr = decl.constructors[i];
 		    env.bind(constr.identifier, createDataConstructor(env, constr));
 		};
 	    };
@@ -46,7 +46,7 @@
     interpreter.execute = function(astt) {
 	var env = new interpreter.RootEnv();
 	// Only fun defs atm
-	interpeter.prepare(astt, env);
+	interpreter.prepare(astt, env);
 	interpreter.primitives(env);
 	return env.lookup("main").force();
     };
