@@ -96,7 +96,7 @@
 	this.cases = cases;
 	this.eval = function(env) {
 	    expr = new interpreter.Closure(env, this.expr);
-	    for (i in this.cases) {
+	    for (var i in this.cases) {
 		newEnv = env.derive();
 		if (this.cases[i][0].match(newEnv, expr)) {
 		    return new interpreter.Closure(newEnv, this.cases[i][1]);
