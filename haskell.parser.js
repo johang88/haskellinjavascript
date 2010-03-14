@@ -436,6 +436,8 @@ haskell.parser.parse = function(code) {
         for (var i in ast) {
             if (ast[i] == '+') {
                 ast[i] = new haskell.parser.Operator(6, haskell.parser.fixity.left, ast[i]);
+            } else if (ast[i] == '-') {
+                ast[i] = new haskell.parser.Operator(6, haskell.parser.fixity.left, ast[i]);
             } else if (ast[i] == '*') {
                 ast[i] = new haskell.parser.Operator(7, haskell.parser.fixity.left, ast[i]);
             } else if (ast[i] == '$') {
