@@ -30,7 +30,15 @@
     interpreter.prepare = function(astt, env) {
         for (var i in astt.declarations) {
             var decl = astt.declarations[i];
-            env.patternBind(decl.pattern, new interpreter.Closure(env, decl.expression));
+	    if (decl.type=="Variable") {
+		env.patternBind(decl.pattern, new interpreter.Closure(env, decl.expression));
+	    }
+	    else if (decl.type=="Data") {
+		for (var i in decl.constructors) {
+		    constr = declr.constructors[i];
+		    env.bind(constr.identifier, createDataConstructor(env, constr));
+		};
+	    };
         };
         return env;
     };
@@ -38,10 +46,7 @@
     interpreter.execute = function(astt) {
 	var env = new interpreter.RootEnv();
 	// Only fun defs atm
-	for (i in astt.declarations) {
-	    var decl = astt.declarations[i];
-	    env.patternBind(decl.pattern, new interpreter.Closure(env, decl.expression));
-	};
+	interpeter.prepare(astt, env);
 	interpreter.primitives(env);
 	return env.lookup("main").force();
     };
@@ -54,10 +59,26 @@
     function createPrimitive(env, args, func) {
 	var expr = new ast.Primitive(func);
 	var argsR = args.reverse();
-	for (i in argsR) {
+	for (var i in argsR) {
 	    expr = new ast.Lambda(new ast.VariableBinding(argsR[i]), expr);
 	};
 	return new interpreter.Closure(env, expr);
+    };
+    function createDataConstructor(env, constr) {
+	var ident = constr.identifier;
+	var num = constr.number;
+	var args = [];
+	for (var i = 0; i<num; i++) {
+	    args[i] = "__p" + i;
+	};
+	var prim = function(env) {
+	    var givenArgs=[];
+	    for (i in args) {
+		givenArgs[i] = env.lookup(args[i]);
+	    };
+	    return new interperter.Data(ident, givenArgs);
+	};
+	return createPrimitive(env, args, prim);
     };
     function forceTo(thunk, type) {
 	while(thunk.type!=type) {
