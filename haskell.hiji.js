@@ -7,12 +7,10 @@ var DOWN  = '40';
     var evaluateHaskell = function(line, env)
     {
         ast = haskell.parser.parse(line).ast;
-        console.log("%o", ast);
-        
-        if (ast == undefined) {
-            return "Syntax error";
+        if (ast == undefined){
+            return "Syntax Error";
         }
-        
+        console.log("%o", ast);
         return haskell.interpreter.eval(ast, env);
     };
     var makeModules = function(modules){
@@ -47,6 +45,15 @@ var DOWN  = '40';
         var env = new haskell.interpreter.RootEnv();
         haskell.interpreter.primitives(env);
         
+
+
+ //  ladda prelude
+
+        $.get('Prelude.hs', function(prelude_data) {
+            var ast = haskell.parser.parse(prelude_data);
+            haskell.interpreter.prepare(ast, env);
+        });
+
         modules[0] = "Prelude";
         modules[1] = "Control.Monad";
         this.html("<ol>" + makeInput(modules) + "</ol>");
