@@ -560,11 +560,11 @@ haskell.parser.parse = function(code) {
             else
                 fixity = haskell.parser.fixity.none;
                 
-            //for (var i in ops) {
+            for (var i in ops) {
                 var op = ops;
                 haskell.parser.opTable[op] = new haskell.parser.Operator(prec, fixity, op);
                 console.log("%o", haskell.parser.opTable[op]);
-            //}
+            }
             
             return "fixity";
         });
