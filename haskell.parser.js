@@ -85,11 +85,11 @@ haskell.parser.parse = function(code) {
     
     var qop = choice(qvarop, qconop);
     
-    var op = undefined;
+    var op = choice(varop, conop);
     
     var conop = choice(consym, sequence(expect(ws('`')), conid, expect(ws('`'))));
     
-    var varop = undefined;
+    var varop = choice(varsym, sequence(expect(ws('`')), varid, expect(ws('`'))));
     
     var qcon = choice(qconid, sequence(expect(ws('(')), gconsym, expect(ws(')'))));
     
@@ -434,16 +434,8 @@ haskell.parser.parse = function(code) {
         };
         
         for (var i in ast) {
-            if (ast[i] == '+') {
-                ast[i] = new haskell.parser.Operator(6, haskell.parser.fixity.left, ast[i]);
-            } else if (ast[i] == '-') {
-                ast[i] = new haskell.parser.Operator(6, haskell.parser.fixity.left, ast[i]);
-            } else if (ast[i] == '*') {
-                ast[i] = new haskell.parser.Operator(7, haskell.parser.fixity.left, ast[i]);
-            } else if (ast[i] == '$') {
-                ast[i] = new haskell.parser.Operator(0, haskell.parser.fixity.right, ast[i]);
-            } else if (ast[i] == '.') {
-                ast[i] = new haskell.parser.Operator(9, haskell.parser.fixity.right, ast[i]);
+            if (haskell.parser.opTable[ast[i]] != undefined) {
+                ast[i] = haskell.parser.opTable[ast[i]];
             }
         }
         
@@ -541,7 +533,7 @@ haskell.parser.parse = function(code) {
     var btype = repeat1(ws(atype));
     var type = list(ws(btype), ws("->"));
     
-    var fixity = epsilon_p;
+    var fixity = choice(ws("infixl"), ws("infixr"), ws("infix"));
     
     var vars = list(ws(var_), ws(','));
     
@@ -555,8 +547,31 @@ haskell.parser.parse = function(code) {
                             sequence(ws('('), list(ws(class_), ws(',')) ,ws(')'))
                         );
     
+    var fixity_op_action = function(p) {
+        return action(p, function(ast) {
+            var fixity = ast[0];
+            var prec = ast[1].value.num;
+            var ops = ast[2];
+            
+            if (fixity == "infixl")
+                fixity = haskell.parser.fixity.left;
+            else if (fixity == "infixr")
+                fixity = haskell.parser.fixity.right;
+            else
+                fixity = haskell.parser.fixity.none;
+                
+            //for (var i in ops) {
+                var op = ops;
+                haskell.parser.opTable[op] = new haskell.parser.Operator(prec, fixity, op);
+                console.log("%o", haskell.parser.opTable[op]);
+            //}
+            
+            return "fixity";
+        });
+    };
+    
     var gendecl = choice(   sequence(ws(vars), ws("::"), optional(sequence(ws(context), ws("=>"))), ws(type)),
-                            sequence(ws(fixity), optional(ws(integer)), ws(ops)),
+                            fixity_op_action(sequence(ws(fixity), optional(ws(integer)), ws(choice(varop, conop)))), // Should be multiple op's
                             epsilon_p
                         );
     
@@ -668,8 +683,6 @@ haskell.parser.parse = function(code) {
 
     var module = module_action(choice(sequence(ws("module"), ws(modid), optional(exports), ws("where"), body),
                         body));
-    
-    var test = case_action(sequence(expect(ws("case")), ws(exp), expect(ws("of")), expect(ws("{")), alts));
     
     var program = action(sequence(choice(module, exp), ws(end_p)), function(ast) { return ast[0]; });
     var result = program(ps(code));
