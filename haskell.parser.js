@@ -161,19 +161,19 @@ haskell.parser.parse = function(code) {
     
     var constant_pattern_action = function(p) {
         return action(p, function(ast) {
-            return new haskell.ast.PatternConstant(ast);
+            return new haskell.ast.ConstantPattern(ast);
         });
     }
     
     var combined_pattern_action = function(p) {
         return action(p, function(ast) {
-            return new haskell.ast.PatternCombined(ast[0], ast[1]);
+            return new haskell.ast.Combined(ast[0], ast[1]);
         });
     }
     
     var wildcard_pattern_action = function(p) {
         return action(p, function(ast) {
-            return new haskell.ast.PatternIgnored();
+            return new haskell.ast.Wildcard();
         });
     }
     
