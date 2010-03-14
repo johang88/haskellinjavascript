@@ -156,6 +156,7 @@
     ast.Num.prototype = new ast.Value();
     /*
       data Declaration = Variable Pattern Expression
+                       | Data Identifier [Constructor]
     */
 
     ast.Declaration = function(){};
@@ -168,7 +169,28 @@
 	this.expression = expression;
     };
 
+    ast.Data = function(identifier, constructors) {
+	expectTypeOf(identifier, "string");
+	expectTypeArray(constructors, ast.Constructor);
+	this.type = "Data";
+	this.identifier = identifier;
+	this.constructors = constructors;
+    };
+
     ast.Variable.prototype = new ast.Declaration();
+    ast.Data.prototype = new ast.Declaration();
+
+
+    /*
+      data Constructor = Constructor Identifier Integer
+     */
+    ast.Constructor = function(identifier, num) {
+	expectTypeOf(identifier, "string");
+	expectTypeOf(num, "number");
+	this.type = "Constructor";
+	this.identifier = identifier;
+	this.number = num;
+    };
 
     /*
       Pattern = Constructor Identifier [Pattern]
