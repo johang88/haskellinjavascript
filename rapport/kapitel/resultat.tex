@@ -1,22 +1,6 @@
 \section{Resultat}
 todo
 
-\subsection{HIJi} 
-HIJi erbjuder användaren ett GHCi-liknande gränssnitt. HIJi fungerar som en fasad in i programmet. 
-HIJi tar input genom att användaren skriver in Haskellkod som därefter tolkas av parsern och slutligen evalueras uttrycket. Resultatet av uttrycket visas på raden under.
-
-HIJi är skapat för att likna GHCi i så stor utsträckning som möjligt. Forskning in
-%TODO get source from cp-book at home
-
-HIJi är tänkt att erbjuda användaren liknande möjligheter som GHCi. 
-
-Fördelen med HIJi framför GHCi är att användaren ej behöver ladda ner den tunga GHC-kompilatorn på sin personliga dator för att testa enkla Haskelluttryck direkt i webbläsaren.
-
-Nackdelar gentemot GHCI är att HIJi är en nedbandat version utav GHCi. HIJi kan bara evaluera enklare uttryck. Det finns i dagsläget inga möjligheter att ladda upp hela Haskell-filer för att köra dem. Att som i GHCi på ett enkelt sätt kolla upp vilka typer en funktion stöds ej.
-
-HIJi använder sig utav JQuery för att få ett unisont stöd på alla moderna webbläsare.
-
-
 \subsection{Parser} 
 %TODO
 
@@ -25,3 +9,27 @@ HIJi använder sig utav JQuery för att få ett unisont stöd på alla moderna w
 
 \subsection{Typcheckare} 
 %TODO
+
+
+\subsection{HIJi}
+
+
+HIJi erbjuder användaren ett GHCi-liknande gränssnitt. HIJi fungerar som en fasad in i programmet. 
+HIJi tar input genom att användaren skriver in Haskellkod som därefter tolkas av parsern och slutligen evalueras uttrycket. Resultatet av uttrycket visas på raden under.
+
+HIJi är skapat för att likna GHCi i så stor utsträckning som möjligt. Det finns väldigt goda anledningar till att göra detta. Dels är GHCi ett mycket kompetent verktyg när man programmerar i Haskell. Att kolla upp funktionsdeklarationer och testa kodfragment är något som varje professionell haskellprogrammerare gör varje dag. Genom att efterlikna GHCi så kommer användare känna igen sig när de tar steget från HIJi till GHCi. Det blir för dem ett naturligt steg och kortar inlärningsstegen avsevärt. Även för haskellprogrammerare som är väl införstådda i GHCi's möjligheter blir det lättare att använda sig utav HIJi, de behöver inte fundera hur verktyget ska användas.
+% Dock finns det vissa nackdelar med ett terminalliknande gränssnitt. 
+
+
+
+%TODO get source from cp-book at home
+
+HIJi är tänkt att erbjuda användaren liknande möjligheter som GHCi. 
+
+% TODO skriv om detta
+Fördelen med HIJi framför GHCi är att användaren ej behöver ladda ner den tunga GHC-kompilatorn på sin personliga dator för att testa enkla Haskelluttryck direkt i webbläsaren.
+Nackdelar gentemot GHCI är att HIJi är en nedbandat version utav GHCi. HIJi kan bara evaluera enklare uttryck. Det finns i dagsläget inga möjligheter att ladda upp hela Haskell-filer för att köra dem. Att som i GHCi på ett enkelt sätt kolla upp vilka typer en funktion stöds ej.
+
+Ett stort problem för alla webbutvecklare idag är att de idag marknadsledande webbläsarna tolkar Javascript lite olika. Det har därför kommit fram en rad olika kodbibliotek för att lösa detta problemet. Ett av dessa är JQuery som HIJi använder sig utav för att få ett unisont stöd på alla moderna webbläsare. 
+
+
