@@ -39,11 +39,16 @@ haskell.parser.opTable = {};
  * \return The ast
  */
 haskell.parser.parse = function(code) {
+    var reservedid = choice("case", "class", "data", "default", "deriving", "do", "else", "if", "import", "in", 
+                            "infix", "infixl", "infixr", "instance", "let", "module", "newtype", "of", "then",
+                            "type", "where", "_");
+    
+    var reservedop = choice("..", ":", "::", "=", "\\", "|", "<-", "->", "@", "~", "=>");
 
     var integer = action(repeat1(range('0', '9')), function(ast) { return new haskell.ast.Num(parseInt(ast.join(""))); });
 
     var ident_ = action(repeat0(choice(range('a', 'z'), range('0', '1'), '\'')), function(ast) { return ast.join(""); });
-    var ident = action(butnot(sequence(range('a', 'z'), ident_), choice("of", "case", "if")), function(ast) { return ast.join(""); });
+    var ident = action(butnot(sequence(range('a', 'z'), ident_), reservedid), function(ast) { return ast.join(""); });
     
     var literal = ws(integer);
     
@@ -53,19 +58,19 @@ haskell.parser.parse = function(code) {
     var modid = action(sequence(range('A', 'Z'), ident_), function(ast) { return ast.join(""); });
     
     var varid = ident;
-    var varsym = sym;
+    var varsym = butnot(sym, reservedop);
     
     var qvarid = ident;
-    var qvarsym = ident;
+    var qvarsym = varsym;
     
     var qtycon = action(sequence(range('A', 'Z'), ident_), function(ast) { return ast.join(""); });
     
     var qtycls = ident;
     
     var conid = action(sequence(range('A', 'Z'), ident_), function(ast) { return ast.join(""); });
-    var consym = sym; // should not allow reserved symbols
+    var consym = butnot(sym, reservedop); // should not allow reserved symbols
     
-    var qconsym = sym;
+    var qconsym = consym;
     var qconid = conid;
 
     var tycon = qtycon;
