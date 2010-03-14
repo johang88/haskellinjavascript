@@ -173,7 +173,7 @@ haskell.parser.parse = function(code) {
     
     var wildcard_pattern_action = function(p) {
         return action(p, function(ast) {
-            return new haskell.ast.Wildcard();
+            return new haskell.ast.WildCard();
         });
     }
     
