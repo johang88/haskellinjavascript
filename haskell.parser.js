@@ -192,17 +192,29 @@ haskell.parser.parse = function(code) {
                         constant_pattern_action(ws(literal)),
                         ident_pattern_action(ws(ident)),
                         wildcard_pattern_action (ws('_')), // wildcard
-                        sequence(expect(ws('(')), apat, expect(ws(')'))), // parans
+                        action(sequence(expect(ws('(')), apat, expect(ws(')'))), function(ast) { return ast[0]; }), // parans
                         sequence(expect(ws('(')), ws(apat), repeat1(sequence(ws(','), ws(apat))), expect(ws(')'))), // tuple
                         list_pattern_action(sequence(expect(ws('[')), optional(wlist(apat, ',')), expect(ws(']')))), // list
                         sequence(expect(ws('(')), chainl(ws(apat), action(ws(':'), cons_pattern_action)), expect(ws(')')))
                         );
     
+    var gcon_pat_action = function(p) {
+        return action(p, function(ast) {
+            var constructor = ast[0];
+            var patterns = ast[1];
+            return new haskell.ast.PatternConstructor(constructor, pattern);
+        });
+    };
+    
+    var pat_10 = choice(apat,
+                        gcon_pat_action(sequence(ws(gcon), repeat1(ws(apat))))
+                       );
+    
     var rpat = undefined;
     
     var lpat = undefined;
     
-    var pat = apat;
+    var pat = pat_10;
     
     var fbind = undefined;
     
