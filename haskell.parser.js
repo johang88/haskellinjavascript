@@ -386,8 +386,6 @@ haskell.parser.parse = function(code) {
                          );
     
     var resolve_op = function(ast) {
-        // todo: lookup all op's before calling parse
-        
         var OpApp = function(e1, op, e2) {
             this.e1 = e1;
             this.op = op;
