@@ -503,7 +503,7 @@ haskell.parser.parse = function(code) {
     var constr_action = function(p) {
         return action(p, function(ast) {
             var name = ast[0];
-            var count = ast[0].length;
+            var count = ast[1].length;
             return new haskell.ast.Constructor(name, count);
         });
     };
