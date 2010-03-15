@@ -188,26 +188,29 @@ haskell.parser.parse = function(code) {
     // todo: implement rpat, lpat and pat
     // should make cons (:) work as expected, that is without parans
     var apat = function(state) { return apat(state) };
+    var pat = function(state) { return pat(state); };
+    
     var apat = choice(  combined_pattern_action(sequence(var_, expect(ws('@')), ws(apat))),
+                        action(ws(gcon), function(ast) { return new haskell.ast.PatternConstructor(ast, new Array()); }),
                         constant_pattern_action(ws(literal)),
                         ident_pattern_action(ws(ident)),
                         wildcard_pattern_action (ws('_')), // wildcard
-                        action(sequence(expect(ws('(')), apat, expect(ws(')'))), function(ast) { return ast[0]; }), // parans
-                        sequence(expect(ws('(')), ws(apat), repeat1(sequence(ws(','), ws(apat))), expect(ws(')'))), // tuple
-                        list_pattern_action(sequence(expect(ws('[')), optional(wlist(apat, ',')), expect(ws(']')))), // list
-                        sequence(expect(ws('(')), chainl(ws(apat), action(ws(':'), cons_pattern_action)), expect(ws(')')))
+                        action(sequence(expect(ws('(')), pat, expect(ws(')'))), function(ast) { return ast[0]; }), // parans
+                        sequence(expect(ws('(')), ws(pat), repeat1(sequence(ws(','), ws(pat))), expect(ws(')'))), // tuple
+                        list_pattern_action(sequence(expect(ws('[')), optional(wlist(pat, ',')), expect(ws(']')))), // list
+                        sequence(expect(ws('(')), chainl(ws(pat), action(ws(':'), cons_pattern_action)), expect(ws(')')))
                         );
     
     var gcon_pat_action = function(p) {
         return action(p, function(ast) {
             var constructor = ast[0];
             var patterns = ast[1];
-            return new haskell.ast.PatternConstructor(constructor, pattern);
+            return new haskell.ast.PatternConstructor(constructor, patterns);
         });
     };
     
-    var pat_10 = choice(apat,
-                        gcon_pat_action(sequence(ws(gcon), repeat1(ws(apat))))
+    var pat_10 = choice(gcon_pat_action(sequence(ws(gcon), repeat1(ws(apat)))),
+                        apat
                        );
     
     var rpat = undefined;
