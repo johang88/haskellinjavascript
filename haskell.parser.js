@@ -452,6 +452,8 @@ haskell.parser.parse = function(code) {
             }
         };
         
+        haskell.parser.opTable[':'] = new haskell.parser.Operator(5,haskell.parser.fixity.right,':');
+        
         for (var i in ast) {
             if (haskell.parser.opTable[ast[i]] != undefined) {
                 ast[i] = haskell.parser.opTable[ast[i]];
