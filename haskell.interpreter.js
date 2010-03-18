@@ -76,7 +76,7 @@
 	    for (i in args) {
 		givenArgs[i] = env.lookup(args[i]);
 	    };
-	    return new interperter.Data(ident, givenArgs);
+	    return new interpreter.Data(ident, givenArgs);
 	};
 	return createPrimitive(env, args, prim);
     };
