@@ -136,7 +136,7 @@ haskell.parser.parse = function(code) {
         return action(p, function(ast) {
             ast = ast[0];
             
-            var cons = "(:)";
+            var cons = ":";
             var empty = "[]";
             
             if (ast.length == 0 || ast == false) {
@@ -296,7 +296,7 @@ haskell.parser.parse = function(code) {
                         aexp_constant_action(ws(literal)),
                         action(sequence(expect(ws('(')), ws(exp), expect(ws(')'))), function(ast) { return ast[0]; }), // parans
                         sequence(ws('('), ws(exp), ws(','), ws(exp), repeat0(sequence(ws(','), ws(exp))) , ws(')')), // tuple
-                        aexp_constant_action(list_action(sequence(expect(ws('[')), optional(wlist(exp, ',')), expect(ws(']'))))),  // list constructor
+                        list_action(sequence(expect(ws('[')), optional(wlist(exp, ',')), expect(ws(']')))),  // list constructor
                         left_section_action(sequence(expect(ws('(')), ws(infixexp), ws(qop), expect(ws(')')))), // left section
                         right_section_action(sequence(expect(ws('(')), ws(qop), ws(infixexp), expect(ws(')')))) // right section, todo: look into resolution of infixexp in this case, see Haskell Report Chapter 3
                         // Todo:
@@ -610,17 +610,21 @@ haskell.parser.parse = function(code) {
     var fun_action = function(p) {
         return action(p, function(ast) {
             try {
-                var patterns = ast[0][1];
-                var fun_ident = ast[0][0];
-                
-                var name = new haskell.ast.VariableBinding(fun_ident);
-                
-                var fun = ast[1][1];
-                for (var i = patterns.length - 1; i >= 0; i--) {
-                    fun = new haskell.ast.Lambda(patterns[i], fun);
-                }
+                if (ast[0] instanceof haskell.ast.Pattern) {
+                    return new haskell.ast.Variable(ast[0], ast[1][1]);
+                } else {        
+                    var patterns = ast[0][1];
+                    var fun_ident = ast[0][0];
+                    
+                    var name = new haskell.ast.VariableBinding(fun_ident);
+                    
+                    var fun = ast[1][1];
+                    for (var i = patterns.length - 1; i >= 0; i--) {
+                        fun = new haskell.ast.Lambda(patterns[i], fun);
+                    }
 
-                return new haskell.ast.Variable(name, fun);
+                    return new haskell.ast.Variable(name, fun);
+                }
             } catch (e) {
                 console.log("%o", e);
             }
