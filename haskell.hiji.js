@@ -51,14 +51,18 @@ var DOWN  = '40';
 
         $.get('Prelude.hs', function(prelude_data) {
 		console.log(prelude_data);
-            var ast = haskell.parser.parse(prelude_data);
-	    console.log("%o", ast);
-	    if (ast.ast == undefined) {
-		console.log("Syntax Error");
-	    }
-	    else {
-		haskell.interpreter.prepare(ast.ast, env);
-	    }
+		try {
+		    var ast = haskell.parser.parse(prelude_data);
+		    console.log("%o", ast);
+		    if (ast.ast == undefined) {
+			console.log("Syntax Error");
+		    }
+		    else {
+			haskell.interpreter.prepare(ast.ast, env);
+		    }
+		} catch(e) {
+		    console.log("%o", e);
+		}
         });
 
         modules[0] = "Prelude";
