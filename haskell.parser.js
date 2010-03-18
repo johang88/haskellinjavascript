@@ -2,9 +2,7 @@
 
 /* 
 Todo:
-  - Pattern matching
   - List comp.
-  - User defined operators
 */
 
 haskell.parser.lastInternalName = 0;
