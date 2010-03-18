@@ -6,13 +6,13 @@
 					  var b = forceTo(env.lookup("b"), "ConstantThunk");
 					  return new interpreter.ConstantThunk(new ast.Num(a.value.num+b.value.num));
 				      }));
-    env.bind("-", createPrimitive(env, ["a", "b"],
+	env.bind("-", createPrimitive(env, ["a", "b"],
 				      function(env) {
 					  var a = forceTo(env.lookup("a"), "ConstantThunk");
 					  var b = forceTo(env.lookup("b"), "ConstantThunk");
 					  return new interpreter.ConstantThunk(new ast.Num(a.value.num-b.value.num));
 				      }));
-    env.bind("*", createPrimitive(env, ["a", "b"],
+	env.bind("*", createPrimitive(env, ["a", "b"],
 				      function(env) {
 					  var a = forceTo(env.lookup("a"), "ConstantThunk");
 					  var b = forceTo(env.lookup("b"), "ConstantThunk");
@@ -24,6 +24,9 @@
 					      alert(l.value.num);
 					      return new interpreter.Data("()", []);
 					  }));
+	env.bind(":", createDataConstructor(env, ":", 2));
+	env.bind("[]", createDataConstructor(env, "[]", 0));
+	
     };
     
     // Creates env from an ast and returns it !
@@ -36,7 +39,7 @@
 	    else if (decl.type=="Data") {
 		for (var i in decl.constructors) {
 		    constr = decl.constructors[i];
-		    env.bind(constr.identifier, createDataConstructor(env, constr));
+		    env.bind(constr.identifier, createDataConstructor(env, constr.identifier, constr.number));
 		};
 	    };
         };
@@ -64,9 +67,7 @@
 	};
 	return new interpreter.Closure(env, expr);
     };
-    function createDataConstructor(env, constr) {
-	var ident = constr.identifier;
-	var num = constr.number;
+    function createDataConstructor(env, ident, num) {
 	var args = [];
 	for (var i = 0; i<num; i++) {
 	    args[i] = "__p" + i;
