@@ -9,18 +9,21 @@ Det är även så att många programmerare inte kommer i kontakt med funktionell
 
 
 % TODO teori eller bakgrund?
-Haskell är ett starkt statiskt typcheckat och funktionellt programeringsspråk med icke-strikt semantik . 
-Att språket är funktionellt innebär bland annat att funktioner är "first-class citizens" och kan därmed användas som parametrar och retuneras från andra funktioner precis som vilken annan typ som helst.
+Haskell är ett starkt statiskt typcheckat och funktionellt programeringsspråk med icke-strikt semantik. 
+Att språket är funktionellt innebär bland annat att funktioner är \emph{first-class citizens} och kan därmed användas som parametrar och retuneras från andra funktioner precis som vilken annan typ som helst.
+
+% TODO teori eller bakkgrund?
 Icke strikt semantik, även kallat \emph{lazy evaluation}, innebär mer konkret att evalueringen av ett uttryck inte kommer utföras förrän resultatet av uttrycket behövs.
 Lazy evaluation gör att programmeraren inte behöver bry sig om exekveringsordningen av ett program. Detta ger prestandaförbättringar eftersom ett uttryck inte evalueras alls om det inte behövs \citep{hudak89}.
 Lazy evaluation gör det också möjligt att använda sig utav oändliga datastrukturer, till exempel oändliga listor. Språket blir därmed mer uttrycksfullt. 
 
-Funktionell programmering anses också vara det naturliga steget att ta när man vill nå en högre abstraktionsnivå än den som imperativa programmeringsspråk tillåter. Program skrivna i ett funktionellt programmeringsspråk är generellt sätt kortare än motsvarande program skrivet i ett imperativt programmeringsspråk. Detta gör att programmeraren blir mer produktiv i ett funktionellt programmeringsspråk kontra ett imperativt \citep{why}.
+Funktionella programmeringsspråk såsom Haskell anses också vara det naturliga steget att ta när man vill nå en högre abstraktionsnivå än den som imperativa programmeringsspråk tillåter.
+Detta för att funktionella programmeringsspråk tillåter programmeraren att skriva program som är mer modulära, lättare att dela upp i separata delar, än imperativa programmeringsspråk. Den ökade modulariteten beror på att de stödjer tekniker såsom lazy evaluation och higher order functions.
+Detta bidrar i sin tur yill att program skrivna i Haskell är generellt sätt kortare än ett program skrivet i ett imperativt programmeringsspråk. Detta gör att programmeraren blir mer produktiv i ett funktionellt programmeringsspråk kontra ett imperativt \citep{why}.
 
-Vår förhoppning är att våran Haskelltolk i Javascript ska vara en inkörsport för programmerare till funktionell programmering. % TODO behövs mer?
+Med ovan nämnda resonemang ser vi det som ovärderligt för programmerare att komma i kontakt och ta del utav funktionell programmering. 
+Vår förhoppning är att våran Haskelltolk i Javascript ska vara en inkörsport för programmerare till funktionell programmering.
 
-
-%\citep{hudak89} 
 \subsection{Syfte}
 Syftet är en implementera en fungerande implementation av en haskkeltolk i Javascript. Den ska kunna tolka en delmängd utav Haskell-specifikationen så att den kan användas för att göra exempelvis interaktiva tutorials för nybörjare.
 Meningen är att dessa ska kunna köras i en vanlig webbläsare utan att ladda ner en haskellkompilator, till exempel GHC, eller behöva lära sig krångliga kommandon.

@@ -34,7 +34,7 @@
             	      | Let Pattern Expression Expression
                	      | Case Expression [(Pattern, Expression)]
                       | VariableLookup Identifier
-        	          | Primitive Function
+		      | Primitive Function
     */
     
     ast.Expression = function(){};
@@ -83,7 +83,9 @@
 	this.declr = declr;
 	this.expr = expr;
 	this.eval = function(env) {
-	    return this.expr.eval(env.substitute(this.declr.pattern, new interpreter.Closure(env, this.declr.expression)));
+	    var newEnv = env.derive();
+	    newEnv.patternBind(this.declr.pattern, new interpreter.Closure(newEnv, this.declr.expression));
+	    return this.expr.eval(newEnv);
 	};
     };
     ast.Case = function(expr, cases) {
@@ -94,14 +96,14 @@
 	this.cases = cases;
 	this.eval = function(env) {
 	    expr = new interpreter.Closure(env, this.expr);
-	    for (i in this.cases) {
+	    for (var i in this.cases) {
 		newEnv = env.derive();
 		if (this.cases[i][0].match(newEnv, expr)) {
-		    return new interpreter.Closure(this.cases[i][1], newEnv);
+		    return new interpreter.Closure(newEnv, this.cases[i][1]);
 		};
 	    };
+	    alert("No matching clause");
 	};
-	alert("No matching clause");
     };
     ast.VariableLookup = function(identifier) {
 	expectTypeOf(identifier, "string");
@@ -145,11 +147,16 @@
 	expectTypeOf(num, "number");
 	this.type = "Num";
 	this.num = num;
+
+	this.equals = function(n) {
+	    return this.num == n.num;
+	};
     };
        
     ast.Num.prototype = new ast.Value();
     /*
       data Declaration = Variable Pattern Expression
+                       | Data Identifier [Constructor]
     */
 
     ast.Declaration = function(){};
@@ -162,7 +169,28 @@
 	this.expression = expression;
     };
 
+    ast.Data = function(identifier, constructors) {
+	expectTypeOf(identifier, "string");
+	expectTypeArray(constructors, ast.Constructor);
+	this.type = "Data";
+	this.identifier = identifier;
+	this.constructors = constructors;
+    };
+
     ast.Variable.prototype = new ast.Declaration();
+    ast.Data.prototype = new ast.Declaration();
+
+
+    /*
+      data Constructor = Constructor Identifier Integer
+     */
+    ast.Constructor = function(identifier, num) {
+	expectTypeOf(identifier, "string");
+	expectTypeOf(num, "number");
+	this.type = "Constructor";
+	this.identifier = identifier;
+	this.number = num;
+    };
 
     /*
       Pattern = Constructor Identifier [Pattern]
@@ -173,10 +201,10 @@
 
     ast.Pattern = function(){};
 
-    ast.Constructor = function(identifier, patterns) {
+    ast.PatternConstructor = function(identifier, patterns) {
 	expectTypeOf(identifier, "string");
-	expectArrayType(patterns, ast.Pattern);
-	this.type = "Constructor";
+	//expectArrayType(patterns, ast.Pattern);
+	this.type = "PatternConstructor";
 	this.identifier = identifier;
 	this.patterns = patterns;
 	this.match = function(env, expr) {
@@ -232,19 +260,28 @@
 	this.type = "ConstantPattern";
 	this.value = value;
 	this.match = function(env, expr) {
-	    while(expr.type!="Constant") {
+	    while(expr.type!="ConstantThunk") {
 		expr = expr.force();
 	    };
-	    return (this.value==expr.value);
+	    return (this.value.equals(expr.value));
+	};
+	this.vars = function() {
+	    return [];
+	};
+    };
+    ast.Wildcard = function() {
+	this.type = "Wildcard";
+	this.match = function(env, expr) {
+	    return true;
 	};
 	this.vars = function() {
 	    return [];
 	};
     };
 
-    ast.Constructor.prototype     = new ast.Pattern();
+    ast.PatternConstructor.prototype     = new ast.Pattern();
     ast.VariableBinding.prototype = new ast.Pattern();
     ast.Combined.prototype        = new ast.Pattern();
-    ast.ConstantPattern.prototype        = new ast.Pattern();
-
+    ast.ConstantPattern.prototype = new ast.Pattern();
+    ast.Wildcard.prototype        = new ast.Pattern();
 })(haskell.ast,haskell.interpreter);

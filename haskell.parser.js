@@ -39,11 +39,16 @@ haskell.parser.opTable = {};
  * \return The ast
  */
 haskell.parser.parse = function(code) {
+    var reservedid = choice("case", "class", "data", "default", "deriving", "do", "else", "if", "import", "in", 
+                            "infix", "infixl", "infixr", "instance", "let", "module", "newtype", "of", "then",
+                            "type", "where", "_");
+    
+    var reservedop = choice("..", ":", "::", "=", "\\", "|", "<-", "->", "@", "~", "=>");
 
     var integer = action(repeat1(range('0', '9')), function(ast) { return new haskell.ast.Num(parseInt(ast.join(""))); });
 
     var ident_ = action(repeat0(choice(range('a', 'z'), range('0', '1'), '\'')), function(ast) { return ast.join(""); });
-    var ident = action(butnot(sequence(range('a', 'z'), ident_), choice("of", "case", "if")), function(ast) { return ast.join(""); });
+    var ident = action(butnot(sequence(range('a', 'z'), ident_), reservedid), function(ast) { return ast.join(""); });
     
     var literal = ws(integer);
     
@@ -53,19 +58,19 @@ haskell.parser.parse = function(code) {
     var modid = action(sequence(range('A', 'Z'), ident_), function(ast) { return ast.join(""); });
     
     var varid = ident;
-    var varsym = sym;
+    var varsym = butnot(sym, reservedop);
     
     var qvarid = ident;
-    var qvarsym = ident;
+    var qvarsym = varsym;
     
     var qtycon = action(sequence(range('A', 'Z'), ident_), function(ast) { return ast.join(""); });
     
     var qtycls = ident;
     
     var conid = action(sequence(range('A', 'Z'), ident_), function(ast) { return ast.join(""); });
-    var consym = sym; // should not allow reserved symbols
+    var consym = butnot(sym, reservedop); // should not allow reserved symbols
     
-    var qconsym = sym;
+    var qconsym = consym;
     var qconid = conid;
 
     var tycon = qtycon;
@@ -80,11 +85,11 @@ haskell.parser.parse = function(code) {
     
     var qop = choice(qvarop, qconop);
     
-    var op = undefined;
+    var op = choice(varop, conop);
     
     var conop = choice(consym, sequence(expect(ws('`')), conid, expect(ws('`'))));
     
-    var varop = undefined;
+    var varop = choice(varsym, sequence(expect(ws('`')), varid, expect(ws('`'))));
     
     var qcon = choice(qconid, sequence(expect(ws('(')), gconsym, expect(ws(')'))));
     
@@ -156,19 +161,19 @@ haskell.parser.parse = function(code) {
     
     var constant_pattern_action = function(p) {
         return action(p, function(ast) {
-            return new haskell.ast.PatternConstant(ast);
+            return new haskell.ast.ConstantPattern(ast);
         });
     }
     
     var combined_pattern_action = function(p) {
         return action(p, function(ast) {
-            return new haskell.ast.PatternCombined(ast[0], ast[1]);
+            return new haskell.ast.Combined(ast[0], ast[1]);
         });
     }
     
     var wildcard_pattern_action = function(p) {
         return action(p, function(ast) {
-            return new haskell.ast.PatternIgnored();
+            return new haskell.ast.Wildcard();
         });
     }
     
@@ -183,21 +188,36 @@ haskell.parser.parse = function(code) {
     // todo: implement rpat, lpat and pat
     // should make cons (:) work as expected, that is without parans
     var apat = function(state) { return apat(state) };
+    var pat = function(state) { return pat(state); };
+    
     var apat = choice(  combined_pattern_action(sequence(var_, expect(ws('@')), ws(apat))),
+                        action(ws(gcon), function(ast) { return new haskell.ast.PatternConstructor(ast, new Array()); }),
                         constant_pattern_action(ws(literal)),
                         ident_pattern_action(ws(ident)),
                         wildcard_pattern_action (ws('_')), // wildcard
-                        sequence(expect(ws('(')), apat, expect(ws(')'))), // parans
-                        sequence(expect(ws('(')), ws(apat), repeat1(sequence(ws(','), ws(apat))), expect(ws(')'))), // tuple
-                        list_pattern_action(sequence(expect(ws('[')), optional(wlist(apat, ',')), expect(ws(']')))), // list
-                        sequence(expect(ws('(')), chainl(ws(apat), action(ws(':'), cons_pattern_action)), expect(ws(')')))
+                        action(sequence(expect(ws('(')), pat, expect(ws(')'))), function(ast) { return ast[0]; }), // parans
+                        sequence(expect(ws('(')), ws(pat), repeat1(sequence(ws(','), ws(pat))), expect(ws(')'))), // tuple
+                        list_pattern_action(sequence(expect(ws('[')), optional(wlist(pat, ',')), expect(ws(']')))), // list
+                        sequence(expect(ws('(')), chainl(ws(pat), action(ws(':'), cons_pattern_action)), expect(ws(')')))
                         );
+    
+    var gcon_pat_action = function(p) {
+        return action(p, function(ast) {
+            var constructor = ast[0];
+            var patterns = ast[1];
+            return new haskell.ast.PatternConstructor(constructor, patterns);
+        });
+    };
+    
+    var pat_10 = choice(gcon_pat_action(sequence(ws(gcon), repeat1(ws(apat)))),
+                        apat
+                       );
     
     var rpat = undefined;
     
     var lpat = undefined;
     
-    var pat = apat;
+    var pat = pat_10;
     
     var fbind = undefined;
     
@@ -381,8 +401,6 @@ haskell.parser.parse = function(code) {
                          );
     
     var resolve_op = function(ast) {
-        // todo: lookup all op's before calling parse
-        
         var OpApp = function(e1, op, e2) {
             this.e1 = e1;
             this.op = op;
@@ -429,14 +447,8 @@ haskell.parser.parse = function(code) {
         };
         
         for (var i in ast) {
-            if (ast[i] == '+') {
-                ast[i] = new haskell.parser.Operator(6, haskell.parser.fixity.left, ast[i]);
-            } else if (ast[i] == '*') {
-                ast[i] = new haskell.parser.Operator(7, haskell.parser.fixity.left, ast[i]);
-            } else if (ast[i] == '$') {
-                ast[i] = new haskell.parser.Operator(0, haskell.parser.fixity.right, ast[i]);
-            } else if (ast[i] == '.') {
-                ast[i] = new haskell.parser.Operator(9, haskell.parser.fixity.right, ast[i]);
+            if (haskell.parser.opTable[ast[i]] != undefined) {
+                ast[i] = haskell.parser.opTable[ast[i]];
             }
         }
         
@@ -503,8 +515,17 @@ haskell.parser.parse = function(code) {
     
     var newconstr = epsilon_p;
     
-    var constr = choice(sequence(ws(con), repeat0(sequence(optional(ws('!')), ws(atype)))),
-                        sequence(choice(ws(btype), sequence(optional(ws('!')), ws(atype))), ws(conop), choice(ws(btype), sequence(optional(ws('!')), ws(atype))))
+    var constr_action = function(p) {
+        return action(p, function(ast) {
+            var name = ast[0];
+            var count = ast[1].length;
+            return new haskell.ast.Constructor(name, count);
+        });
+    };
+    
+    var atype = function(state) { return atype(state); };
+    var constr = choice(constr_action(sequence(ws(con), repeat0(sequence(optional(ws('!')), ws(atype)))))
+                      //  sequence(choice(ws(btype), sequence(optional(ws('!')), ws(atype))), ws(conop), choice(ws(btype), sequence(optional(ws('!')), ws(atype))))
                        ); // Todo: fielddecl stuffz
     
     var constrs = list(ws(constr), ws('|'));
@@ -516,7 +537,7 @@ haskell.parser.parse = function(code) {
     var scontext = undefined;
 
     var gtycon = choice(qtycon,
-                   sequence(repeat1(ws(var_)), repeat0(ws(apat))),
+                        sequence(repeat1(ws(var_)), repeat0(ws(apat))),
                         "()",
                         "[]",
                         "(->)",
@@ -534,7 +555,7 @@ haskell.parser.parse = function(code) {
     var btype = repeat1(ws(atype));
     var type = list(ws(btype), ws("->"));
     
-    var fixity = epsilon_p;
+    var fixity = choice(ws("infixl"), ws("infixr"), ws("infix"));
     
     var vars = list(ws(var_), ws(','));
     
@@ -548,8 +569,34 @@ haskell.parser.parse = function(code) {
                             sequence(ws('('), list(ws(class_), ws(',')) ,ws(')'))
                         );
     
+    var fixity_op_action = function(p) {
+        return action(p, function(ast) {
+            var fixity = ast[0];
+            
+            var prec = 9;
+            if (ast[1] != false)
+                prec = ast[1].value.num;
+                
+            var ops = ast[2];
+            
+            if (fixity == "infixl")
+                fixity = haskell.parser.fixity.left;
+            else if (fixity == "infixr")
+                fixity = haskell.parser.fixity.right;
+            else
+                fixity = haskell.parser.fixity.none;
+                
+            for (var i in ops) {
+                var op = ops;
+                haskell.parser.opTable[op] = new haskell.parser.Operator(prec, fixity, op);
+            }
+            
+            return "fixity";
+        });
+    };
+    
     var gendecl = choice(   sequence(ws(vars), ws("::"), optional(sequence(ws(context), ws("=>"))), ws(type)),
-                            sequence(ws(fixity), optional(ws(integer)), ws(ops)),
+                            fixity_op_action(sequence(ws(fixity), optional(ws(integer)), ws(choice(varop, conop)))), // Should be multiple op's
                             epsilon_p
                         );
     
@@ -590,8 +637,16 @@ haskell.parser.parse = function(code) {
     
     var decls = action(sequence(expect(ws('{')), list(ws(decl), ws(';')), expect(ws('}'))), function(ast) { return ast[0]; });
     
+    var data_action = function(p) {
+        return action(p, function(ast) {
+            var ident = ast[1][0];
+            var constructors = ast[2];
+            return new haskell.ast.Data(ident, constructors);
+        });
+    };
+    
     var topdecl = choice(   sequence(ws("type"), ws(simpletype), ws('='), ws(type)),
-                            sequence(ws("data"), optional(sequence(context, "=>")), ws(simpletype), ws('='), constrs, optional(deriving)),
+                            data_action(sequence(expect(ws("data")), optional(sequence(context, expect("=>"))), ws(simpletype), expect(ws('=')), constrs, optional(deriving))),
                             sequence(ws("newtype"), optional(sequence(context, "=>")), ws(simpletype), ws('='), newconstr, optional(deriving)),
                             sequence(ws("class"), optional(sequence(scontext, "=>")), tycls, tyvar, optional(sequence(ws("where"), cdecls))),
                             sequence(ws("instance"), optional(sequence(scontext, "=>")), qtycls, inst, optional(sequence(ws("where"), idecls))),
@@ -602,7 +657,7 @@ haskell.parser.parse = function(code) {
     var topdecls_action = function(p) {
         return action(p, function(ast) {
             return ast.filter(function(element) {
-                return element instanceof haskell.ast.Variable;
+                return element instanceof haskell.ast.Variable || element instanceof haskell.ast.Data;
             });
         });
     };
@@ -662,7 +717,8 @@ haskell.parser.parse = function(code) {
     var module = module_action(choice(sequence(ws("module"), ws(modid), optional(exports), ws("where"), body),
                         body));
     
-    var test = case_action(sequence(expect(ws("case")), ws(exp), expect(ws("of")), expect(ws("{")), alts));
+    var program = action(sequence(choice(module, exp), ws(end_p)), function(ast) { return ast[0]; });
+    var result = program(ps(code));
     
-    return choice(module, exp)(ps(code));
+    return result;
 };

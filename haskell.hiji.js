@@ -1,17 +1,16 @@
-// TODO :: FOKUS NÄR MAN KLICKAR I DEN SVARTA RUTAN!!!
-
-
 var ENTER = '13';
 var UP    = '38';
 var DOWN  = '40';
 
 (function($){
 
-
     var evaluateHaskell = function(line, env)
     {
-	ast = haskell.parser.parse(line).ast;
-	console.log("%o", ast);
+        ast = haskell.parser.parse(line).ast;
+        if (ast == undefined){
+            return "Syntax Error";
+        }
+        console.log("%o", ast);
         return haskell.interpreter.eval(ast, env);
     };
     var makeModules = function(modules){
@@ -39,12 +38,22 @@ var DOWN  = '40';
         var hiss = new historry;
         // load history from cookie
         hiss_cookie = $.cookie("hiss");
-        if(hiss_cookie != null)
+        if(hiss_cookie != null){
             hiss.history_array = hiss_cookie.split(",");
+        }
 
         var env = new haskell.interpreter.RootEnv();
         haskell.interpreter.primitives(env);
         
+
+
+ //  ladda prelude
+
+        $.get('Prelude.hs', function(prelude_data) {
+            var ast = haskell.parser.parse(prelude_data).ast;
+            haskell.interpreter.prepare(ast, env);
+        });
+
         modules[0] = "Prelude";
         modules[1] = "Control.Monad";
         this.html("<ol>" + makeInput(modules) + "</ol>");
@@ -65,7 +74,6 @@ var DOWN  = '40';
                 // history
                 hiss.addHistory(line);
                 $.cookie("hiss", hiss.history_array.toString(), {expires: 3 });              
-
                 input.attr("value","");
                 try {
                     var newLine = makeEntered(modules, line);
@@ -90,7 +98,7 @@ var DOWN  = '40';
 // historry-class with nice name
 // !!!WARNING!!! NICE NAME
 historry = function (){
-    this.pointer = 0;
+    this.pointer = -1;
     this.history_array = new Array();
     this.addHistory = function(input){
         this.history_array.unshift(input);
@@ -115,3 +123,6 @@ historry = function (){
     };
 
 };
+
+
+
