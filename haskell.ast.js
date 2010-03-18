@@ -227,6 +227,7 @@
 	    for (i in this.patterns) {
 		vars=vars.concat(this.patterns[i].vars());
 	    };
+	    return vars;
 	};
     };
     ast.VariableBinding = function(identifier) {
