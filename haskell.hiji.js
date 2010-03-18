@@ -50,8 +50,14 @@ var DOWN  = '40';
  //  ladda prelude
 
         $.get('Prelude.hs', function(prelude_data) {
+		console.log(prelude_data);
             var ast = haskell.parser.parse(prelude_data).ast;
-            haskell.interpreter.prepare(ast, env);
+	    if (ast == undefined) {
+		console.log("Syntax Error");
+	    }
+	    else {
+		haskell.interpreter.prepare(ast, env);
+	    }
         });
 
         modules[0] = "Prelude";
