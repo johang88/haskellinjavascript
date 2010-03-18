@@ -1,20 +1,20 @@
 (function(ast, interpreter) {
     function expectType(o,t) {
 	if (!(o instanceof t)) {
-	    throw "Expected " + typeof t + " " + typeof o + " given.";
+	    throw new Error("Expected " + typeof t + " " + typeof o + " given.");
 	};
     };
 
     function expectTypeOf(o, t) {
 	if ((typeof o) != t) {
-	    throw "Expected " + t + " " + typeof o + " given.";
+	    throw new Error("Expected " + t + ", " + typeof o + " given.");
 	};
     };
 
     function expectTypeArray(os, t) {
 	for (i in os) {
 	    if (!(os[i] instanceof t)) {
-		throw "Expected " + typeof t + " " + typeof o[i] + " at index " + i;
+		throw new Error("Expected " + typeof t + ", " + typeof os[i] + " given at index " + i);
 	    };
 	};
     };
