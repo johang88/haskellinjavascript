@@ -1,35 +1,31 @@
-﻿\section{Metod} 
+\section{Metod} 
+
+% modulbaserat arbete..
+Under planeringsstadiet upptäcktes tidigt att projektet kunde med enkelhet delas upp i tre separata moduler; parser, interpretator och typcheckare. Dessa tre moduler intergrerar enbart med varandra genom det abstrakta syntaxträdet. Detta medför att det är väldigt lätt att utveckla de olika delarna helt frånskilt från varandra. Därmed valdes det att arbeta parallellt på de olika modulerna.
 
 \subsection{Kodstandard} 
 För att få konsistens i koden och för att underlätta att olika utvecklare kan läsa och arbeta på koden samtidigt har vi utformat en intärn kodstandard kodstandard som alla ska följa.
 När en commit görs måste denna standard följas.
 
-
 \subsection{Versionshantering} 
 Ett problem som alla mjukvaruprojekt av icke trivial storlek är att hantera den stora mängden filer, och distrubera uppdaterade kopior till samtliga utvecklare att arbeta på.
 För att lösa detta problemet brukar man använda sig utav en versionshanteringsmjukvara. 
 
-Under de första veckorna av projektet användes SVN. Valet berodde på att det var det som alla i medlemmar i projektet hade erfarenhet från tidigare. Tyvärr har SVN vissa problem när det kommer till att skapa nya förgreningar och sedan sammanfoga dem. Det är generellt sett svårt att sammanfoga olika grenar i SVN, medan i Git är designat för att med enkelhet skapa nya grenar och slå ihop dem.   
-
-
+Under de första veckorna av projektet användes SVN. Valet berodde på att det var det som alla i medlemmar i projektet hade erfarenhet från tidigare. Tyvärr har SVN vissa problem när det kommer till att skapa nya förgreningar och sedan sammanfoga dem. Det är generellt sett svårt att sammanfoga olika grenar i SVN, medan i Git är designat för att med enkelhet skapa nya grenar och slå ihop dem.
 
 \subsection{Javascript} 
 Javascript \citep{javascript} är ett programmeringsspråk som framförallt används på klientsidan på webben. Javascript är ett dynamiskt objektorienterat skriptspråk.
 
-Javascript är det programmeringsspråk som används uteslutande i detta projektet för att tolka och interpretera Haskell.
-Detta valet är gjort tack vare att Javascript kan exekveras på klientsidan i en webbläsare.
+Javascript är det programmeringsspråk som används uteslutande i detta projektet för att skriva haskelltolken och interpretera Haskell.
 
 \subsection{Kodbibliotek}
 
 \emph{Standing on the Shoulder of Giants}
 
 Detta projektet följer en fin tradition inom datorvetenskapen att om ett problem redan är löst så ska det inte behöva lösas igen. Att återuppfinna hjulet varje gång är både tidsödande och onödigt. 
-Därför har ett antal kodbibliotek används i projektet. Ett kodbibliotek
-
-
+Därför har ett antal kodbibliotek används i projektet. 
 Genom att använda dessa kodbibliotek kan fokus läggas på implementeringen av de kärnområden som projektet behandlar.
-
-Nedan följer en kort beskrivning av de olika kodbibliotek som vi användt genom projektet
+Nedan följer en kort beskrivning av de olika kodbibliotek som vi använt i projektet.
 
  \subsubsection{JSparse}  
 Parsern implementeras med hjälp av ett parser combinator bibliotek kallat JSParser.
@@ -44,8 +40,6 @@ JQuery är designat för att underlätta för utvecklare att modifiera DOM-träd
 
 JQuery används i projektet för att få enkelt cross browser stöd utan att behöva tänka på det. 
 JQuery ger även möjlighet att skapa ett enkelt och stilrent interaktivt gränssnitt utan att behöva göra allt från grunden.
-
-Ett tillägg till JQuery som heter JQuery.cookie används också. Som namnet antyder ger det ett till JQuery syntaxliknande sätt att hantera kakor på websidor.  
 
 
 % \subsection{Testning} 

@@ -1,31 +1,28 @@
 ﻿\section{Inledning}
 
 \subsection{Bakgrund}
-På vissa av Chalmers och Göteborgs Universitets program så är den första programmeringskursen i Haskell \citep{haskell98} och för en del av de nya eleverna är inlärningströskeln relativt hög. Vi tror att ett interaktivt webbverktyg skulle kunna sänka den här tröskeln och underlätta undervisningen. Ett webbverktyg medför även att man slipper installera och lära sig extra verktyg så som Glasgow Haskell Compiler (GCI). Webbens stöd för interaktivitet gör det möjligt att snabbt visa funktionsdeklarationerna för de inbyggda funktionerna och att enkelt evaluera funktionerna och testa sig fram till olika resultat. 
-
+På vissa av Chalmers och Göteborgs Universitets program så är den första programmeringskursen i Haskell \citep{haskell98} och för en del av de nya eleverna är inlärningströskeln relativt hög. Vi tror att ett interaktivt webbverktyg skulle kunna sänka den här tröskeln och underlätta undervisningen. Ett webbverktyg medför även att man slipper installera och lära sig extra verktyg så som Glasgow Haskell Compiler (GHC), den idag ledande Haskell-kompilatorn. Webbens stöd för interaktivitet gör det möjligt att snabbt visa funktionsdeklarationerna för de inbyggda funktionerna och att enkelt evaluera funktionerna och testa sig fram till olika resultat. 
 En stor fördel med att ha tolken på webben är att det enda som behövs för att använda den är en javascriptkompatibel webbläsare, något som följer med i princip i alla moderna operativsystem.
 
 Det är även så att många programmerare inte kommer i kontakt med funktionell programmering  och med hjälp utav ett enkelt interaktivt webbverktyg så är våran förhoppning att fler människor ska komma i kontakt med funktionell programmering, och i synnerhet Haskell. Då flera moderna objektorienterade programmeringsspråk börjar ta begrepp och funktionalitet ifrån funktionella programmeringsspråk så är det extra viktigt att programmerare kommer i kontakt med funktionell programering. Ett exempel på detta är C\# som i senare versioner har fått stöd för bland annat lambdafunktioner \citep{csharp}. 
 
-Vår förhoppning är att våran Haskelltolk i Javascript ska vara en inkörsport för programmerare till funktionell programmering.
 
 % TODO teori eller bakgrund?
 Haskell är ett starkt statiskt typcheckat och funktionellt programeringsspråk med icke-strikt semantik . 
-
-Att språket är funktionellt innebär bland annat att funktioner är "first-class citizens" och kan därmed användas som parametrar och retuneras från andra funktioner precis som vilken annan typ som helst.
+Att språket är funktionellt innebär bland annat att funktioner är \emph{first-class citizens} och kan därmed användas som parametrar och retuneras från andra funktioner precis som vilken annan typ som helst.
 
 % TODO teori eller bakkgrund?
 Icke strikt semantik, även kallat \emph{lazy evaluation}, innebär mer konkret att evalueringen av ett uttryck inte kommer utföras förrän resultatet av uttrycket behövs.
 Lazy evaluation gör att programmeraren inte behöver bry sig om exekveringsordningen av ett program. Detta ger prestandaförbättringar eftersom ett uttryck inte evalueras alls om det inte behövs \citep{hudak89}.
 Lazy evaluation gör det också möjligt att använda sig utav oändliga datastrukturer, till exempel oändliga listor. Språket blir därmed mer uttrycksfullt. 
-Funktionell programmering anses också vara det naturliga steget att ta när man vill nå en högre abstraktionsnivå än den som imperativa programmeringsspråk tillåter. Program skrivna i ett funktionellt programmeringsspråk är generellt sätt kortare än ett program skrivet i ett imperativt programmeringsspråk. Detta gör att programmeraren blir mer produktiv i ett funktionellt programmeringsspråk kontra ett imperativt \citep{why}.
-%TODO skriva mer om detta 
 
+Funktionella programmeringsspråk såsom Haskell anses också vara det naturliga steget att ta när man vill nå en högre abstraktionsnivå än den som imperativa programmeringsspråk tillåter.
+Detta för att funktionella programmeringsspråk tillåter programmeraren att skriva program som är mer modulära, lättare att dela upp i separata delar, än imperativa programmeringsspråk. Den ökade modulariteten beror på att de stödjer tekniker såsom lazy evaluation och higher order functions.
+Detta bidrar i sin tur yill att program skrivna i Haskell är generellt sätt kortare än ett program skrivet i ett imperativt programmeringsspråk. Detta gör att programmeraren blir mer produktiv i ett funktionellt programmeringsspråk kontra ett imperativt \citep{why}.
 
-% TODO blä
-Dessa ovan nämnda anledningar är att många ser funktionell programmering som ett naturligt steg f
+Med ovan nämnda resonemang ser vi det som ovärderligt för programmerare att komma i kontakt och ta del utav funktionell programmering. 
+Vår förhoppning är att våran Haskelltolk i Javascript ska vara en inkörsport för programmerare till funktionell programmering.
 
-%\citep{hudak89} 
 \subsection{Syfte}
 Syftet är en implementera en fungerande implementation av en haskkeltolk i Javascript. Den ska kunna tolka en delmängd utav Haskell-specifikationen så att den kan användas för att göra exempelvis interaktiva tutorials för nybörjare.
 Meningen är att dessa ska kunna köras i en vanlig webbläsare utan att ladda ner en haskellkompilator eller behöva lära sig krångliga kommandon.
