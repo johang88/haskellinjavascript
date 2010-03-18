@@ -61,7 +61,7 @@
 
     function createPrimitive(env, args, func) {
 	var expr = new ast.Primitive(func);
-	var argsR = args.reverse();
+	var argsR = [].concat(args).reverse();
 	for (var i in argsR) {
 	    expr = new ast.Lambda(new ast.VariableBinding(argsR[i]), expr);
 	};
