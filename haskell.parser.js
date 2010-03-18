@@ -195,7 +195,7 @@ haskell.parser.parse = function(code) {
                         action(sequence(expect(ws('(')), pat, expect(ws(')'))), function(ast) { return ast[0]; }), // parans
                         sequence(expect(ws('(')), ws(pat), repeat1(sequence(ws(','), ws(pat))), expect(ws(')'))), // tuple
                         list_pattern_action(sequence(expect(ws('[')), optional(wlist(pat, ',')), expect(ws(']')))), // list
-                        sequence(expect(ws('(')), chainl(ws(pat), action(ws(':'), cons_pattern_action)), expect(ws(')')))
+                        action(sequence(expect(ws('(')), chainl(ws(pat), action(ws(':'), cons_pattern_action)), expect(ws(')'))), function(ast) { return ast[0]; })
                         );
     
     var gcon_pat_action = function(p) {
