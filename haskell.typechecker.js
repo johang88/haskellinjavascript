@@ -33,15 +33,11 @@
      };
 
      ast.Constant.prototype.infer = function() {
-	 if(this.hsType == undefined) {
-	     this.hsType = this.value.infer();
-	 }
-	 return this.hsType;
+	 return this.value.infer();
      };
 
      ast.Num.prototype.infer = function() {
-	 this.hsType = "Integer";
-	 return "Integer";
+	 return new typechecker.TCon(new Tycon ("Integer", new Star()));
      };
 
      ast.Num.prototype.check = function(type) {
@@ -49,10 +45,7 @@
      };
 
      ast.Variable.prototype.infer = function() {
-	 if(this.hsType == undefined) {
-	     this.hsType = this.expression.infer();
-	 }
-	 return this.hsType;
+	 return this.expression.infer();
      };
 
      typechecker.Star = function() {
@@ -63,11 +56,12 @@
      };
 
      typechecker.Tyvar = function(id, kind) {
-	this.kind = function() { return kind; }; 
+	 this.id=id;
+	 this.kind = function() { return kind; }; 
      };
 
      typechecker.Tycon = function(id, kind) {
-	this.kind = function() { return kind; };
+	 this.kind = function() { return kind; };
      };
 
      typechecker.TVar = function(tyvar) {
@@ -100,5 +94,37 @@
 	 alert(asttt.infer());
 	 alert(asttt.check("Integer"));
      };
+
+     typechecker.tUnit = new typechecker.TCon(
+	 new typechecker.Tycon("()", new typechecker.Star()));
+     typechecker.tChar = new typechecker.TCon(
+	 new typechecker.Tycon("Char", new typechecker.Star()));
+     typechecker.tInt = new typechecker.TCon(
+	 new typechecker.Tycon("Int", new typechecker.Star()));
+     typechecker.tInteger = new typechecker.TCon(
+	 new typechecker.Tycon("Integer", new typechecker.Star()));
+     typechecker.tFloat = new typechecker.TCon(
+	 new typechecker.Tycon("Float", new typechecker.Star()));
+     typechecker.tDouble = new typechecker.TCon(
+	 new typechecker.Tycon("Double", new typechecker.Star()));
+
+     typechecker.tList = new typechecker.TCon(
+	 new typechecker.Tycon("[]",
+			       new typechecker.Kfun(new typechecker.Star(),
+						    new typechecker.Star())));
+     typechecker.tArrow = new typechecker.TCon(
+	 new typechecker.Tycon("(->)",
+			       new typechecker.Kfun(
+				   new typechecker.Star(),
+				   new typechecker.Kfun(
+				       new typechecker.Star(),
+				       new typechecker.Star()))));
+     typechecker.tTuple2 = new typechecker.TCon(
+	 new typechecker.Tycon ("(,)",
+				new typechecker.Kfun(
+				    new typechecker.Star(),
+				    new typechecker.Kfun(
+					new typechecker.Star(),
+					new typechecker.Star()))));
 
 }) (haskell.typechecker, haskell.ast);
