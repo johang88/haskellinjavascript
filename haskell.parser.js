@@ -392,6 +392,15 @@ haskell.parser.parse = function(code) {
         });
     };
     
+    var neg_exp_action = function(p) {
+        return action(p, function(ast) {
+            ast.info = new function() {
+                this.need_resolve = true;
+            };
+            return ast;
+        });
+    }
+    
     var infixexp = choice( infixexp_action(sequence(ws(exp_10), ws(qop), ws(infixexp))),
                            sequence(ws('-'), ws(infixexp)),
                            ws(exp_10)
@@ -435,7 +444,7 @@ haskell.parser.parse = function(code) {
         var parseNeg = function(op1, rest) {
             var e1 = rest.shift();
             
-            if (e1 == '-') {
+            if (e1.op != undefined && e1.op == '-') {
                 var res = parseNeg(new haskell.parser.Operator(6, haskell.parser.fixity.left, '-'), rest);
                 return parse(op1, new NegOp(res.exp), res.rest);
             } else {
@@ -458,8 +467,8 @@ haskell.parser.parse = function(code) {
                 
                 if (exp instanceof OpApp || exp instanceof NegOp)
                     exp = translate(exp);
-                
-                return new haskell.ast.Application(new haskell.ast.VariableLookup('-'), exp);
+                    
+                return new haskell.ast.Application(new haskell.ast.Application(new haskell.ast.VariableLookup('-'), new haskell.ast.Constant(new haskell.ast.Num(0))), exp);
             } else {            
                 var lhs = op.e1;
                 var rhs = op.e2;
