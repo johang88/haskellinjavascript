@@ -41,6 +41,14 @@ module Prelude where {
         (x:xs) -> f x (foldr1 f xs);
     };
     
+    filter f xs = case xs of {
+        [] -> [];
+        (x:xs) -> case (f x) of {
+            True -> x : filter f xs;
+            False -> filter f xs;
+        };
+    };
+    
     iterate f x = f x : iterate f x;
     
     head xs = case xs of { (x:_) -> x; };
