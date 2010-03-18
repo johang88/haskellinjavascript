@@ -45,7 +45,7 @@ haskell.parser.parse = function(code) {
 
     var integer = action(repeat1(range('0', '9')), function(ast) { return new haskell.ast.Num(parseInt(ast.join(""))); });
 
-    var ident_ = action(repeat0(choice('A', 'Z'), choice(range('a', 'z'), range('0', '1'), '\'')), function(ast) { return ast.join(""); });
+    var ident_ = action(repeat0(choice(range('A', 'Z'), range('a', 'z'), range('0', '1'), '\'')), function(ast) { return ast.join(""); });
     var ident = action(butnot(sequence(range('a', 'z'), ident_), reservedid), function(ast) { return ast.join(""); });
     
     var literal = ws(integer);
