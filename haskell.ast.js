@@ -203,7 +203,7 @@
 
     ast.PatternConstructor = function(identifier, patterns) {
 	expectTypeOf(identifier, "string");
-	//expectArrayType(patterns, ast.Pattern);
+	expectTypeArray(patterns, ast.Pattern);
 	this.type = "PatternConstructor";
 	this.identifier = identifier;
 	this.patterns = patterns;
