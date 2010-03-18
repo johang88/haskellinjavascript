@@ -14,6 +14,11 @@ module Prelude where {
     	  [] -> [];
 	  (x:xs) -> f x : map f xs;
     	};
+        
+    foldr1 f xs = case xs of {
+        [x] -> x;
+        (x:xs) -> f x (foldr1 f xs);
+    };
     
     fix f = let { x = f x; } in x;
 }
