@@ -717,7 +717,7 @@ haskell.parser.parse = function(code) {
                         body));
     
     var program = action(sequence(choice(module, exp), ws(end_p)), function(ast) { return ast[0]; });
-    var result = pat(ps(code));
+    var result = program(ps(code));
     
     return result;
 };
