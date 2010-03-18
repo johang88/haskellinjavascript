@@ -496,7 +496,13 @@ haskell.parser.parse = function(code) {
     var gdrhs = undefined;
     
     // todo: missing second choice
-    var rhs = sequence(ws('='), ws(exp), optional(sequence(ws("where"), ws(decls))));
+    var decl_rhs_action = function(p) {
+        return action(p, function(ast) {
+            // todo: desugar where
+            return ast[0];
+        });
+    };
+    var rhs = decl_rhs_action(sequence(expect(ws('=')), ws(exp), optional(sequence(expect(ws("where")), ws(decls)))));
     
     // todo: Should be quite a lot of choices here, but those are for 
     //       operators so it's not very important right now
@@ -609,14 +615,14 @@ haskell.parser.parse = function(code) {
         return action(p, function(ast) {
             try {
                 if (ast[0] instanceof haskell.ast.Pattern) {
-                    return new haskell.ast.Variable(ast[0], ast[1][1]);
+                    return new haskell.ast.Variable(ast[0], ast[1]);
                 } else {        
                     var patterns = ast[0][1];
                     var fun_ident = ast[0][0];
                     
                     var name = new haskell.ast.VariableBinding(fun_ident);
                     
-                    var fun = ast[1][1];
+                    var fun = ast[1];
                     for (var i = patterns.length - 1; i >= 0; i--) {
                         fun = new haskell.ast.Lambda(patterns[i], fun);
                     }
