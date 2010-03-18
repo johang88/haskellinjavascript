@@ -140,13 +140,12 @@ haskell.parser.parse = function(code) {
             var empty = "[]";
             
             if (ast.length == 0 || ast == false) {
-                return new haskell.ast.PatternConstructor(empty);
+                return new haskell.ast.PatternConstructor(empty, new Array());
             }
             
-            var fun = empty;
+            var fun = new haskell.ast.PatternConstructor(empty, new Array());
             for (var i = ast.length - 1; i >= 0; i--) {
-                var f = new haskell.ast.PatternConstructor(cons, ast[i]);
-                fun = new haskell.ast.PatternConstructor(f, fun);
+                fun = new haskell.ast.PatternConstructor(cons, [ast[i], fun]);
             }
             
             return fun;
@@ -718,7 +717,7 @@ haskell.parser.parse = function(code) {
                         body));
     
     var program = action(sequence(choice(module, exp), ws(end_p)), function(ast) { return ast[0]; });
-    var result = program(ps(code));
+    var result = pat(ps(code));
     
     return result;
 };
