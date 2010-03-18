@@ -20,41 +20,26 @@
 				     new ast.Constant(new ast.Num(1))); // ((x + :: (Num -> Num)) 1 :: Num)
      // asttt = new ast.Constant(new ast.Num(1));
 
-     ast.Application.prototype.infer = function() {
-	 return undefined;
-     };
 
-     ast.Application.prototype.check = function(type) {
-	 return this.infer() == type;
-     };
-
-     ast.Constant.prototype.check = function(type) {
-	 return this.infer() == type;
-     };
-
-     ast.Constant.prototype.infer = function() {
-	 return this.value.infer();
-     };
-
-     ast.Num.prototype.infer = function() {
-	 return new typechecker.TCon(new Tycon ("Integer", new Star()));
-     };
-
-     ast.Num.prototype.check = function(type) {
-	 return this.infer() == type;
-     };
-
-     ast.Variable.prototype.infer = function() {
-	 return this.expression.infer();
-     };
-
+     /*
+      * data Kind = Star | Kfun Kind Kind
+      *   deriving Eq
+      * 
+      */
      typechecker.Star = function() {
+	 this.toString = function() { return "*"; };
      };
      typechecker.Kfun = function(kind1, kind2) {
 	 this.kind1 = kind1;
 	 this.kind2 = kind2;
+	 this.toString = function() { return kind1.toString() + "->" + kind2.toString(); };
      };
 
+     /*
+      * data Tyvar = Tyvar Id Kind
+      *   deriving Eq
+      * 
+      */
      typechecker.Tyvar = function(id, kind) {
 	 this.id=id;
 	 this.kind = function() { return kind; }; 
@@ -64,6 +49,11 @@
 	 this.kind = function() { return kind; };
      };
 
+     /*
+      * data Type = TVar Tyvar | TCon Tycon | TAp Type Type | TGen Int
+      *   deriving Eq
+      * 
+      */
      typechecker.TVar = function(tyvar) {
 	 this.kind = function() { return tyvar.kind(); };
 	 this.apply = function(subst) {
@@ -82,7 +72,7 @@
      typechecker.TAp = function(t1, t2) {
 	 this.kind = function() { return t1.kind().kind2;  };
 	 this.apply = function(subst) { return new typechecker.TAp(t1.apply(),t2.apply()); };
-	 this.tv = function() { };
+	 this.tv = function() { return [].concat(t1.tv()).concat(t2.tv()).unique(); };
      };
      typechecker.TGen = function() {
 	 // this.kind = function() { }; - should probably throw an exception
@@ -91,10 +81,13 @@
      };
 
      typechecker.test = function() {
-	 alert(asttt.infer());
-	 alert(asttt.check("Integer"));
+	 alert(typechecker.tArrow.kind().toString());
      };
 
+     /*
+      * Some built-in types
+      * 
+      */
      typechecker.tUnit = new typechecker.TCon(
 	 new typechecker.Tycon("()", new typechecker.Star()));
      typechecker.tChar = new typechecker.TCon(
@@ -126,5 +119,26 @@
 				    new typechecker.Kfun(
 					new typechecker.Star(),
 					new typechecker.Star()))));
+
+     /*
+      * Substitutions
+      * 
+      * type Subst [(Tyvar, Type)]
+      * 
+      * We use a map (JavaScript Object) instead
+      * 
+      */
+     typechecker.nullSubst = {};
+     typechecker.singleSubst = function(u,t) { return {u: t}; };
+     typechecker.composeSubst = function(s1, s2) {
+	 var s3 = {};
+	 for(var u in s2) {
+	     s3[u] = s2[u].apply(s1);
+	 }
+	 for(var u in s1) {
+	     s3[u] = s1[u];
+	 }
+	 return s3;
+     };
 
 }) (haskell.typechecker, haskell.ast);
