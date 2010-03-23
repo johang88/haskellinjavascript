@@ -1,3 +1,11 @@
+/* TODO:
+
+    * n'r man bläddrar ner så ska den spara den i history om man börjat skriva
+    * kommaseparera i cookies måste escapeas eller nåt
+
+
+*/
+
 var ENTER = '13';
 var UP    = '38';
 var DOWN  = '40';
@@ -75,10 +83,10 @@ var DOWN  = '40';
             var input = $('input', this);
             var line = input.attr("value");
             if(e.keyCode==UP){
-                input.attr("value", hiss.older());
+                input.attr("value", hiss.older(line));
             }
             if(e.keyCode==DOWN){
-                input.attr("value", hiss.newer());
+                input.attr("value", hiss.newer(line));
             }
             if (e.keyCode==ENTER){
                 
@@ -107,16 +115,29 @@ var DOWN  = '40';
 
 
 // historry-class with nice name
-// !!!WARNING!!! NICE NAME
-historry = function (){
+// !!!WARNING!!! NICE NAME. conflict with javascript
+historry = function(input){
     this.pointer = -1;
     this.history_array = new Array();
+    this.active_value = "";
+
     this.addHistory = function(input){
         this.history_array.unshift(input);
         this.pointer = -1;
     };
 
-    this.older = function(){
+    this.updateHistory = function(input){
+        this.history_array[this.pointer] = input;
+    }
+
+    this.older = function(input){
+
+        if(this.pointer == -1){
+            this.active_value = input;
+        }else{
+            this.updateHistory(input);
+        }
+
         this.pointer++;
         if(this.pointer >= this.history_array.length){
             this.pointer = this.history_array.length-1
@@ -124,11 +145,14 @@ historry = function (){
         return this.history_array[this.pointer];
     };
 
-    this.newer = function(){
+    this.newer = function(input){
+
+        this.updateHistory(input);   
+
         this.pointer--;
         if(this.pointer < 0){
             this.pointer = -1
-            return "";
+            return this.active_value;
         }
         return this.history_array[this.pointer];
     };
