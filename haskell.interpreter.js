@@ -192,10 +192,14 @@
 	this.type = "Closure";
 	this.env = env;
 	this.expression = expression;
+	this.forced = undefined;
     };
     interpreter.Closure.prototype.force = function() {
+	if (this.forced == undefined) {
+	    this.forced = this.expression.eval(this.env);
+	}
 	// Forcing a closure is the same as evaluating its expression under the closures env
-	return this.expression.eval(this.env);
+	return this.forced;
     };
 
     interpreter.ConstantThunk = function(value) {
