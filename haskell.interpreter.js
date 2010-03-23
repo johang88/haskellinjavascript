@@ -74,7 +74,7 @@
 	};
 	var prim = function(env) {
 	    var givenArgs=[];
-	    for (i in args) {
+	    for (var i in args) {
 		givenArgs[i] = env.lookup(args[i]);
 	    };
 	    return new interpreter.Data(ident, givenArgs);
@@ -137,7 +137,7 @@
     };
     interpreter.Env.prototype.patternBind = function(pattern, expression) {
 	var vars = pattern.vars();
-	for (i in vars) {
+	for (var i in vars) {
 	    this.env[vars[i]] = [pattern, expression];
 	    this.env[vars[i]].type = "unforced";
 	}
