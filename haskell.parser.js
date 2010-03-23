@@ -91,11 +91,17 @@ haskell.parser.parse = function(code) {
     
     var qcon = choice(qconid, sequence(expect(ws('(')), gconsym, expect(ws(')'))));
     
-    var con = choice(conid, sequence(ws('('), consym, ws(')')));
+    var op_paran_action = function(p) {
+        return action(p, function(ast) {
+            return ast[0];
+        });
+    }
     
-    var qvar = choice(qvarid, sequence(ws('('), qvarsym, ws(')')));
+    var con = choice(conid, op_paran_action(sequence(expect(ws('(')), consym, expect(ws(')')))));
     
-    var var_ = choice(varid, action(sequence(expect(ws('(')), varsym, expect(ws(')'))), function(ast) { return ast [0]; }));
+    var qvar = choice(qvarid, op_paran_action(sequence(expect(ws('(')), qvarsym, expect(ws(')')))));
+    
+    var var_ = choice(varid, op_paran_action(sequence(expect(ws('(')), varsym, expect(ws(')')))));
     
     var gcon = choice(  ws("()"),
                         ws("[]"),
