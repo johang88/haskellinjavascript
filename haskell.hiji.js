@@ -1,11 +1,3 @@
-/* TODO:
-
-    * n'r man bläddrar ner så ska den spara den i history om man börjat skriva
-    * kommaseparera i cookies måste escapeas eller nåt
-
-
-*/
-
 var ENTER = '13';
 var UP    = '38';
 var DOWN  = '40';
@@ -47,7 +39,7 @@ var DOWN  = '40';
         // load history from cookie
         hiss_cookie = $.cookie("hiss");
         if(hiss_cookie != null){
-            hiss.history_array = hiss_cookie.split(",");
+            hiss.history_array = JSON.parse(hiss_cookie);
         }
 
         var env = new haskell.interpreter.RootEnv();
@@ -92,7 +84,7 @@ var DOWN  = '40';
                 
                 // history
                 hiss.addHistory(line);
-                $.cookie("hiss", hiss.history_array.toString(), {expires: 3 });              
+                $.cookie("hiss", JSON.stringify(hiss.history_array), {expires: 3 });              
                 input.attr("value","");
                 try {
                     var newLine = makeEntered(modules, line);
