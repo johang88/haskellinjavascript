@@ -45,8 +45,6 @@ var DOWN  = '40';
         var env = new haskell.interpreter.RootEnv();
         haskell.interpreter.primitives(env);
         
-
-
  //  ladda prelude
 
         $.get('Prelude.hs', function(prelude_data) {
@@ -139,7 +137,11 @@ historry = function(input){
 
     this.newer = function(input){
 
-        this.updateHistory(input);   
+        if(this.pointer == -1){
+            this.active_value = input;
+        }else{
+            this.updateHistory(input);
+        }
 
         this.pointer--;
         if(this.pointer < 0){
