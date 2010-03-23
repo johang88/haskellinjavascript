@@ -95,9 +95,9 @@
 	this.expr = expr;
 	this.cases = cases;
 	this.eval = function(env) {
-	    expr = new interpreter.Closure(env, this.expr);
+	    var expr = new interpreter.Closure(env, this.expr);
 	    for (var i in this.cases) {
-		newEnv = env.derive();
+		var newEnv = env.derive();
 		if (this.cases[i][0].match(newEnv, expr)) {
 		    return new interpreter.Closure(newEnv, this.cases[i][1]);
 		};
@@ -214,7 +214,7 @@
 	    if (this.identifier!=expr.identifier) {
 		return false;
 	    };
-	    for (i in this.patterns) {
+	    for (var i in this.patterns) {
 		if (!this.patterns[i].match(env, expr.thunks[i])) {
 		    return false;
 		};
@@ -223,8 +223,8 @@
 	};
 
 	this.vars = function() {
-	    vars=[];
-	    for (i in this.patterns) {
+	    var vars=[];
+	    for (var i in this.patterns) {
 		vars=vars.concat(this.patterns[i].vars());
 	    };
 	    return vars;
