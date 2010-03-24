@@ -80,8 +80,40 @@
 	 this.tv = function() { return []; };
      };
 
+     typechecker.Class = function(ids, insts) {
+	 this.ids = function() { return ids; };
+	 this.insts = function() { return insts; };
+     };
+
+     typechecker.Inst = function() {
+	 
+     };
+
+     
+
+     typechecker.Qual = function(pred, t) {
+	 this.pred = function() { return pred; };
+	 this.t = function() { return t; };
+     };
+
+     typechecker.Pred = function(id, type) {
+	 this.id = function() { return id; };
+	 this.type = function() { return type; };
+     };
+
+     typechecker.ClassEnv = function(classes, defaults) {
+	 this.classes = function() { return classes; };
+	 this.defaults = function() { return defaults; };
+	 this.super = function(id) {
+	     return this.classes(id).ids();
+	 };
+	 this.insts = function(id) {
+	     return this.classes(id).insts();
+	 };
+     };
+
      typechecker.test = function() {
-	 alert(typechecker.tArrow.kind().toString());
+	 alert(typechecker.tInt.kind().toString());
      };
 
      /*
@@ -140,5 +172,7 @@
 	 }
 	 return s3;
      };
+
+     
 
 }) (haskell.typechecker, haskell.ast);
