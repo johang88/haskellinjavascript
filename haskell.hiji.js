@@ -43,7 +43,7 @@ var DOWN  = '40';
         }
 
         var env = new haskell.interpreter.RootEnv();
-        haskell.interpreter.primitives(env);
+        haskell.primitives.init(env);
         
  //  ladda prelude
 

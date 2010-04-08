@@ -1,34 +1,4 @@
-(function(interpreter, ast){
-    interpreter.primitives = function(env) {
-	env.bind("+", createPrimitive(env, ["a", "b"],
-				      function(env) {
-					  var a = forceTo(env.lookup("a"), "ConstantThunk");
-					  var b = forceTo(env.lookup("b"), "ConstantThunk");
-					  return new interpreter.ConstantThunk(new ast.Num(a.value.num+b.value.num));
-				      }));
-	env.bind("-", createPrimitive(env, ["a", "b"],
-				      function(env) {
-					  var a = forceTo(env.lookup("a"), "ConstantThunk");
-					  var b = forceTo(env.lookup("b"), "ConstantThunk");
-					  return new interpreter.ConstantThunk(new ast.Num(a.value.num-b.value.num));
-				      }));
-	env.bind("*", createPrimitive(env, ["a", "b"],
-				      function(env) {
-					  var a = forceTo(env.lookup("a"), "ConstantThunk");
-					  var b = forceTo(env.lookup("b"), "ConstantThunk");
-					  return new interpreter.ConstantThunk(new ast.Num(a.value.num*b.value.num));
-				      }));
-	env.bind("alert", createPrimitive(env, ["l"],
-					  function(env) {
-					      var l = forceTo(env.lookup("l"), "ConstantThunk");
-					      alert(l.value.num);
-					      return new interpreter.Data("()", []);
-					  }));
-	env.bind(":", createDataConstructor(env, ":", 2));
-	env.bind("[]", createDataConstructor(env, "[]", 0));
-	
-    };
-    
+(function(interpreter, ast, primitives){
     // Creates env from an ast and returns it !
     interpreter.prepare = function(astt, env) {
         for (var i in astt.declarations) {
@@ -50,43 +20,15 @@
 	var env = new interpreter.RootEnv();
 	// Only fun defs atm
 	interpreter.prepare(astt, env);
-	interpreter.primitives(env);
+	primitives.init(env);
 	return env.lookup("main").force();
     };
-
 
     interpreter.eval = function(astt, env) {
 	return (new interpreter.Closure(env, astt)).force();
     };
 
-    function createPrimitive(env, args, func) {
-	var expr = new ast.Primitive(func);
-	var argsR = [].concat(args).reverse();
-	for (var i in argsR) {
-	    expr = new ast.Lambda(new ast.VariableBinding(argsR[i]), expr);
-	};
-	return new interpreter.Closure(env, expr);
-    };
-    function createDataConstructor(env, ident, num) {
-	var args = [];
-	for (var i = 0; i<num; i++) {
-	    args[i] = "__p" + i;
-	};
-	var prim = function(env) {
-	    var givenArgs=[];
-	    for (var i in args) {
-		givenArgs[i] = env.lookup(args[i]);
-	    };
-	    return new interpreter.Data(ident, givenArgs);
-	};
-	return createPrimitive(env, args, prim);
-    };
-    function forceTo(thunk, type) {
-	while(thunk.type!=type) {
-	    thunk=thunk.force();
-	};
-	return thunk;
-    };
+
 
 
     interpreter.test = function() {
@@ -219,4 +161,4 @@
 	// Data is already forced...
 	return this;
     };
-})(haskell.interpreter, haskell.ast);
+})(haskell.interpreter, haskell.ast, haskell.primitives);
