@@ -188,7 +188,6 @@ haskell.parser.parse = function(code) {
         };
     }
     
-    // todo: implement rpat, lpat and pat
     // should make cons (:) work as expected, that is without parans
     var apat = function(state) { return apat(state) };
     var pat = function(state) { return pat(state); };
