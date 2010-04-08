@@ -31,15 +31,19 @@ module Prelude where {
     
     id x = x;
 
-    map f xs = case xs of {
-    	  [] -> [];
-	  (x:xs) -> f x : map f xs;
-    	};
-        
+    map f = foldr (\y ys -> f y : ys) [];
+
+    foldr f s xs = case xs of {
+        [] -> s;
+        (x:xs) -> f x (foldr f s xs);
+    };
+
     foldr1 f xs = case xs of {
         [x] -> x;
         (x:xs) -> f x (foldr1 f xs);
     };
+
+    filt f = foldr (\y ys -> ( case f y of { True -> y:ys; False -> ys;})) [];
     
     filter f xs = case xs of {
         [] -> [];
