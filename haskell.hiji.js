@@ -56,7 +56,7 @@ var DOWN  = '40';
         });
 
         modules[0] = "Prelude";
-        modules[1] = "Control.Monad";
+       // modules[1] = "Control.Monad";
         this.html("<ol>" + makeInput(modules) + "</ol>");
 
         $("input:text:visible:first").focus();
