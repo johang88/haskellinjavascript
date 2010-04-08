@@ -66,7 +66,7 @@ haskell.parser.parse = function(code) {
     var qtycls = ident;
     
     var conid = action(sequence(range('A', 'Z'), ident_), function(ast) { return ast.join(""); });
-    var consym = butnot(sym, reservedop); // should not allow reserved symbols
+    var consym = butnot(sym, reservedop);
     
     var qconsym = consym;
     var qconid = conid;
