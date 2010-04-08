@@ -48,7 +48,15 @@ haskell.parser.parse = function(code) {
     var ident_ = action(repeat0(choice(range('A', 'Z'), range('a', 'z'), range('0', '1'), '\'')), function(ast) { return ast.join(""); });
     var ident = action(butnot(sequence(range('a', 'z'), ident_), reservedid), function(ast) { return ast.join(""); });
     
-    var literal = ws(integer);
+    var char_ = choice(range('A', 'Z'), range('a', 'z'), range('0', '1'), ' ', '\\n');
+    
+    var charlit = sequence('\'', char_, '\'');
+    
+    var string_ = action(repeat0(char_), function(ast) { return ast.join(""); });
+    
+    var stringlit = sequence('"', string_, '"');
+    
+    var literal = choice(ws(integer), ws(charlit), ws(stringlit));
     
     var symbol = choice('!', '#', '$', '%', '&', '*', '+', '.', '/', '<', '=', '>', '?', '@', '\\', '^', '|', '-', '~');
     var sym = action(repeat1(symbol), function(ast) { return ast.join(""); });
