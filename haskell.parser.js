@@ -45,10 +45,10 @@ haskell.parser.parse = function(code) {
 
     var integer = action(repeat1(range('0', '9')), function(ast) { return new haskell.ast.Num(parseInt(ast.join(""))); });
 
-    var ident_ = action(repeat0(choice(range('A', 'Z'), range('a', 'z'), range('0', '1'), '\'')), function(ast) { return ast.join(""); });
+    var ident_ = action(repeat0(choice(range('A', 'Z'), range('a', 'z'), range('0', '9'), '\'', '#')), function(ast) { return ast.join(""); });
     var ident = action(butnot(sequence(range('a', 'z'), ident_), reservedid), function(ast) { return ast.join(""); });
     
-    var char_ = choice(range('A', 'Z'), range('a', 'z'), range('0', '1'), ' ', '\\n');
+    var char_ = choice(range('A', 'Z'), range('a', 'z'), range('0', '9'), ' ', '\\n');
     
     var charlit = sequence('\'', char_, '\'');
     
@@ -56,7 +56,12 @@ haskell.parser.parse = function(code) {
     
     var stringlit = sequence('"', string_, '"');
     
-    var literal = choice(ws(integer), ws(charlit), ws(stringlit));
+    var exponent = sequence(choice('e', 'E'), optional(choice('+', '-')), integer); // todo: fix
+    
+    var float_ = choice(sequence(integer, expect('.'), integer, optional(exponent)),
+                        sequence(integer, exponent));
+                        
+    var literal = choice(ws(integer), ws(charlit), ws(stringlit), ws(float_));
     
     var symbol = choice('!', '#', '$', '%', '&', '*', '+', '.', '/', '<', '=', '>', '?', '@', '\\', '^', '|', '-', '~');
     var sym = action(repeat1(symbol), function(ast) { return ast.join(""); });
