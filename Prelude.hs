@@ -49,7 +49,7 @@ module Prelude where {
         };
     };
     
-    iterate f x = f x : iterate f x;
+    iterate f x = f x : iterate f (f x);
     
     head xs = case xs of { (x:_) -> x; };
     
