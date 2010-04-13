@@ -9,7 +9,7 @@
 	    else if (decl.type=="Data") {
 		for (var i in decl.constructors) {
 		    constr = decl.constructors[i];
-		    env.bind(constr.identifier, createDataConstructor(env, constr.identifier, constr.number));
+		    env.bind(constr.identifier, primitives.createDataConstructorKludge(env, constr.identifier, constr.number));
 		};
 	    };
         };
