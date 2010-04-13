@@ -3,6 +3,14 @@ todo
 
 \subsection{Parser} 
 %TODO
+Parsern uppgift är att ta användarens indata och konvertera den till en datastruktur som är lättare att hantera internt. 
+Denna datastruktur brukar kalls AST (Abstract Syntax Tree). 
+Till parserns hjälp har Haskellstandarden definerat upp en grammatik, ett antal regler som definerar hur korrekt Haskellkod ser ut och hur den ska tolka tvetydiga definitioner.
+
+För att parsa indatan använder vi ett bibliotek för att bygga parsers kallat JSParse \citep{jsparse}. 
+Detta bibliotek ger oss ett antal primtiver med vars hjälp vi kan definera upp grammatiken och enkelt konvertera denna till vår interna struktur.
+
+Parsern klarar av att parsa hela den context-fria varianten av Haskell. Detta innebär att användaren är tvungen att använda måsvingar för att avgränsa block och semikolon för att avsluta deklarationer och statements.
 
 \subsection{Abstrakt syntaxträd} 
 %TODO
