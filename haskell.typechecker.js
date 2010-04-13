@@ -21,7 +21,9 @@
      // asttt = new ast.Constant(new ast.Num(1));
 
      ast.Num.prototype.infer = function(env) {
-	return "Num";
+	return new typechecker.Pred(
+	    "Num",
+	    new typechecker.TVar("a1", new typechecker.Star()));
      };
 
 
@@ -45,11 +47,12 @@
       * 
       */
      typechecker.Tyvar = function(id, kind) {
-	 this.id=id;
-	 this.kind = function() { return kind; }; 
+	 this.id = function () { return id; };
+	 this.kind = function() { return kind; };
      };
 
      typechecker.Tycon = function(id, kind) {
+	 this.id = function() { return id; };
 	 this.kind = function() { return kind; };
      };
 
@@ -58,18 +61,25 @@
       *   deriving Eq
       * 
       */
-     typechecker.TVar = function(tyvar) {
-	 this.kind = function() { return tyvar.kind(); };
+     typechecker.TVar = function(id, kind) {
+	 this.toString = function () {
+	     return this.id() + " (" + this.kind() + ")";
+	 };
+	 this.id = function () { return id; };
+	 this.kind = function() { return kind; };
+	 // this.kind = function() { return tyvar.kind(); };
 	 this.apply = function(subst) {
-	     if (subst[tyvar] != undefined) {
-		 return subst[tyvar];
+	     if (subst[this] != undefined) {
+		 return subst[this];
 	     }
-	     return (new typechecker.TVar(tyvar));
+	     return (new typechecker.TVar(this.id(), this.kind()));
 	 };
 	 this.tv = function() { return [tyvar]; };
      };
-     typechecker.TCon = function(tycon) {
-	 this.kind = function() { return tycon.kind(); };
+     typechecker.TCon = function(id, kind) {
+	 this.id = function() { return id; };
+	 this.kind = function() { return kind; };
+	 // this.kind = function() { return tycon.kind(); };
 	 this.apply = function(subst) { return this; };
 	 this.tv = function() { return []; };
      };
@@ -78,8 +88,9 @@
 	 this.apply = function(subst) { return new typechecker.TAp(t1.apply(),t2.apply()); };
 	 this.tv = function() { return [].concat(t1.tv()).concat(t2.tv()).unique(); };
      };
-     typechecker.TGen = function() {
+     typechecker.TGen = function(id) {
 	 // this.kind = function() { }; - should probably throw an exception
+	 this.id = function() { return id; };
 	 this.apply = function(subst) { return this; };
 	 this.tv = function() { return []; };
      };
@@ -93,16 +104,20 @@
 	 
      };
 
-     
-
      typechecker.Qual = function(pred, t) {
 	 this.pred = function() { return pred; };
 	 this.t = function() { return t; };
      };
 
-     typechecker.Pred = function(id, type) {
-	 this.id = function() { return id; };
+     typechecker.Pred = function(class, type) {
+	 this.class = function() { return class; };
 	 this.type = function() { return type; };
+	 this.toString = function() {
+	     return this.class().toString() +
+		 " " + 
+		 this.type().id() +
+		 " => " + this.type().toString();
+	 };
      };
 
      typechecker.Scheme = function(kinds, qual) {
@@ -121,14 +136,11 @@
 	 };
      };
 
-     typechecker.test = function() {
-	 alert(typechecker.tInt.kind().toString());
-     };
-
      /*
       * Some built-in types
       * 
       */
+     /* 
      typechecker.tUnit = new typechecker.TCon(
 	 new typechecker.Tycon("()", new typechecker.Star()));
      typechecker.tChar = new typechecker.TCon(
@@ -160,7 +172,7 @@
 				    new typechecker.Kfun(
 					new typechecker.Star(),
 					new typechecker.Star()))));
-
+      */
      /*
       * Substitutions
       * 
