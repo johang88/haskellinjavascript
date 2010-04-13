@@ -826,7 +826,23 @@ haskell.parser.parse = function(code, options) {
             return ast[ast.length - 1];
         });
     
-    var result = grammar(ps(code));
+    // no nested multiline comments for now
+    var singleLineComment = sequence(ws("--"), repeat0(negate(choice('\n', '\r'))));
+    var multiLineComment = sequence(ws("{-"), repeat0(negate("-}")), ws("-}"));
+    
+    var strip_comments_action = function(ast) {
+        return "";
+    };
+    
+    singleLineComment = action(singleLineComment, strip_comments_action);
+    multiLineComment = action(multiLineComment, strip_comments_action);
+    
+    var comments = repeat0(choice(singleLineComment, multiLineComment, negate(choice(singleLineComment, multiLineComment))));
+    comments = join_action(comments, "");
+    
+    var stripped = comments(ps(code)).ast;
+    
+    var result = grammar(ps(stripped));
     
     return result;
 };
