@@ -786,8 +786,25 @@ haskell.parser.parse = function(code, options) {
     var module = module_action(choice(sequence(ws("module"), ws(modid), optional(exports), ws("where"), body),
                         body));
     
+    
     var program = action(sequence(choice(module, exp), ws(end_p)), function(ast) { return ast[0]; });
-    var result = program(ps(code));
+    
+    // {-# MagicHash #-}
+    var pragmaId = join_action(repeat1(negate(choice('\t', ' ', '\r', '\n', "#-}"))), "");
+    var pragma = action(sequence(expect(ws("{-#")), ws(pragmaId), expect(ws("#-}"))), 
+            function(ast) {
+                var p = ast[0];
+                if (p == "MagicHash") {
+                    enableHash = true;
+                }
+                return ast;
+            });
+            
+    var grammar = action(sequence(repeat0(pragma), program), function(ast) {
+            return ast[ast.length - 1];
+        });
+    
+    var result = grammar(ps(code));
     
     return result;
 };
