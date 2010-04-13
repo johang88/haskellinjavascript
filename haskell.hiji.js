@@ -56,8 +56,7 @@ commands[":help"] = "HELP";
         var env = new haskell.interpreter.RootEnv();
         haskell.primitives.init(env);
         
-        //  ladda prelude
-        load_module('Prelude.hs');
+        load_module('hs/Prelude.hs');
         modules[0] = "Prelude";
         this.html("<ol>" + makeInput(modules) + "</ol>");
 
