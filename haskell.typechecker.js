@@ -20,6 +20,10 @@
 				     new ast.Constant(new ast.Num(1))); // ((x + :: (Num -> Num)) 1 :: Num)
      // asttt = new ast.Constant(new ast.Num(1));
 
+     ast.Num.prototype.infer = function(env) {
+	return "Num";
+     };
+
 
      /*
       * data Kind = Star | Kfun Kind Kind
@@ -99,6 +103,11 @@
      typechecker.Pred = function(id, type) {
 	 this.id = function() { return id; };
 	 this.type = function() { return type; };
+     };
+
+     typechecker.Scheme = function(kinds, qual) {
+	 this.kinds = function() { return kinds; };
+	 this.qual = function() { return qual; };
      };
 
      typechecker.ClassEnv = function(classes, defaults) {
