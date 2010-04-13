@@ -65,7 +65,13 @@ haskell.parser.parse = function(code, options) {
 
     var ident_ = function(state) {
         if (enableHash) {
-            return action(repeat0(choice(range('A', 'Z'), range('a', 'z'), range('0', '9'), '\'', '#')), function(ast) { return ast.join(""); })(state);
+            return action(sequence(repeat0(choice(range('A', 'Z'), range('a', 'z'), range('0', '9'), '\'')), optional('#')), function(ast) { 
+                if (ast[1] != false) {
+                    return ast[0].join("") + '#';
+                } else {
+                    return ast[0].join(""); 
+                }
+            })(state);
         } else {
             return action(repeat0(choice(range('A', 'Z'), range('a', 'z'), range('0', '9'), '\'')), function(ast) { return ast.join(""); })(state);
         }
@@ -79,7 +85,15 @@ haskell.parser.parse = function(code, options) {
     
     var string_ = action(repeat0(char_), function(ast) { return ast.join(""); });
     
-    var stringlit = sequence('"', string_, '"');
+    var stringlit = function(state) {
+        var str = sequence('"', string_, '"');
+        if (enableHash) {
+            return choice(action(sequence(str, '#'), function(ast) { return ast[0]; }), 
+                          str)(state);
+        } else {
+            return str(state);
+        }
+    };
     
     var exponent = sequence(choice('e', 'E'), optional(choice('+', '-')), integer); // todo: fix
     
