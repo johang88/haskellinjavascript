@@ -44,6 +44,10 @@ haskell.parser.parse = function(code) {
     var reservedop = choice("..", ":", "::", "=", "\\", "|", "<-", "->", "@", "~", "=>");
 
     var integer = action(repeat1(range('0', '9')), function(ast) { return new haskell.ast.Num(parseInt(ast.join(""))); });
+    var integerlit = choice( action(sequence(repeat1(range('0', '9')), '#'), function(ast) {
+                                return parseInt(ast[0].join(""));
+                            }),
+                            integer);
 
     var ident_ = action(repeat0(choice(range('A', 'Z'), range('a', 'z'), range('0', '9'), '\'', '#')), function(ast) { return ast.join(""); });
     var ident = action(butnot(sequence(range('a', 'z'), ident_), reservedid), function(ast) { return ast.join(""); });
@@ -61,7 +65,7 @@ haskell.parser.parse = function(code) {
     var float_ = choice(sequence(integer, expect('.'), integer, optional(exponent)),
                         sequence(integer, exponent));
                         
-    var literal = choice(ws(integer), ws(charlit), ws(stringlit), ws(float_));
+    var literal = choice(ws(integerlit), ws(charlit), ws(stringlit), ws(float_));
     
     var symbol = choice('!', '#', '$', '%', '&', '*', '+', '.', '/', '<', '=', '>', '?', '@', '\\', '^', '|', '-', '~');
     var sym = action(repeat1(symbol), function(ast) { return ast.join(""); });
