@@ -44,11 +44,28 @@ haskell.parser.parse = function(code) {
     var reservedop = choice("..", ":", "::", "=", "\\", "|", "<-", "->", "@", "~", "=>");
 
     var integer = action(repeat1(range('0', '9')), function(ast) { return new haskell.ast.Num(parseInt(ast.join(""))); });
+    var integerlit = choice( action(sequence(repeat1(range('0', '9')), '#'), function(ast) {
+                                return parseInt(ast[0].join(""));
+                            }),
+                            integer);
 
-    var ident_ = action(repeat0(choice(range('A', 'Z'), range('a', 'z'), range('0', '1'), '\'')), function(ast) { return ast.join(""); });
+    var ident_ = action(repeat0(choice(range('A', 'Z'), range('a', 'z'), range('0', '9'), '\'', '#')), function(ast) { return ast.join(""); });
     var ident = action(butnot(sequence(range('a', 'z'), ident_), reservedid), function(ast) { return ast.join(""); });
     
-    var literal = ws(integer);
+    var char_ = choice(range('A', 'Z'), range('a', 'z'), range('0', '9'), ' ', '\\n');
+    
+    var charlit = sequence('\'', char_, '\'');
+    
+    var string_ = action(repeat0(char_), function(ast) { return ast.join(""); });
+    
+    var stringlit = sequence('"', string_, '"');
+    
+    var exponent = sequence(choice('e', 'E'), optional(choice('+', '-')), integer); // todo: fix
+    
+    var float_ = choice(sequence(integer, expect('.'), integer, optional(exponent)),
+                        sequence(integer, exponent));
+                        
+    var literal = choice(ws(integerlit), ws(charlit), ws(stringlit), ws(float_));
     
     var symbol = choice('!', '#', '$', '%', '&', '*', '+', '.', '/', '<', '=', '>', '?', '@', '\\', '^', '|', '-', '~');
     var sym = action(repeat1(symbol), function(ast) { return ast.join(""); });
@@ -66,7 +83,7 @@ haskell.parser.parse = function(code) {
     var qtycls = ident;
     
     var conid = action(sequence(range('A', 'Z'), ident_), function(ast) { return ast.join(""); });
-    var consym = butnot(sym, reservedop); // should not allow reserved symbols
+    var consym = butnot(sym, reservedop);
     
     var qconsym = consym;
     var qconid = conid;
@@ -188,7 +205,6 @@ haskell.parser.parse = function(code) {
         };
     }
     
-    // todo: implement rpat, lpat and pat
     // should make cons (:) work as expected, that is without parans
     var apat = function(state) { return apat(state) };
     var pat = function(state) { return pat(state); };
@@ -390,6 +406,10 @@ haskell.parser.parse = function(code) {
         	    }
         	}
             
+            var op = ast[1];
+            ast[1] = new Object();
+            ast[1].op = op;
+            
             ast.info = new function() { 
                 this.need_resolve = true;
             };
@@ -461,9 +481,13 @@ haskell.parser.parse = function(code) {
         haskell.parser.opTable[':'] = new haskell.parser.Operator(5,haskell.parser.fixity.right,':');
         
         for (var i in ast) {
-            if (haskell.parser.opTable[ast[i]] != undefined) {
-                ast[i] = haskell.parser.opTable[ast[i]];
-            }
+            if (ast[i].op != undefined) {
+                if (haskell.parser.opTable[ast[i].op] != undefined) {
+                    ast[i] = haskell.parser.opTable[ast[i].op];
+                } else {
+                    ast[i] = new haskell.parser.Operator(5, haskell.parser.fixity.right, ast[i].op);
+                }
+            }   
         }
         
         ast = parseNeg(new haskell.parser.Operator(-1, haskell.parser.fixity.none, ''), ast);
