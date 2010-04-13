@@ -36,7 +36,15 @@ haskell.parser.opTable = {};
  * \code Code to parse
  * \return The ast
  */
-haskell.parser.parse = function(code) {
+haskell.parser.parse = function(code, options) {
+    var enableHash = false;
+    
+    if (options != undefined) {
+        if (options.enableHash) {
+            enableHash = true;
+        }
+    }
+    
     var reservedid = choice("case", "class", "data", "default", "deriving", "do", "else", "if", "import", "in", 
                             "infix", "infixl", "infixr", "instance", "let", "module", "newtype", "of", "then",
                             "type", "where", "_");
@@ -44,12 +52,25 @@ haskell.parser.parse = function(code) {
     var reservedop = choice("..", ":", "::", "=", "\\", "|", "<-", "->", "@", "~", "=>");
 
     var integer = action(repeat1(range('0', '9')), function(ast) { return new haskell.ast.Num(parseInt(ast.join(""))); });
-    var integerlit = choice( action(sequence(repeat1(range('0', '9')), '#'), function(ast) {
+    var integerlit = function(state) {
+            if (enableHash) {
+                return choice( action(sequence(repeat1(range('0', '9')), '#'), function(ast) {
                                 return parseInt(ast[0].join(""));
                             }),
-                            integer);
+                            integer)(state);
+            } else {
+                return integer(state);
+            }
+    };
 
-    var ident_ = action(repeat0(choice(range('A', 'Z'), range('a', 'z'), range('0', '9'), '\'', '#')), function(ast) { return ast.join(""); });
+    var ident_ = function(state) {
+        if (enableHash) {
+            return action(repeat0(choice(range('A', 'Z'), range('a', 'z'), range('0', '9'), '\'', '#')), function(ast) { return ast.join(""); })(state);
+        } else {
+            return action(repeat0(choice(range('A', 'Z'), range('a', 'z'), range('0', '9'), '\'')), function(ast) { return ast.join(""); })(state);
+        }
+    };
+    
     var ident = action(butnot(sequence(range('a', 'z'), ident_), reservedid), function(ast) { return ast.join(""); });
     
     var char_ = choice(range('A', 'Z'), range('a', 'z'), range('0', '9'), ' ', '\\n');
