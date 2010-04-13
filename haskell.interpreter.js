@@ -26,39 +26,7 @@
 
     interpreter.eval = function(astt, env) {
 	return (new interpreter.Closure(env, astt)).force();
-    };
-
-
-
-
-    interpreter.test = function() {
-	// inc  = \x -> x + 1
-	// inc2 = \x -> inc (inc x)
-	// main = print (inc2 2)
-	// map = (\f -> let map' = (\l -> case l of
-        //                                (x:xs) -> f x : map' xs
-	//                                []     -> []
-	//                          ) in map')
-	var astt = new ast.Module([
-				   new ast.Variable(new ast.VariableBinding("inc"),
-						    new ast.Lambda(new ast.VariableBinding("x"),
-								   new ast.Application(new ast.Application(new ast.VariableLookup("+"),
-													   new ast.VariableLookup("x")),
-										       new ast.Constant(new ast.Num(1))))),
-				   new ast.Variable(new ast.VariableBinding("inc2"),
-						    new ast.Lambda(new ast.VariableBinding("x"),
-								   new ast.Application(new ast.VariableLookup("inc"),
-										       new ast.Application(new ast.VariableLookup("inc"),
-													   new ast.VariableLookup("x"))))),
-				   new ast.Variable(new ast.VariableBinding("main"),
-						    new ast.Application(new ast.VariableLookup("alert"),
-									new ast.Application(new ast.VariableLookup("inc2"),
-											    new ast.Constant(new ast.Num(2)))))
-				   ]);
-	interpreter.execute(astt);
-    };
-
- 
+    }; 
 
      // Live data
     /*
@@ -129,6 +97,7 @@
                 | ConstantThunk Value
 	        | Data Identifier [Thunk]
 	        | Primitive Env Function
+		| PrimData -- Javascript data
     */
     interpreter.Closure = function(env, expression) {
 	this.type = "Closure";
