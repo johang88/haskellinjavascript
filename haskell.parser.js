@@ -402,6 +402,10 @@ haskell.parser.parse = function(code) {
         	    }
         	}
             
+            var op = ast[1];
+            ast[1] = new Object();
+            ast[1].op = op;
+            
             ast.info = new function() { 
                 this.need_resolve = true;
             };
@@ -473,9 +477,13 @@ haskell.parser.parse = function(code) {
         haskell.parser.opTable[':'] = new haskell.parser.Operator(5,haskell.parser.fixity.right,':');
         
         for (var i in ast) {
-            if (haskell.parser.opTable[ast[i]] != undefined) {
-                ast[i] = haskell.parser.opTable[ast[i]];
-            }
+            if (ast[i].op != undefined) {
+                if (haskell.parser.opTable[ast[i].op] != undefined) {
+                    ast[i] = haskell.parser.opTable[ast[i].op];
+                } else {
+                    ast[i] = new haskell.parser.Operator(5, haskell.parser.fixity.right, ast[i].op);
+                }
+            }   
         }
         
         ast = parseNeg(new haskell.parser.Operator(-1, haskell.parser.fixity.none, ''), ast);
