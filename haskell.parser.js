@@ -811,11 +811,12 @@ haskell.parser.parse = function(code, options) {
     
     var program = action(sequence(choice(module, exp), ws(end_p)), function(ast) { return ast[0]; });
     
-    // {-# MagicHash #-}
+    // Pragma macro parser
     var pragmaId = join_action(repeat1(negate(choice('\t', ' ', '\r', '\n', "#-}"))), "");
     var pragma = action(sequence(expect(ws("{-#")), ws(pragmaId), expect(ws("#-}"))), 
             function(ast) {
                 var p = ast[0];
+                // Add extension alternatives here
                 if (p == "MagicHash") {
                     enableHash = true;
                 }
@@ -840,8 +841,12 @@ haskell.parser.parse = function(code, options) {
     var comments = repeat0(choice(singleLineComment, multiLineComment, negate(choice(singleLineComment, multiLineComment))));
     comments = join_action(comments, "");
     
+    // Step 1: Strip comments
     var stripped = comments(ps(code)).ast;
     
+    // Step 2: TODO: Parse lexical syntax and convert to context free
+    
+    // Step 3: Parse context free grammar
     var result = grammar(ps(stripped));
     
     return result;
