@@ -58,48 +58,34 @@
 	env.bind("<=#", ["a", "b"], lePrim);
 	// chr# :: Int# -> Char#
 	// int2Word# :: Int# -> Word#
-	env.bind("int2Word#", ["a"], primNarrow(32, false));
-	// int2Float# :: Int# -> Float#
 	env.bind("int2Word#", ["a"], primNarrow(32, true));
+	// int2Float# :: Int# -> Float#
+	env.bind("int2Float#", ["a"], primNarrow(32, true));
 	// int2Double# :: Int# -> Double#
-	env.bind("int2Word#", ["a"], primNarrow(64, true));
+	env.bind("int2Double#", ["a"], primNarrow(64, true));
 	// uncheckedIShiftL# :: Int# -> Int# -> Int#
+	env.bind("uncheckedIShiftL#", ["a", "b"], uncheckedIShiftL);
 	// uncheckedIShiftRA# :: Int# -> Int# -> Int#
-	// uncheckedIShiftRL# :: Int# -> Int# -> Int#	
+	env.bind("uncheckedIShiftRA#", ["a", "b"], uncheckedIShiftRA);
+	// uncheckedIShiftRL# :: Int# -> Int# -> Int#
+	env.bind("uncheckedIShiftRL#", ["a", "b"], uncheckedIShiftRL);
+
+
+	// Some extras:
+	// intToString# :: Int# -> String#
+	env.bind("intToString#", ["a"], function(env) {
+		return "" + env.lookup("a");
+	    });
+	// alert# -> String# -> () -- This should be IO ()
+	env.bind("alert#", ["a"], function(env) {
+		// TODO: Are we sure that primitives are evaluated?
+		alert(env.lookup("a"));
+		return new interpreter.Data("()", []);
+	    });
     };
 
     primitives.init = function(env) {
 	primitives.prim(env);
-	// (+) :: Num a => a -> a -> a
-	env.bind("+", createPrimitive(env, ["a", "b"],
-				      function(env) {
-					  var a = forceHead(env.lookup("a"));
-					  var b = forceHead(env.lookup("b"));
-					  return new interpreter.ConstantThunk(new ast.Num(a.value.num+b.value.num));
-				      }));
-
-	// (-) :: Num a => a -> a -> a
-	env.bind("-", createPrimitive(env, ["a", "b"],
-				      function(env) {
-					  var a = forceHead(env.lookup("a"));
-					  var b = forceHead(env.lookup("b"));
-					  return new interpreter.ConstantThunk(new ast.Num(a.value.num-b.value.num));
-				      }));
-	// (*) :: Num a => a -> a -> a
-	env.bind("*", createPrimitive(env, ["a", "b"],
-				      function(env) {
-					  var a = forceHead(env.lookup("a"));
-					  var b = forceHead(env.lookup("b"));
-					  return new interpreter.ConstantThunk(new ast.Num(a.value.num*b.value.num));
-				      }));
-	// primAlert :: String -> a
-	env.bind("alert", createPrimitive(env, ["l"],
-					  function(env) {
-					      var l = forceHead(env.lookup("l"));
-					      alert(l.value.num);
-					      return new interpreter.Data("()", []);
-					  }));
-
 	// seq :: a -> b -> b
 	env.bind("seq", createPrimitive(env, ["a", "b"],
 					function(env) {
@@ -109,7 +95,7 @@
 
 	// Can print all different haskell types (including functions...)
 	// Should be hidden away and only used for the deriving Show implementation.
-	// defaultShow :: a -> String
+	// defaultShow :: a -> String#
 	env.bind("defaultShow", createPrimitive(env, ["s"],
 						function(env) {
 						    var t = env.lookup("s");
@@ -270,5 +256,16 @@
     function doPrimOverflow(bits, twoComplement, num) {
 	return doPrimNarrow(bits, twoComplement, num);
     };
-    
+
+    function uncheckedIShiftL(env) {
+	return env.lookup("a") << env.lookup("b");
+    };
+
+    function uncheckedIShiftRA(env) {
+	return env.lookup("a") >> env.lookup("b");
+    };
+
+    function uncheckedIShiftRL(env) {
+	return env.lookup("a") >>> env.lookup("b");
+    };
 })(haskell.primitives, haskell.ast, haskell.interpreter);
