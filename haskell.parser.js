@@ -81,7 +81,15 @@ haskell.parser.parse = function(code, options) {
     
     var char_ = choice(range('A', 'Z'), range('a', 'z'), range('0', '9'), ' ', '\\n');
     
-    var charlit = sequence('\'', char_, '\'');
+    var charlit = function(state) {
+        var chr = sequence('\'', char_, '\'');
+        if (enableHash) {
+            return choice(action(sequence(chr, '#'), function(ast) { return ast[0]; }), 
+                          chr)(state);
+        } else {
+            return chr(state);
+        }
+    }
     
     var string_ = action(repeat0(char_), function(ast) { return ast.join(""); });
     
