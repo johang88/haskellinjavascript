@@ -38,7 +38,7 @@ som tolkar språket utefter dess specifikation.
 
 Vi hade tänkt följa den här planen genom varje milstolpe genom att utöka parsern, typecheckaren och interpretern med ny funktionalitet.
 
-Ett lämpligt delmål är att först göra en enkel implementation utav lambda calculus då mer avancerade funktionella programspråksegenskaper kan implementeras som detta \citep{jones87}
+Ett lämpligt delmål är att först göra en enkel implementation utav lambda calculus då mer avancerade funktionella programspråksegenskaper kan implementeras som detta \citep{jones87}.
 
  Parsern implementeras med hjälp av ett parser combinator bibliotek kallat \emph{JSParse} \citep{jsparse}. Detta ger oss möjlighet att implementera den del av Haskells syntax som inte är context free relativt enkelt.
 
@@ -56,11 +56,5 @@ Endast en delmängd av Haskell98 specifikationen kommer att implementeras. De de
             \item{pattern matching}
             \item{Guards}
             \end{enumerate}
-Med dessa delar implementerade kan de flesta enklare haskellprogram köras och borde vara tillräckligt för det stora flertalet nybörjare. Man ska komma ihåg att detta projekt inte kommer resultera i något som ska ses som ett komplement till vanliga haskellkompilatorer, såsom GHC och Hugs, utan en snabbare inkörsport för att lära sig Haskell. Därför anser vi att detta är en bra kompromiss för som gagnar Haskellcommunityn mest. % :D :D: D
+Med dessa delar implementerade kan de flesta enklare haskellprogram köras och borde vara tillräckligt för det stora flertalet nybörjare. Man ska komma ihåg att detta projekt inte kommer resultera i något som ska ses som ett komplement till vanliga haskellkompilatorer, såsom GHC och Hugs, utan en snabbare inkörsport för att lära sig Haskell. Därför anser vi att detta är en bra kompromiss som gagnar Haskellcommunityn mest. % :D :D: D
 
-\begin{figure}
-    \begin{center}
-        \includegraphics[width=1.0\textwidth]{image1.png}
-        \caption{Överblick över tolkens struktur och interaktion}
-    \end{center}
-\end{figure}
