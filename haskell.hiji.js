@@ -47,7 +47,7 @@ var DOWN  = '40';
         
  //  ladda prelude
 
-        $.get('Prelude.hs', function(prelude_data) {
+        $.get('hs/Prelude.hs', function(prelude_data) {
 		console.log(prelude_data);
 		try {
 		    var ast = haskell.parser.parse(prelude_data);
