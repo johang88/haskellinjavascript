@@ -144,6 +144,9 @@
 	return createPrimitive(env, args, prim);
     };
 
+    primitives.createDataConstructorKludge = createDataConstructor;
+
+
     function forceHead(thunk) {
 	while(thunk.type!="ConstantThunk" && thunk.type!="Data") {
 	    thunk=thunk.force();
