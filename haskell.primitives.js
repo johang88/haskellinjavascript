@@ -3,110 +3,128 @@
 	// data Char#
 
 	// gtChar# :: Char# -> Char# -> Bool
-	env.bind("gtChar#", ["a", "b"], gtPrim);
+	env.bind("gtChar#", createPrimitive(env, 2, gtPrim));
 
 	// geChar# :: Char# -> Char# -> Bool
-	env.bind("geChar#", ["a", "b"], gePrim);
+	env.bind("geChar#", createPrimitive(env, 2, gePrim));
 
 	// eqChar# :: Char# -> Char# -> Bool
-	env.bind("eqChar#", ["a", "b"], eqPrim);
+	env.bind("eqChar#", createPrimitive(env, 2, eqPrim));
 
 	// neChar# :: Char# -> Char# -> Bool
-	env.bind("neChar#", ["a", "b"], nePrim);
+	env.bind("neChar#", createPrimitive(env, 2, nePrim));
 
 	// ltChar# :: Char# -> Char# -> Bool
-	env.bind("ltChar#", ["a", "b"], ltPrim);
+	env.bind("ltChar#", createPrimitive(env, 2, ltPrim));
 
 	// leChar# :: Char# -> Char# -> Bool
-	env.bind("leChar#", ["a", "b"], lePrim);
+	env.bind("leChar#", createPrimitive(env, 2, lePrim));
 
 	// ord# :: Char# -> Int#
-	env.bind("ord#", ["a"], 
-		 function(env) {
-		     var a = env.lookup("a");
-		     return a.charCodeAt(0);
-		 });
+	env.bind("ord#", createPrimitive(env, 1, 
+					 function(env, args) {
+					     return args[0].charCodeAt(0);
+					 }));
 
 	// data Int#
 	var intSize = 32;
 	// (+#) :: Int# -> Int# -> Int#
-	env.bind("+#", ["a", "b"], primAdd(intSize, true));
+	env.bind("+#", createPrimitive(env, 2, primAdd(intSize, true)));
 	// (-#) :: Int# -> Int# -> Int#
-   	env.bind("-#", ["a", "b"], primSub(intSize, true));
+   	env.bind("-#", createPrimitive(env, 2, primSub(intSize, true)));
 	// (*#) :: Int# -> Int# -> Int#
-	env.bind("*#", ["a", "b"], primMul(intSize, true));
+	env.bind("*#", createPrimitive(env, 2, primMul(intSize, true)));
 	// mulIntMayOflo# :: Int# -> Int# -> Int#
 	// quotInt# :: Int# -> Int# -> Int#
-	env.bind("quotInt#", ["a", "b"], primQuot(intSize, true));
+	env.bind("quotInt#", createPrimitive(env, 2, primQuot(intSize, true)));
 	// remInt# :: Int# -> Int# -> Int#
-	env.bind("remInt#", ["a", "b"], primRem(intSize, true));
+	env.bind("remInt#", createPrimitive(env, 2, primRem(intSize, true)));
 	// negateInt# :: Int# -> Int#
-	env.bind("negateInt#", ["a", "b"], primNegate(intSize, true));
+	env.bind("negateInt#", createPrimitive(env, 2, primNegate(intSize, true)));
 	// addIntC# :: Int# -> Int# -> (#Int#, Int##)
 	// subIntC# :: Int# -> Int# -> (#Int#, Int##)
 	// (>#) :: Int# -> Int# -> Bool
-	env.bind(">#", ["a", "b"], gtPrim);
+	env.bind(">#", createPrimitive(env, 2, gtPrim));
 	// (>=#) :: Int# -> Int# -> Bool
-	env.bind(">=#", ["a", "b"], gePrim);
+	env.bind(">=#", createPrimitive(env, 2, gePrim));
 	// (==#) :: Int# -> Int# -> Bool
-	env.bind("==#", ["a", "b"], eqPrim);
+	env.bind("==#", createPrimitive(env, 2, eqPrim));
 	// (/=#) :: Int# -> Int# -> Bool
-	env.bind("/=#", ["a", "b"], nePrim);
+	env.bind("/=#", createPrimitive(env, 2, nePrim));
 	// (<#) :: Int# -> Int# -> Bool
-	env.bind("<#", ["a", "b"], ltPrim);
+	env.bind("<#", createPrimitive(env, 2, ltPrim));
 	// (<=#) :: Int# -> Int# -> Bool
-	env.bind("<=#", ["a", "b"], lePrim);
+	env.bind("<=#", createPrimitive(env, 2, lePrim));
 	// chr# :: Int# -> Char#
 	// int2Word# :: Int# -> Word#
-	env.bind("int2Word#", ["a"], primNarrow(32, true));
+	env.bind("int2Word#", createPrimitive(env, 1, primNarrow(32, true)));
 	// int2Float# :: Int# -> Float#
-	env.bind("int2Float#", ["a"], primNarrow(32, true));
+	env.bind("int2Float#", createPrimitive(env, 1, primNarrow(32, true)));
 	// int2Double# :: Int# -> Double#
-	env.bind("int2Double#", ["a"], primNarrow(64, true));
+	env.bind("int2Double#", createPrimitive(env, 1, primNarrow(64, true)));
 	// uncheckedIShiftL# :: Int# -> Int# -> Int#
-	env.bind("uncheckedIShiftL#", ["a", "b"], uncheckedIShiftL);
+	env.bind("uncheckedIShiftL#", createPrimitive(env, 2, uncheckedIShiftL));
 	// uncheckedIShiftRA# :: Int# -> Int# -> Int#
-	env.bind("uncheckedIShiftRA#", ["a", "b"], uncheckedIShiftRA);
+	env.bind("uncheckedIShiftRA#", createPrimitive(env, 2, uncheckedIShiftRA));
 	// uncheckedIShiftRL# :: Int# -> Int# -> Int#
-	env.bind("uncheckedIShiftRL#", ["a", "b"], uncheckedIShiftRL);
+	env.bind("uncheckedIShiftRL#", createPrimitive(env, 2, uncheckedIShiftRL));
 
 
 	// Some extras:
 	// intToString# :: Int# -> String#
-	env.bind("intToString#", ["a"], function(env) {
-		return "" + env.lookup("a");
-	    });
+	env.bind("intToString#", createPrimitive(env, 1, function(env, args) {
+		    return "" + args[0];
+		}));
 	// alert# -> String# -> () -- This should be IO ()
-	env.bind("alert#", ["a"], function(env) {
-		// TODO: Are we sure that primitives are evaluated?
-		alert(env.lookup("a"));
-		return new interpreter.Data("()", []);
-	    });
+	env.bind("alert#", createPrimitive(env, 1, function(env) {
+		    // TODO: Are we sure that primitives are evaluated?
+		    alert(args[0]);
+		    return new interpreter.Data("()", []);
+		}));
+	// debug# :: a -> () -- This should be IO (), outputs an unforced expression. "as is"
+	env.bind("debug#", createPrimitive(env, 1, function(env, args) {
+		    console.log("debug#: %o", args[0]);
+		    return new interpreter.Data("()", []);
+		}));
     };
 
     primitives.init = function(env) {
 	primitives.prim(env);
 	// seq :: a -> b -> b
-	env.bind("seq", createPrimitive(env, ["a", "b"],
-					function(env) {
-					    env.lookup("a").forceHead();
-					    return env.lookup("b");
+	env.bind("seq", createPrimitive(env, 2,
+					function(env, args) {
+					    args[0].force();
+					    return args[1];
 					}));
 
 	// Can print all different haskell types (including functions...)
 	// Should be hidden away and only used for the deriving Show implementation.
 	// defaultShow :: a -> String#
-	env.bind("defaultShow", createPrimitive(env, ["s"],
+	env.bind("defaultShow", createPrimitive(env, 1,
 						function(env) {
-						    var t = env.lookup("s");
+						    alert("undefined");
 						}));
 
 	env.bind(":", createDataConstructor(env, ":", 2));
 	env.bind("[]", createDataConstructor(env, "[]", 0));
     };
     
-    function createPrimitive(env, args, func) {
-	var expr = new ast.Primitive(func);
+    function createPrimitive(env, numArgs, func) {
+	if (numArgs.length != undefined) {
+	    numArgs = numArgs.length; // KLUDGE: createPrimitive should take a number instead of an argument list
+	}
+	var args = [];
+	for (var i = 0; i<numArgs; i++) {
+	    args[i] = "__p" + i;
+	}; 
+	var primitive = function(env) {
+	    var givenArgs=[];
+	    for (var i in args) {
+		givenArgs[i] = env.lookup(args[i]);
+	    };
+	    return func(env, givenArgs);
+	};
+	var expr = new ast.Primitive(primitive);
 	var argsR = [].concat(args).reverse();
 	for (var i in argsR) {
 	    expr = new ast.Lambda(new ast.VariableBinding(argsR[i]), expr);
@@ -116,18 +134,10 @@
 
 
     function createDataConstructor(env, ident, num) {
-	var args = [];
-	for (var i = 0; i<num; i++) {
-	    args[i] = "__p" + i;
+	var prim = function(env, args) {
+	    return new interpreter.Data(ident, args);
 	};
-	var prim = function(env) {
-	    var givenArgs=[];
-	    for (var i in args) {
-		givenArgs[i] = env.lookup(args[i]);
-	    };
-	    return new interpreter.Data(ident, givenArgs);
-	};
-	return createPrimitive(env, args, prim);
+	return createPrimitive(env, num, prim);
     };
 
     primitives.createDataConstructorKludge = createDataConstructor;
@@ -148,98 +158,75 @@
 	return env.lookup("False");
     };
 
-    function gtPrim(env) {
-	var a = env.lookup("a");
-	var b = env.lookup("b");
-	return boxBool(env, a > b);
+    function gtPrim(env, args) {
+	return boxBool(env, args[0] > args[1]);
     };
 
-    function gePrim(env) {
-	var a = env.lookup("a");
-	var b = env.lookup("b");
-	return boxBool(env, a >= b);
+    function gePrim(env, args) {
+	return boxBool(env, args[0] >= args[1]);
     };
 
-    function eqPrim(env) {
-	var a = env.lookup("a");
-	var b = env.lookup("b");
-	return boxBool(env, a == b);
+    function eqPrim(env, args) {
+	return boxBool(env, args[0] == args[1]);
     };
 
-    function nePrim(env) {
-	var a = env.lookup("a");
-	var b = env.lookup("b");
-	return boxBool(env, a != b);
+    function nePrim(env, args) {
+	return boxBool(env, args[0] != args[1]);
     };
 
-    function ltPrim(env) {
-	var a = env.lookup("a");
-	var b = env.lookup("b");
-	return boxBool(env, a < b);
+    function ltPrim(env, args) {
+	return boxBool(env, args[0] < args[1]);
     };
 
-    function lePrim(env) {
-	var a = env.lookup("a");
-	var b = env.lookup("b");
-	return boxBool(env, a <= b);
+    function lePrim(env, args) {
+	return boxBool(env, args[0] <= args[1]);
     };
 
     function primAdd(bits, twoComplement) {
-	return function(env) {
-	    var a = env.lookup("a");
-	    var b = env.lookup("b");
-	    var result = a + b;
+	return function(env, args) {
+	    var result = args[0] + args[1];
 	    return doPrimOverflow(bits, twoComplement, result);
 	};
     };
 
     function primSub(bits, twoComplement) {
-	return function(env) {
-	    var a = env.lookup("a");
-	    var b = env.lookup("b");
-	    var result = a - b;
+	return function(env, args) {
+	    var result = args[0] - args[1];
 	    return doPrimOverflow(bits, twoComplement, result);
 	};
     };
 
     function primMul(bits, twoComplement) {
-	return function(env) {
-	    var a = env.lookup("a");
-	    var b = env.lookup("b");
-	    var result = a * b;
+	return function(env, args) {
+	    var result = args[0] * args[1];
 	    return doPrimOverflow(bits, twoComplement, result);
 	};
     };
 
     function primQuot(bits, twoComplement) {
-	return function(env) {
-	    var a = env.lookup("a");
-	    var b = env.lookup("b");
-	    var result = parseInt(a / b);
+	return function(env, args) {
+	    var result = parseInt(args[0] / args[1]);
 	    return doPrimOverflow(bits, twoComplement, result);
 	};
     };
 
     function primRem(bits, twoComplement) {
-	return function(env) {
-	    var a = env.lookup("a");
-	    var b = env.lookup("b");
-	    var result = a % b;
+	return function(env, args) {
+	    var result = args[0] % args[1];
 	    return doPrimOverflow(bits, twoComplement, result);
 	};
     };
 
     function primNegate(bits, twoComplement) {
-	return function(env) {
-	    var a = env.lookup("a");
-	    var result = -a;
+	return function(env, args) {
+	    var result = -args[0];
 	    return doPrimOverflow(bits, twoComplement, result);
 	};
     };
 
     function primNarrow(bits, twoComplement) {
-	return function(env) {
-	    return doPrimNarrow(bits, twoComplement, env.lookup("a"));
+	return function(env, args) {
+	    return doPrimNarrow(bits, twoComplement, args[0]);
 	};
     };
 
@@ -257,15 +244,15 @@
 	return doPrimNarrow(bits, twoComplement, num);
     };
 
-    function uncheckedIShiftL(env) {
-	return env.lookup("a") << env.lookup("b");
+    function uncheckedIShiftL(env, args) {
+	return args[0] << args[1];
     };
 
     function uncheckedIShiftRA(env) {
-	return env.lookup("a") >> env.lookup("b");
+	return args[0] >> args[1];
     };
 
     function uncheckedIShiftRL(env) {
-	return env.lookup("a") >>> env.lookup("b");
+	return args[0] >>> args[1];
     };
 })(haskell.primitives, haskell.ast, haskell.interpreter);
