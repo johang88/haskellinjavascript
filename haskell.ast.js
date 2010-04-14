@@ -46,7 +46,7 @@
 	this.type ="Constant";
 	this.value = value;
 	this.eval = function(env) {
-	    return new interpreter.ConstantThunk(this.value);
+	    return this.value.eval();
 	};
     };
     ast.Lambda = function(pattern, expression) {
@@ -129,7 +129,6 @@
     ast.Case.prototype              = new ast.Expression();
     ast.VariableLookup.prototype    = new ast.Expression();
     ast.Primitive.prototype     = new ast.Expression();
-    
     /*    ast.Constant.prototype.constructor = ast.Constant; 
     ast.Lambda.prototype.constructor = ast.Lambda; 
     ast.Application.prototype.constructor = ast.Application; 
@@ -151,9 +150,21 @@
 	this.equals = function(n) {
 	    return this.num == n.num;
 	};
+
+	this.eval = function(env) {
+	    return new interpreter.ConstantThunk(this);
+	};
+    };
+    ast.PrimitiveValue = function(value) {
+	this.type="PrimitiveValue";
+	this.value = value;
+	this.eval = function(env) {
+	    return this.value;
+	};
     };
        
     ast.Num.prototype = new ast.Value();
+    ast.PrimitiveValue.prototype = new ast.Value();
     /*
       data Declaration = Variable Pattern Expression
                        | Data Identifier [Constructor]
