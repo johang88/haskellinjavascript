@@ -45,7 +45,7 @@ haskell.parser.parse = function(code) {
 
     var integer = action(repeat1(range('0', '9')), function(ast) { return new haskell.ast.Num(parseInt(ast.join(""))); });
     var integerlit = choice( action(sequence(repeat1(range('0', '9')), '#'), function(ast) {
-                                return parseInt(ast[0].join(""));
+		return new haskell.ast.PrimitiveValue(parseInt(ast[0].join("")));
                             }),
                             integer);
 
