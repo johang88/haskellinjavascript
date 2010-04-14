@@ -28,6 +28,8 @@
 
 	// data Int#
 	var intSize = 32;
+	var maxInt = (1 << (intSize-1));
+	var minInt = (-1 >>> 1);
 	// (+#) :: Int# -> Int# -> Int#
 	env.bind("+#", createPrimitive(env, 2, primAdd(intSize, true)));
 	// (-#) :: Int# -> Int# -> Int#
@@ -35,14 +37,31 @@
 	// (*#) :: Int# -> Int# -> Int#
 	env.bind("*#", createPrimitive(env, 2, primMul(intSize, true)));
 	// mulIntMayOflo# :: Int# -> Int# -> Int#
+	env.bind("mulIntMayOflo#", createPrimitive(env, 2, 
+						   function(env, args) {
+						       var filter = 0xFFFF << 16;
+						       return (args[0] & filter) | (args[1] & filter);
+						   }));
 	// quotInt# :: Int# -> Int# -> Int#
 	env.bind("quotInt#", createPrimitive(env, 2, primQuot(intSize, true)));
 	// remInt# :: Int# -> Int# -> Int#
 	env.bind("remInt#", createPrimitive(env, 2, primRem(intSize, true)));
 	// negateInt# :: Int# -> Int#
-	env.bind("negateInt#", createPrimitive(env, 2, primNegate(intSize, true)));
+	env.bind("negateInt#", createPrimitive(env, 1, primNegate(intSize, true)));
 	// addIntC# :: Int# -> Int# -> (#Int#, Int##)
+	env.bind("addIntC#", createPrimitive(env, 2,
+					     function(env, args) {
+						 var result = args[0] + args[1];
+						 var carry =  (result > maxInt) || (result < minInt)
+						 return [doPrimtOverflow(intSize, true, result), 0+carry];
+					     }));
 	// subIntC# :: Int# -> Int# -> (#Int#, Int##)
+	env.bind("subIntC#", createPrimitive(env, 2,
+					     function(env, args) {
+						 var result = args[0] - args[1];
+						 var carry =  (result > maxInt) || (result < minInt)
+						 return [doPrimtOverflow(intSize, true, result), 0+carry];
+					     }));	
 	// (>#) :: Int# -> Int# -> Bool
 	env.bind(">#", createPrimitive(env, 2, gtPrim));
 	// (>=#) :: Int# -> Int# -> Bool
@@ -56,6 +75,10 @@
 	// (<=#) :: Int# -> Int# -> Bool
 	env.bind("<=#", createPrimitive(env, 2, lePrim));
 	// chr# :: Int# -> Char#
+	env.bind("chr#", createPrimitive(env, 1, 
+					 function(env, args) {
+					     return String.fromCharCode(args[0]);
+					 }));
 	// int2Word# :: Int# -> Word#
 	env.bind("int2Word#", createPrimitive(env, 1, primNarrow(32, true)));
 	// int2Float# :: Int# -> Float#
@@ -69,6 +92,28 @@
 	// uncheckedIShiftRL# :: Int# -> Int# -> Int#
 	env.bind("uncheckedIShiftRL#", createPrimitive(env, 2, uncheckedIShiftRL));
 
+	// plusWord# :: Word# -> Word# -> Word#
+	// minusWord# :: Word# -> Word# -> Word#
+	// timesWord# :: Word# -> Word# -> Word#
+	// quotWord# :: Word# -> Word# -> Word#
+	// remWord# :: Word# -> Word# -> Word#
+	// and# :: Word# -> Word# -> Word#
+	// or# :: Word# -> Word# -> Word#
+	// xor# :: Word# -> Word# -> Word#
+	// not# :: Word# -> Word#
+	// uncheckedShiftL# :: Word# -> Int# -> Word#
+	// Shift left logical. Result undefined if shift amount is not in the range 0 to word size - 1 inclusive.
+	// uncheckedShiftRL# :: Word# -> Int# -> Word#
+	// Shift right logical. Result undefined if shift amount is not in the range 0 to word size - 1 inclusive.
+	// word2Int# :: Word# -> Int#
+	// word2Integer# :: Word# -> (#Int#, ByteArr##)
+	// gtWord# :: Word# -> Word# -> Bool
+	// geWord# :: Word# -> Word# -> Bool
+	// eqWord# :: Word# -> Word# -> Bool
+	// neWord# :: Word# -> Word# -> Bool
+	// ltWord# :: Word# -> Word# -> Bool
+	// leWord# :: Word# -> Word# -> Bool
+	
 
 	// Some extras:
 	// intToString# :: Int# -> String#
@@ -76,7 +121,7 @@
 		    return "" + args[0];
 		}));
 	// alert# -> String# -> () -- This should be IO ()
-	env.bind("alert#", createPrimitive(env, 1, function(env) {
+	env.bind("alert#", createPrimitive(env, 1, function(env, args) {
 		    // TODO: Are we sure that primitives are evaluated?
 		    alert(args[0]);
 		    return new interpreter.Data("()", []);
@@ -120,7 +165,7 @@
 	var primitive = function(env) {
 	    var givenArgs=[];
 	    for (var i in args) {
-		givenArgs[i] = env.lookup(args[i]);
+		givenArgs[i] = env.lookup(args[i]).force(); // Arguments to primitives must be forced
 	    };
 	    return func(env, givenArgs);
 	};
@@ -248,11 +293,11 @@
 	return args[0] << args[1];
     };
 
-    function uncheckedIShiftRA(env) {
+    function uncheckedIShiftRA(env, args) {
 	return args[0] >> args[1];
     };
 
-    function uncheckedIShiftRL(env) {
+    function uncheckedIShiftRL(env, args) {
 	return args[0] >>> args[1];
     };
 })(haskell.primitives, haskell.ast, haskell.interpreter);
