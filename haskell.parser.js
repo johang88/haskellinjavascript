@@ -248,7 +248,6 @@ haskell.parser.parse = function(code, options) {
         };
     }
     
-    // should make cons (:) work as expected, that is without parans
     var apat = function(state) { return apat(state) };
     var pat = function(state) { return pat(state); };
     
@@ -259,8 +258,7 @@ haskell.parser.parse = function(code, options) {
                         wildcard_pattern_action (ws('_')), // wildcard
                         action(sequence(expect(ws('(')), pat, expect(ws(')'))), function(ast) { return ast[0]; }), // parans
                         sequence(expect(ws('(')), ws(pat), repeat1(sequence(ws(','), ws(pat))), expect(ws(')'))), // tuple
-                        list_pattern_action(sequence(expect(ws('[')), optional(wlist(pat, ',')), expect(ws(']')))), // list
-                        action(sequence(expect(ws('(')), chainl(ws(pat), action(ws(':'), cons_pattern_action)), expect(ws(')'))), function(ast) { return ast[0]; })
+                        list_pattern_action(sequence(expect(ws('[')), optional(wlist(pat, ',')), expect(ws(']')))) // list
                         );
     
     var gcon_pat_action = function(p) {
@@ -272,6 +270,7 @@ haskell.parser.parse = function(code, options) {
     };
     
     var pat_10 = choice(gcon_pat_action(sequence(ws(gcon), repeat1(ws(apat)))),
+                        action(sequence(chainl(ws(apat), action(ws(':'), cons_pattern_action))), function(ast) { return ast[0]; }),
                         apat
                        );
     
