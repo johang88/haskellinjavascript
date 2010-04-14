@@ -827,9 +827,10 @@ haskell.parser.parse = function(code, options) {
             return ast[ast.length - 1];
         });
     
-    // no nested multiline comments for now
+    // comments grammar, allows nested multi line comments
     var singleLineComment = sequence(ws("--"), repeat0(negate(choice('\n', '\r'))));
-    var multiLineComment = sequence(ws("{-"), repeat0(negate("-}")), ws("-}"));
+    var multiLineComment = function(state) { return multiLineComment(state); };
+    var multiLineComment = sequence(ws("{-"), repeat0(choice(multiLineComment, negate("-}"))), ws("-}"));
     
     var strip_comments_action = function(ast) {
         return "";
