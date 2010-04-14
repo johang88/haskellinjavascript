@@ -847,8 +847,39 @@ Todo:
         
         // Step 2: TODO: Parse lexical syntax and convert to context free
         
+        /*
+         * Tabs are 8 spaces 
+         * A lexeme can not be less indented than the enclosing context
+         * let,where,do,of followed by { then reset indent level
+         */
+        
+        var lexer_state = {
+            indents: new Array()
+        }
+         
+        var whitestuff = choice('\t', ' ');
+        var tab = action(repeat0(whitestuff), function(ast) {
+            var cnt = 0;
+            for (var i in ast) {
+                if (i == '\t') {
+                    cnt += 8;
+                } else {
+                    cnt += 1;
+                }
+            }
+            
+            lexer_state.indents.push({ depth: cnt, bracket: false });
+            return "";
+        });
+        
+        var lexeme = join_action(repeat0(negate(choice('\n', '\r', ' ', '\t', ';', '{', '}'))), "");
+        lexeme = choice(';', '{', '}', lexeme);
+        
+        var line = join_action(sequence(tab, join_action(repeat0(ws(lexeme)), " ")), " ");
+        var lines = join_action(list(line, '\n'), '\n');
+        
         // Step 3: Parse context free grammar
-        var result = grammar(ps(stripped));
+        var result = grammar(ps(lines(ps(stripped)).ast));
         
         return result;
     };
