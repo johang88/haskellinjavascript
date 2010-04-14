@@ -2,6 +2,11 @@ var ENTER = '13';
 var UP    = '38';
 var DOWN  = '40';
 
+
+// olika font?
+// scrollning
+// history funkar inte ???
+
 var modules = new Array();
 
 
@@ -26,7 +31,7 @@ var modules = new Array();
 
     };
     var makeInput = function(modules){
-        return "<li class='input'>" + makeModules(modules) + "<input type='text' name='inputBox' id='inbox'></li>";
+        return "<li class='input' id='inputTest'>" + makeModules(modules) + "<input type='text' name='inputBox' id='inbox'></li>";
     };
     var makeOutput = function(output) {
 	console.log("%o", output);
@@ -53,7 +58,7 @@ var modules = new Array();
         load_module('Prelude.hs');
         modules[0] = "Prelude";
         modules[1] = "Control.Monad";
-        this.html("<ol>" + makeInput(modules) + "</ol>");
+        this.html("<ol id='test123'>" + makeInput(modules) + "</ol>");
 
         $("input:text:visible:first").focus();
         
@@ -78,7 +83,6 @@ var modules = new Array();
                 }else
                 {
                     try {
-                    //    alert(this + " hej");
                         var newLine = makeEntered(modules, line);
                         var output = makeOutput(evaluateHaskell(line, env));
                         $('.input', this).after(output).replaceWith(newLine);
@@ -96,14 +100,16 @@ var modules = new Array();
 
         // load a module
         function load_module(module){
-            jQuery.get(module, function(prelude_data) {
+            // ajax commando ist'llet..
+            var hej = jQuery.get(module, function(prelude_data) {
                 console.log(prelude_data);
+                
                 try {
-                    var ast = haskell.parser.parse(prelude_data);
-                    console.log("%o", ast);
-                    if (ast.ast == undefined) {
-                        console.log("Syntax Error");
-                    }
+                        var ast = haskell.parser.parse(prelude_data);
+                        console.log("%o", ast);
+                        if (ast.ast == undefined) {
+                            console.log("Syntax Error");
+                        }
                     else {
                         haskell.interpreter.prepare(ast.ast, env);
                     }
@@ -111,7 +117,6 @@ var modules = new Array();
                     console.log("%o", e);
                 }
             });
-            //alert("ut ur load_module");
         }
 
         function isCommand(l){
@@ -123,9 +128,6 @@ var modules = new Array();
         }
         
         function runCommand(i, input2, line){
-
-           // var input2 = $('input', this);
-           // var line = input2.attr("value");
             var input   = trim(i);
             var command = input.substr(0,2);
             var arg     = trim(input.substr(2)); 
@@ -133,12 +135,26 @@ var modules = new Array();
             // load module
             if(command == ':l'){
                 load_module(arg);
-                modules.push(arg);
-
-                var newLine = makeEntered(modules, line);
-                var output = makeOutput("test"); ///(evaluateHaskell(line, env));
-                $('.input').after(output).replaceWith(newLine);
-                $("ol").append(makeInput(modules));
+            
+                var module_already_in_modules = false;
+                module_name = arg.substr(0, arg.lastIndexOf('.'));  
+                for(x in modules){
+                    if(modules[x] == module_name)
+                        module_already_in_modules = true;
+                }
+                if(module_already_in_modules == false){
+                    var newLine = makeEntered(modules, line);
+                    var output = makeOutput("Module " + module_name +" loaded");
+                    $('.input').after(output).replaceWith(newLine);
+                    modules.push(module_name);
+                    $("ol").append(makeInput(modules));
+                }else{
+                    var newLine = makeEntered(modules, line);
+                    var output = makeOutput("Module " + module_name + " already loaded");
+                    $('.input').after(output).replaceWith(newLine);
+                    $("ol").append(makeInput(modules));
+                }
+                
             }
         }
     };
