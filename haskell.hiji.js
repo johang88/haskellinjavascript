@@ -1,12 +1,7 @@
 var ENTER = '13';
 var UP    = '38';
 var DOWN  = '40';
-
-
-// olika font?
-// scrollning
-// history funkar inte ???
-
+var is_module_loaded = false;
 var modules = new Array();
 
 
@@ -100,23 +95,29 @@ var modules = new Array();
 
         // load a module
         function load_module(module){
-            // ajax commando ist'llet..
-            var hej = jQuery.get(module, function(prelude_data) {
-                console.log(prelude_data);
-                
-                try {
-                        var ast = haskell.parser.parse(prelude_data);
-                        console.log("%o", ast);
-                        if (ast.ast == undefined) {
-                            console.log("Syntax Error");
-                        }
-                    else {
-                        haskell.interpreter.prepare(ast.ast, env);
+
+                is_module_loaded = false;
+
+                jQuery.ajax({
+                    async : false,
+                    url : module,
+                    success: function(prelude_data){
+                        console.log(prelude_data);
+                        try {
+                                var ast = haskell.parser.parse(prelude_data);
+                                console.log("%o", ast);
+                                if (ast.ast == undefined) {
+                                    console.log("Syntax Error");
+                                }
+                            else {
+                                haskell.interpreter.prepare(ast.ast, env);
+                                is_module_loaded = true;
+                            }
+                        } catch(e) {
+                            console.log("%o", e);
+                       }
                     }
-                } catch(e) {
-                    console.log("%o", e);
-                }
-            });
+                });
         }
 
         function isCommand(l){
@@ -131,30 +132,34 @@ var modules = new Array();
             var input   = trim(i);
             var command = input.substr(0,2);
             var arg     = trim(input.substr(2)); 
-            
+            var module_name = arg.substr(0, arg.lastIndexOf('.'));  
             // load module
             if(command == ':l'){
                 load_module(arg);
-            
-                var module_already_in_modules = false;
-                module_name = arg.substr(0, arg.lastIndexOf('.'));  
-                for(x in modules){
-                    if(modules[x] == module_name)
-                        module_already_in_modules = true;
-                }
-                if(module_already_in_modules == false){
-                    var newLine = makeEntered(modules, line);
-                    var output = makeOutput("Module " + module_name +" loaded");
-                    $('.input').after(output).replaceWith(newLine);
-                    modules.push(module_name);
-                    $("ol").append(makeInput(modules));
+                if(is_module_loaded){
+                    var module_already_in_modules = false;
+                    for(x in modules){
+                        if(modules[x] == module_name)
+                            module_already_in_modules = true;
+                    }
+                    if(module_already_in_modules == false){
+                        var newLine = makeEntered(modules, line);
+                        var output = makeOutput("Module " + module_name +" loaded");
+                        $('.input').after(output).replaceWith(newLine);
+                        modules.push(module_name);
+                        $("ol").append(makeInput(modules));
+                    }else{
+                        var newLine = makeEntered(modules, line);
+                        var output = makeOutput("Module " + module_name + " already loaded");
+                        $('.input').after(output).replaceWith(newLine);
+                        $("ol").append(makeInput(modules));
+                    }
                 }else{
-                    var newLine = makeEntered(modules, line);
-                    var output = makeOutput("Module " + module_name + " already loaded");
-                    $('.input').after(output).replaceWith(newLine);
-                    $("ol").append(makeInput(modules));
+                        var newLine = makeEntered(modules, line);
+                        var output = makeOutput("Module " + module_name + " not found");
+                        $('.input').after(output).replaceWith(newLine);
+                        $("ol").append(makeInput(modules));
                 }
-                
             }
         }
     };
