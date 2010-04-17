@@ -808,8 +808,10 @@ Todo:
         var module = module_action(choice(sequence(ws("module"), ws(modid), optional(exports), ws("where"), body),
                             body));
         
-        
-        var program = action(sequence(choice(module, exp), ws(end_p)), function(ast) { return ast[0]; });
+        var toplevel_exp = action(sequence(optional(ws('{')), exp, optional(ws('}'))), function(ast) {
+            return ast[1];
+        });
+        var program = action(sequence(choice(module, toplevel_exp), ws(end_p)), function(ast) { return ast[0]; });
         
         // Pragma macro parser
         var pragmaId = join_action(repeat1(negate(choice('\t', ' ', '\r', '\n', "#-}"))), "");
