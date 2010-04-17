@@ -300,7 +300,7 @@ Todo:
         
         var alt = sequence(ws(pat), expect(ws("->")), ws(exp));
         
-        var alts = repeat1(action(sequence(ws(alt), ws(';')), function(ast) { return ast[0]; }));
+        var alts = list(ws(alt), ws(';'));
         
         var qval = undefined;
         
