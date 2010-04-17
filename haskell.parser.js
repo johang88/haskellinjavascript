@@ -939,7 +939,7 @@ Todo:
                 
                 derivedIndentLevels.unshift(newLexo);
                 derivedIndentLevels.push(lexalized[i]);
-            } else if (i > 0 && lexalized[i].isFirst && lexalized[i].indent > 0 && !lexalized[i].isBrackesIndent) {
+            } else if (i > 0 && lexalized[i].isFirst && lexalized[i].indent > 0 && !derivedIndentLevels[derivedIndentLevels.length - 1].isBrackesIndent) {
                 var indent = lexalized[i].indent;
                 
                 var newLexo = new LexObject(indent, indent); // Insert <n< where n is indent level
@@ -969,21 +969,14 @@ Todo:
                 var t = ts[0];
                 
                 if (t.isArrowsIndent) {
-                    if (ms.length > 0) {
-                        var m = ms[0];
-                        var n = t.indent;
-                        
-                        if (m == n) {
-                            ts.shift();
-                            out.push(';');
-                            applyLayoutRules(ts, ms, out);
-                        } else if (n < m) {
-                            ms.shift();
-                            out.push('}');
-                            applyLayoutRules(ts, ms, out);
-                        } else {
-                            console.log("layout error");
-                        }
+                    if (ms[0] == t.indent) {
+                        ts.shift();
+                        out.push(';');
+                        applyLayoutRules(ts, ms, out);
+                    } else if (t.indent < ms[0]) {
+                        ms.shift();
+                        out.push('}');
+                        applyLayoutRules(ts, ms, out);
                     } else {
                         ts.shift();
                         ms.shift();
@@ -1027,11 +1020,11 @@ Todo:
                     applyLayoutRules(ts, ms, out);
                 } else {
                     var m = ms[0];
-                    if (m != 0 && m != undefined) {
+                    /*if (m != 0 && m != undefined) {
                         out.push('}');
                         ms.shift();
                         applyLayoutRules(ts, ms, out);
-                    } else {
+                    } else */{
                         ts.shift();
                         out.push(t.lex);
                         applyLayoutRules(ts, ms, out);
@@ -1039,6 +1032,8 @@ Todo:
                 }
             }
         }
+        
+        console.log("%o", derivedIndentLevels);
         
         var layoutApplied = new Array();
         applyLayoutRules(derivedIndentLevels, new Array(), layoutApplied);
