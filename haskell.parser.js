@@ -994,7 +994,9 @@ Todo:
                     } else if (ms.length == 0 && n > 0) {
                         ts.shift();
                         out.push('{');
-                        applyLayoutRules(ts, new Array(n), out);
+                        var a = new Array();
+                        a.push(n);
+                        applyLayoutRules(ts, a, out);
                     } else {
                         t.isBrackesIndent = false;
                         t.isArrowsIndent = true;
