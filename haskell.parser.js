@@ -869,17 +869,84 @@ Todo:
             }
             
             lexer_state.indents.push({ depth: cnt, bracket: false });
-            return "";
+            var o = new LexObject(cnt, cnt);
+            o.isStartTab = true;
+            return o;
         });
         
-        var lexeme = join_action(repeat0(negate(choice('\n', '\r', ' ', '\t', ';', '{', '}'))), "");
-        lexeme = choice(';', '{', '}', lexeme);
+        var LexObject = function(lex, indent) {
+            this.lex = lex;
+            this.indent = indent;
+        }
         
-        var line = join_action(sequence(tab, join_action(repeat0(ws(lexeme)), " ")), " ");
-        var lines = join_action(list(line, '\n'), '\n');
+        var lexeme = join_action(repeat1(negate(choice('\n', '\r', ' ', '\t', ';', '{', '}'))), "");
+        lexeme = choice(';', '{', '}', lexeme);
+        lexeme = action(lexeme, function(ast) {
+            return new LexObject(ast, lexer_state.indents[lexer_state.indents.length - 1].depth);
+        });
+        
+        var ws_ = function(p) {
+            return action(sequence(expect(repeat0(" ")), p), function(ast) {
+               return ast[ast.length - 1]; 
+            });
+        }
+        
+        var concat_action = function(p) {
+            return action(p, function(ast) {
+                var a = ast.pop();
+                /*for (var i in a) {
+                    ast.push(a[i]);
+                }*/
+                if (a.length > 0) {
+                    a[0].isFirst = true;
+                }
+                return a
+            });
+        }
+        
+        var line = concat_action(sequence(tab, repeat0(ws_(lexeme))));
+        var lines = action(list(line, '\n'), function(ast) {
+            var a = Array();
+            for (var i in ast) {
+                var b = ast[i];
+                for (var j in b) {
+                    a.push(b[j]);
+                }
+            }
+            return a;
+        });
+        
+        var lexalized = lines(ps(stripped)).ast;
+        
+        for (var i = 0; i < lexalized.length; i++) {
+            var lex = lexalized[i].lex;
+            
+            if ((lex == "let" || lex == "where" || lex == "do" || lex == "of") && lexalized[i + 1].lex != '{') {
+                var nextIndent = lexalized[i + 1].indent;
+                
+                var newLexo = new LexObject(nextIndent, nextIndent); // Insert {n} where n is indent level of next lexeme
+                newLexo.isBrackesIndent = true;
+                lexalized.splice(i + 1, 0, newLexo);
+            } if (i == 0 && lex != '{' && lex != "module") {
+                var indent = lex.indent;
+                
+                var newLexo = new LexObject(indent, indent); // Insert {n} where n is indent level of first lexeme
+                newLexo.isBrackesIndent = true;
+                lexalized.splice(0, 0, newLexo);
+            } else if (i > 0 && lex.isFirst && lex.indent > 0) {
+                alert("hej");
+                var indent = lex.indent;
+                
+                var newLexo = new LexObject(indent, indent); // Insert <n< where n is indent level
+                newLexo.isArrowsIndent = true;
+                lexalized.splice(i, 0, newLexo);
+            }
+        }
+        
+        console.log("%o", lexalized);
         
         // Step 3: Parse context free grammar
-        var result = grammar(ps(lines(ps(stripped)).ast));
+        var result = grammar(ps(lexalized.join(" ")));
         
         return result;
     };
