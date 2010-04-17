@@ -918,7 +918,7 @@ Todo:
         
         var lexalized = lines(ps(stripped)).ast;
         
-        var layoutApplied = Array();
+        var derivedIndentLevels = new Array();
         
         for (var i = 0; i < lexalized.length; i++) {
             var lex = lexalized[i].lex;
@@ -929,28 +929,119 @@ Todo:
                 var newLexo = new LexObject(nextIndent, nextIndent); // Insert {n} where n is indent level of next lexeme
                 newLexo.isBrackesIndent = true;
                 
-                layoutApplied.push(lexalized[i]);
-                layoutApplied.push(newLexo);
+                derivedIndentLevels.push(lexalized[i]);
+                derivedIndentLevels.push(newLexo);
             } else if (i == 0 && lex != '{' && lex != "module") {
                 var indent = lexalized[i].indent;
                 
                 var newLexo = new LexObject(indent, indent); // Insert {n} where n is indent level of first lexeme
                 newLexo.isBrackesIndent = true;
                 
-                layoutApplied.splice(0, 0, newLexo);
-                layoutApplied.push(lexalized[i]);
-            } else if (i > 0 && lexalized[i].isFirst && lexalized[i].indent > 0) {
+                derivedIndentLevels.unshift(newLexo);
+                derivedIndentLevels.push(lexalized[i]);
+            } else if (i > 0 && lexalized[i].isFirst && lexalized[i].indent > 0 && !lexalized[i].isBrackesIndent) {
                 var indent = lexalized[i].indent;
                 
                 var newLexo = new LexObject(indent, indent); // Insert <n< where n is indent level
                 newLexo.isArrowsIndent = true;
                 
-                layoutApplied.push(newLexo);
-                layoutApplied.push(lexalized[i]);
+                derivedIndentLevels.push(newLexo);
+                derivedIndentLevels.push(lexalized[i]);
             } else {
-                layoutApplied.push(lexalized[i]);
+                derivedIndentLevels.push(lexalized[i]);
             }
         }
+        
+        var applyLayoutRules = function(ts, ms, out) {
+            if (ts.length == 0 && ms.length == 0) {
+                // done
+            } else if (ts.length == 0) {
+                var m = ms[0];
+                ms.shift();
+                
+                //if (m != 0) {
+                    out.push('}');
+                    applyLayoutRules(ts, ms, out);
+                //} else {
+                //    console.log("layout error");
+                //}
+            } else {
+                var t = ts[0];
+                
+                if (t.isArrowsIndent) {
+                    if (ms.length > 0) {
+                        var m = ms[0];
+                        var n = t.indent;
+                        
+                        if (m == n) {
+                            ts.shift();
+                            out.push(';');
+                            applyLayoutRules(ts, ms, out);
+                        } else if (n < m) {
+                            ms.shift();
+                            out.push('}');
+                            applyLayoutRules(ts, ms, out);
+                        } else {
+                            console.log("layout error");
+                        }
+                    } else {
+                        ts.shift();
+                        ms.shift();
+                        applyLayoutRules(ts, ms, out);
+                    }
+                } else if (t.isBrackesIndent) {
+                    var n = t.indent;
+                    
+                    if (ms.length > 0 && n > ms[0] || ms.length == 0 && n == 0) {
+                        var m = ms[0];
+                        out.push('{');
+                        ts.shift();
+                        ms.unshift(n);
+                        applyLayoutRules(ts, ms, out);
+                    } else if (ms.length == 0 && n > 0) {
+                        ts.shift();
+                        out.push('{');
+                        applyLayoutRules(ts, new Array(n), out);
+                    } else {
+                        t.isBrackesIndent = false;
+                        t.isArrowsIndent = true;
+                        ms.shift();
+                        out.push('{');
+                        out.push('}');
+                        applyLayoutRules(ts, ms, out);
+                    }
+                } else if (t.lex == '}') {
+                    var n = t.indent;
+                    if (n == 0) {
+                        ts.shift();
+                        ms.shift();
+                        out.push('}');
+                        applyLayoutRules(ts, ms, out);
+                    }  else {
+                        console.log("layout error");
+                    }
+                } else if (t.lex == '{') {
+                    ts.shift();
+                    ms.unshift(0);
+                    out.push('{');
+                    applyLayoutRules(ts, ms, out);
+                } else {
+                    var m = ms[0];
+                    if (m != 0 && m != undefined) {
+                        out.push('}');
+                        ms.shift();
+                        applyLayoutRules(ts, ms, out);
+                    } else {
+                        ts.shift();
+                        out.push(t.lex);
+                        applyLayoutRules(ts, ms, out);
+                    }
+                }
+            }
+        }
+        
+        var layoutApplied = new Array();
+        applyLayoutRules(derivedIndentLevels, new Array(), layoutApplied);
         
         console.log("%o", layoutApplied);
         
