@@ -918,6 +918,8 @@ Todo:
         
         var lexalized = lines(ps(stripped)).ast;
         
+        var layoutApplied = Array();
+        
         for (var i = 0; i < lexalized.length; i++) {
             var lex = lexalized[i].lex;
             
@@ -926,27 +928,34 @@ Todo:
                 
                 var newLexo = new LexObject(nextIndent, nextIndent); // Insert {n} where n is indent level of next lexeme
                 newLexo.isBrackesIndent = true;
-                lexalized.splice(i + 1, 0, newLexo);
-            } if (i == 0 && lex != '{' && lex != "module") {
-                var indent = lex.indent;
+                
+                layoutApplied.push(lexalized[i]);
+                layoutApplied.push(newLexo);
+            } else if (i == 0 && lex != '{' && lex != "module") {
+                var indent = lexalized[i].indent;
                 
                 var newLexo = new LexObject(indent, indent); // Insert {n} where n is indent level of first lexeme
                 newLexo.isBrackesIndent = true;
-                lexalized.splice(0, 0, newLexo);
-            } else if (i > 0 && lex.isFirst && lex.indent > 0) {
-                alert("hej");
-                var indent = lex.indent;
+                
+                layoutApplied.splice(0, 0, newLexo);
+                layoutApplied.push(lexalized[i]);
+            } else if (i > 0 && lexalized[i].isFirst && lexalized[i].indent > 0) {
+                var indent = lexalized[i].indent;
                 
                 var newLexo = new LexObject(indent, indent); // Insert <n< where n is indent level
                 newLexo.isArrowsIndent = true;
-                lexalized.splice(i, 0, newLexo);
+                
+                layoutApplied.push(newLexo);
+                layoutApplied.push(lexalized[i]);
+            } else {
+                layoutApplied.push(lexalized[i]);
             }
         }
         
-        console.log("%o", lexalized);
+        console.log("%o", layoutApplied);
         
         // Step 3: Parse context free grammar
-        var result = grammar(ps(lexalized.join(" ")));
+        var result = grammar(ps(layoutApplied.join(" ")));
         
         return result;
     };
