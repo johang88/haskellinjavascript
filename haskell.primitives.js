@@ -128,9 +128,29 @@
 		}));
 	// debug# :: a -> () -- This should be IO (), outputs an unforced expression. "as is"
 	env.bind("debug#", createPrimitive(env, 1, function(env, args) {
-		    console.log("debug#: %o", args[0]);
-		    return new interpreter.Data("()", []);
-		}));
+	    console.log("debug#: %o", args[0]);
+	    return new interpreter.Data("()", []);
+	}));
+
+        env.bind("stepDebug#", parameterCollector(env, 1, function(env, args) {
+            var step = args[0];
+            var pending = [step];
+            var stepN = 0;
+            while (pending.length>0) {
+                console.log("step %i: %o", ++stepN, step.stringify());
+                var newPending = [];
+                for (var i in pending) {
+                    var v = pending[i].dereference();
+                    if (v instanceof interpreter.Data)
+                    {
+                        newPending = newPending.concat(v.getPtrs());
+                    }
+                }
+                pending = newPending;
+            }
+            console.log("done: %o", step);
+	    return new interpreter.Data("()", []);            
+        }));
     };
 
     primitives.init = function(env) {
@@ -153,11 +173,8 @@
 	env.bind(":", createDataConstructor(env, ":", 2));
 	env.bind("[]", createDataConstructor(env, "[]", 0));
     };
-    
-    function createPrimitive(env, numArgs, func) {
-	if (numArgs.length != undefined) {
-	    numArgs = numArgs.length; // KLUDGE: createPrimitive should take a number instead of an argument list
-	}
+
+    function parameterCollector(env, numArgs, func) {
 	var args = [];
 	for (var i = 0; i<numArgs; i++) {
 	    args[i] = "__p" + i;
@@ -165,7 +182,7 @@
 	var primitive = function(env) {
 	    var givenArgs=[];
 	    for (var i in args) {
-		givenArgs[i] = env.lookup(args[i]).force(); // Arguments to primitives must be forced
+		givenArgs[i] = env.lookup(args[i]);
 	    };
 	    return func(env, givenArgs);
 	};
@@ -174,7 +191,21 @@
 	for (var i in argsR) {
 	    expr = new ast.Lambda(new ast.VariableBinding(argsR[i]), expr);
 	};
-	return new interpreter.Closure(env, expr);
+	return new interpreter.HeapPtr(new interpreter.Closure(env, expr));        
+    };
+    
+    function createPrimitive(env, numArgs, func) {
+	if (numArgs.length != undefined) {
+	    numArgs = numArgs.length; // KLUDGE: createPrimitive should take a number instead of an argument list
+	}
+        var prim = function(env, args) {
+            var dereferencedArgs = []
+            for (var i in args) {
+                dereferencedArgs[i] = args[i].dereference();
+            }
+            return func(env, dereferencedArgs);
+        };
+        return parameterCollector(env, numArgs, prim);
     };
 
 
@@ -182,7 +213,7 @@
 	var prim = function(env, args) {
 	    return new interpreter.Data(ident, args);
 	};
-	return createPrimitive(env, num, prim);
+	return parameterCollector(env, num, prim);
     };
 
     primitives.createDataConstructorKludge = createDataConstructor;

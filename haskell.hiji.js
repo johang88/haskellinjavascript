@@ -72,13 +72,13 @@ var DOWN  = '40';
         this.keydown(function(e){
             var input = $('input', this);
             var line = input.attr("value");
-            if(e.keyCode==UP){
+            if(e.which==UP){
                 input.attr("value", hiss.older(line));
             }
-            if(e.keyCode==DOWN){
+            if(e.which==DOWN){
                 input.attr("value", hiss.newer(line));
             }
-            if (e.keyCode==ENTER){
+            if (e.which==ENTER){
                 
                 // history
                 hiss.addHistory(line);

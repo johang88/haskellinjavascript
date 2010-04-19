@@ -56,4 +56,8 @@ module Prelude where {
     tail xs = case xs of { (_:xs) -> xs; };
     
     fix f = let { x = f x; } in x;
+
+    data Int = I# Int#;
+
+    (+) (I# i1) (I# i2) = I# (i1 +# i2);
 }

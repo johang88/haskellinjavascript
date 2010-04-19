@@ -1,23 +1,9 @@
-(function(ast, interpreter) {
-    function expectType(o,t) {
-	if (!(o instanceof t)) {
-	    throw new Error("Expected " + typeof t + " " + typeof o + " given.");
-	};
-    };
+(function(ast, interpreter, utilities) {
+    expectType = utilities.expectType;
 
-    function expectTypeOf(o, t) {
-	if ((typeof o) != t) {
-	    throw new Error("Expected " + t + ", " + typeof o + " given.");
-	};
-    };
+    expectTypeOf = utilities.expectTypeOf;
 
-    function expectTypeArray(os, t) {
-	for (i in os) {
-	    if (!(os[i] instanceof t)) {
-		throw new Error("Expected " + typeof t + ", " + typeof os[i] + " given at index " + i);
-	    };
-	};
-    };
+    expectTypeArray = utilities.expectTypeArray;
 
    /*
       data Module = Module [Declaration]
@@ -36,10 +22,8 @@
                       | VariableLookup Identifier
 		      | Primitive Function
     */
-    
+    // Eval returns a whnf
     ast.Expression = function(){};
-
-
 
     ast.Constant = function(value) {
 	expectType(value, ast.Value);
@@ -48,6 +32,10 @@
 	this.eval = function(env) {
 	    return this.value.eval();
 	};
+
+        this.stringify = function() {
+            return this.value.stringify();
+        };
     };
     ast.Lambda = function(pattern, expression) {
 	expectType(pattern, ast.Pattern);
@@ -57,8 +45,12 @@
 	this.expression = expression;
 
 	this.eval = function(env) {
-	    return new interpreter.Closure(env, this);
+	    return new interpreter.LambdaAbstraction(env, this.pattern, this.expression);
 	};
+
+        this.stringify = function() {
+            return "(" + this.pattern.stringify() + " -> " + this.expression.stringify() + ")";
+        };
     };
     ast.Application = function(func, arg) {
 	expectType(func, ast.Expression);
@@ -67,14 +59,15 @@
 	this.func = func;
 	this.arg = arg;
 	this.eval = function(env) {
-	    var clos = this.func.eval(env);
-	    while (clos.expression.type!="Lambda") {
-		clos = clos.force();
-	    };
-	    var x = clos.expression.pattern;
-	    var body = clos.expression.expression;
-	    return body.eval(clos.env.substitute(x, new interpreter.Closure(env, this.arg)));
+            var continuation = this.func.eval(env);
+            while (!(continuation instanceof interpreter.LambdaAbstraction)) {
+                continuation = continuation.force();
+            };
+            return continuation.apply(new interpreter.HeapPtr(new interpreter.Closure(env, this.arg)));
 	};
+        this.stringify = function() {
+            return "(" + this.func.stringify() + ") (" + this.arg.stringify() + ")";
+        };
     };
     ast.Let = function(declr, expr) {
 	expectType(declr, ast.Declaration);
@@ -84,9 +77,12 @@
 	this.expr = expr;
 	this.eval = function(env) {
 	    var newEnv = env.derive();
-	    newEnv.patternBind(this.declr.pattern, new interpreter.Closure(newEnv, this.declr.expression));
+	    newEnv.patternBind(this.declr.pattern, new interpreter.HeapPtr(new interpreter.Closure(newEnv, this.declr.expression)));
 	    return this.expr.eval(newEnv);
 	};
+        this.stringify = function() {
+            return "let " + this.declr.stringify() + " in " + this.expr.stringify();
+        };
     };
     ast.Case = function(expr, cases) {
 	expectType(expr, ast.Expression);
@@ -95,11 +91,11 @@
 	this.expr = expr;
 	this.cases = cases;
 	this.eval = function(env) {
-	    var expr = new interpreter.Closure(env, this.expr);
+	    var expr = new interpreter.HeapPtr(new interpreter.Closure(env, this.expr));
 	    for (var i in this.cases) {
 		var newEnv = env.derive();
 		if (this.cases[i][0].match(newEnv, expr)) {
-		    return new interpreter.Closure(newEnv, this.cases[i][1]);
+		    return this.cases[i][1].eval(newEnv);
 		};
 	    };
 	    alert("No matching clause");
@@ -110,8 +106,12 @@
 	this.type = "VariableLookup";
 	this.identifier = identifier;
 	this.eval = function(env) {
-	    return env.lookup(this.identifier);
+	    return env.lookup(this.identifier).dereference();
 	};
+
+        this.stringify = function() {
+            return this.identifier;
+        };
     };
     ast.Primitive = function(func) {
 	expectTypeOf(func, "function");
@@ -120,6 +120,10 @@
 	this.eval = function(env) {
 	    return this.func(env);
 	};
+
+        this.stringify = function() {
+            return "{primitive}";
+        };
     };
 
     ast.Constant.prototype          = new ast.Expression();
@@ -154,6 +158,10 @@
 	this.eval = function(env) {
 	    return new interpreter.ConstantThunk(this);
 	};
+
+        this.stringify = function() {
+            return this.num;
+        };
     };
     ast.PrimitiveValue = function(value) {
 	this.type="PrimitiveValue";
@@ -161,6 +169,14 @@
 	this.eval = function(env) {
 	    return this.value;
 	};
+        this.equals = function(v) {
+            return this.value == v;
+        };
+
+        this.stringify = function()
+        {
+            return this.value + "#";
+        };
     };
        
     ast.Num.prototype = new ast.Value();
@@ -178,6 +194,10 @@
 	this.type = "Variable";
 	this.pattern = pattern;
 	this.expression = expression;
+
+        this.stringify = function() {
+            return this.pattern.stringify() + " = " + this.expression.stringify();
+        };
     };
 
     ast.Data = function(identifier, constructors) {
@@ -219,14 +239,12 @@
 	this.identifier = identifier;
 	this.patterns = patterns;
 	this.match = function(env, expr) {
-	    while(expr.type!="Data") {
-		expr=expr.force();
-	    };
-	    if (this.identifier!=expr.identifier) {
+            var weakHead = expr.dereference();
+	    if (this.identifier!=weakHead.identifier) {
 		return false;
 	    };
 	    for (var i in this.patterns) {
-		if (!this.patterns[i].match(env, expr.thunks[i])) {
+		if (!this.patterns[i].match(env, weakHead.ptrs[i])) {
 		    return false;
 		};
 	    };
@@ -272,10 +290,8 @@
 	this.type = "ConstantPattern";
 	this.value = value;
 	this.match = function(env, expr) {
-	    while(expr.type!="ConstantThunk") {
-		expr = expr.force();
-	    };
-	    return (this.value.equals(expr.value));
+            var weakHead = expr.dereference();
+	    return (this.value.equals(weakHead));
 	};
 	this.vars = function() {
 	    return [];
@@ -296,4 +312,4 @@
     ast.Combined.prototype        = new ast.Pattern();
     ast.ConstantPattern.prototype = new ast.Pattern();
     ast.Wildcard.prototype        = new ast.Pattern();
-})(haskell.ast,haskell.interpreter);
+})(haskell.ast,haskell.interpreter, haskell.utilities);
