@@ -50,4 +50,4 @@ module Prelude where
     tail xs = case xs of
         (_:xs) -> xs
     
-    {- fix f = let x = f x in x -}
+    fix f = let x = f x in x
