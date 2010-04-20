@@ -8,7 +8,8 @@ var modules = new Array();
 
     var evaluateHaskell = function(line, env)
     {
-        ast = haskell.parser.parse(line).ast;
+        var line_ = '{' + line + '}';
+        ast = haskell.parser.parse(line_).ast;
         if (ast == undefined){
             return "Syntax Error";
         }

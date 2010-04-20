@@ -350,6 +350,7 @@ Todo:
         
         var aexp_constant_action = function(p) {
             return action(p, function(ast) {
+                console.log("%o", ast);
                 return new haskell.ast.Constant(ast);
             });
         };
@@ -808,8 +809,9 @@ Todo:
         var module = module_action(choice(sequence(ws("module"), ws(modid), optional(exports), ws("where"), body),
                             body));
         
-        var toplevel_exp = action(sequence(optional(ws('{')), exp, optional(ws('}'))), function(ast) {
-            return ast[1];
+        var toplevel_exp = choice(sequence(expect(ws('{')), ws(exp), expect(ws('}'))), exp);
+        toplevel_exp = action(toplevel_exp, function(ast) {
+            return ast[0];
         });
         var program = action(sequence(choice(module, toplevel_exp), ws(end_p)), function(ast) { return ast[0]; });
         
@@ -1051,7 +1053,9 @@ Todo:
         applyLayoutRules(derivedIndentLevels, new Array(), layoutApplied);
         
         // Step 3: Parse context free grammar
-        var result = grammar(ps(layoutApplied.join(" ")));
+        var contextFree = layoutApplied.join(" ");
+        console.log("%o", contextFree);
+        var result = grammar(ps(contextFree));
         
         return result;
     };
