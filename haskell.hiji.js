@@ -25,7 +25,7 @@ var modules = new Array();
 
     };
     var makeInput = function(modules){
-        return "<li class='input' id='inputTest'>" + makeModules(modules) + "<input type='text' name='inputBox' id='inbox'></li>";
+            return "<li class='input' id='inputTest'>" + makeModules(modules) + "<input type='text' name='inputBox' id='inbox'></li>";
     };
     var makeOutput = function(output) {
 	console.log("%o", output);
@@ -51,8 +51,7 @@ var modules = new Array();
         //  ladda prelude
         load_module('Prelude.hs');
         modules[0] = "Prelude";
-        modules[1] = "Control.Monad";
-        this.html("<ol id='test123'>" + makeInput(modules) + "</ol>");
+        this.html("<ol>" + makeInput(modules) + "</ol>");
 
         $("input:text:visible:first").focus();
         
