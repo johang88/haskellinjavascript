@@ -1047,12 +1047,8 @@ Todo:
             }
         }
         
-        console.log("%o", derivedIndentLevels);
-        
         var layoutApplied = new Array();
         applyLayoutRules(derivedIndentLevels, new Array(), layoutApplied);
-        
-        console.log("%o", layoutApplied);
         
         // Step 3: Parse context free grammar
         var result = grammar(ps(layoutApplied.join(" ")));
