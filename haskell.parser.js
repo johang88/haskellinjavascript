@@ -350,7 +350,6 @@ Todo:
         
         var aexp_constant_action = function(p) {
             return action(p, function(ast) {
-                console.log("%o", ast);
                 return new haskell.ast.Constant(ast);
             });
         };
