@@ -4,7 +4,6 @@ var DOWN  = '40';
 var is_module_loaded = false;
 var modules = new Array();
 
-
 (function($){
 
     var evaluateHaskell = function(line, env)
@@ -95,29 +94,27 @@ var modules = new Array();
 
         // load a module
         function load_module(module){
-
-                is_module_loaded = false;
-
-                jQuery.ajax({
-                    async : false,
-                    url : module,
-                    success: function(prelude_data){
-                        console.log(prelude_data);
-                        try {
-                                var ast = haskell.parser.parse(prelude_data);
-                                console.log("%o", ast);
-                                if (ast.ast == undefined) {
-                                    console.log("Syntax Error");
-                                }
-                            else {
-                                haskell.interpreter.prepare(ast.ast, env);
-                                is_module_loaded = true;
+            is_module_loaded = false;
+            jQuery.ajax({
+                async : false,
+                url : module,
+                success: function(prelude_data){
+                    console.log(prelude_data);
+                    try {
+                            var ast = haskell.parser.parse(prelude_data);
+                            console.log("%o", ast);
+                            if (ast.ast == undefined) {
+                                console.log("Syntax Error");
                             }
-                        } catch(e) {
-                            console.log("%o", e);
-                       }
-                    }
-                });
+                        else {
+                            haskell.interpreter.prepare(ast.ast, env);
+                            is_module_loaded = true;
+                        }
+                    } catch(e) {
+                        console.log("%o", e);
+                   }
+                }
+            });
         }
 
         function isCommand(l){
