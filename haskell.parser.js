@@ -847,14 +847,7 @@ Todo:
         // Step 1: Strip comments
         var stripped = comments(ps(code)).ast;
         
-        // Step 2: TODO: Parse lexical syntax and convert to context free
-        
-        /*
-         * Tabs are 8 spaces 
-         * A lexeme can not be less indented than the enclosing context
-         * let,where,do,of followed by { then reset indent level
-         */
-        
+        // Step 2: Parse lexical syntax and convert to context free
         var lexer_state = {
             indents: new Array()
         }
@@ -895,7 +888,7 @@ Todo:
         
         var concat_action = function(p) {
             return action(p, function(ast) {
-                var a = ast.pop();
+                var a = ast[1];
                 /*for (var i in a) {
                     ast.push(a[i]);
                 }*/
@@ -906,7 +899,7 @@ Todo:
             });
         }
         
-        var line = concat_action(sequence(tab, repeat0(ws_(lexeme))));
+        var line = concat_action(sequence(tab, repeat0(ws_(lexeme)), repeat0(choice(' ', '\t'))));
         var lines = action(list(line, '\n'), function(ast) {
             var a = Array();
             for (var i in ast) {
@@ -927,6 +920,10 @@ Todo:
             
             if ((lex == "let" || lex == "where" || lex == "do" || lex == "of") && lexalized[i + 1].lex != '{') {
                 var nextIndent = lexalized[i + 1].indent;
+                
+                if (lex == "let") {
+                    nextIndent += 1;
+                }
                 
                 var newLexo = new LexObject(nextIndent, nextIndent); // Insert {n} where n is indent level of next lexeme
                 newLexo.isBrackesIndent = true;
@@ -954,6 +951,10 @@ Todo:
             }
         }
         
+        var layout_state = {
+            let_stack: new Array()
+        };
+        
         var applyLayoutRules = function(ts, ms, out) {
             if (ts.length == 0 && ms.length == 0) {
                 // done
@@ -961,14 +962,18 @@ Todo:
                 var m = ms[0];
                 ms.shift();
                 
-                //if (m != 0) {
+                if (m != 0) {
                     out.push('}');
                     applyLayoutRules(ts, ms, out);
-                //} else {
-                //    console.log("layout error");
-                //}
+                } else {
+                    console.log("layout error");
+                }
             } else {
                 var t = ts[0];
+                
+                if (t.lex == "let") {
+                    layout_state.let_stack.push(t);
+                }
                 
                 if (t.isArrowsIndent) {
                     if (ms[0] == t.indent) {
@@ -987,7 +992,7 @@ Todo:
                 } else if (t.isBrackesIndent) {
                     var n = t.indent;
                     
-                    if (ms.length > 0 && n > ms[0] || ms.length == 0 && n == 0) {
+                    if (ms.length > 0 && n > ms[0]) {
                         var m = ms[0];
                         out.push('{');
                         ts.shift();
@@ -1024,11 +1029,16 @@ Todo:
                     applyLayoutRules(ts, ms, out);
                 } else {
                     var m = ms[0];
-                    /*if (m != 0 && m != undefined) {
+                    if (m != 0 && m != undefined && t.lex == "in" && layout_state.let_stack.length > 0) { 
+                        // parse-error(t) is more or less equals to checking for in
+                        // or maybe not, but at least it expands let ... in correctly
+                        // we also need to make sure that we are actually in a let expression
+                        // so we keep track of all nested lets in a stack
+                        layout_state.let_stack.pop();
                         out.push('}');
                         ms.shift();
                         applyLayoutRules(ts, ms, out);
-                    } else */{
+                    } else {
                         ts.shift();
                         out.push(t.lex);
                         applyLayoutRules(ts, ms, out);
