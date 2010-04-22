@@ -812,7 +812,7 @@ Todo:
         toplevel_exp = action(toplevel_exp, function(ast) {
             return ast[0];
         });
-        var program = action(sequence(choice(module, toplevel_exp), ws(end_p)), function(ast) { return ast[0]; });
+        var program = action(sequence(choice(toplevel_exp, module), ws(end_p)), function(ast) { return ast[0]; });
         
         // Pragma macro parser
         var pragmaId = join_action(repeat1(negate(choice('\t', ' ', '\r', '\n', "#-}"))), "");
