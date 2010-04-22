@@ -927,7 +927,7 @@ Todo:
                 }
                 
                 var newLexo = new LexObject(nextIndent, nextIndent); // Insert {n} where n is indent level of next lexeme
-                newLexo.isBrackesIndent = true;
+                newLexo.isBracketsIndent = true;
                 
                 derivedIndentLevels.push(lexalized[i]);
                 derivedIndentLevels.push(newLexo);
@@ -935,11 +935,11 @@ Todo:
                 var indent = lexalized[i].indent;
                 
                 var newLexo = new LexObject(indent, indent); // Insert {n} where n is indent level of first lexeme
-                newLexo.isBrackesIndent = true;
+                newLexo.isBracketsIndent = true;
                 
                 derivedIndentLevels.unshift(newLexo);
                 derivedIndentLevels.push(lexalized[i]);
-            } else if (i > 0 && lexalized[i].isFirst && lexalized[i].indent > 0 && !derivedIndentLevels[derivedIndentLevels.length - 1].isBrackesIndent) {
+            } else if (i > 0 && lexalized[i].isFirst && lexalized[i].indent > 0 && !derivedIndentLevels[derivedIndentLevels.length - 1].isBracketsIndent) {
                 var indent = lexalized[i].indent;
                 
                 var newLexo = new LexObject(indent, indent); // Insert <n< where n is indent level
@@ -990,7 +990,7 @@ Todo:
                         ms.shift();
                         applyLayoutRules(ts, ms, out);
                     }
-                } else if (t.isBrackesIndent) {
+                } else if (t.isBracketsIndent) {
                     var n = t.indent;
                     
                     if (ms.length > 0 && n > ms[0]) {
@@ -1006,7 +1006,7 @@ Todo:
                         a.push(n);
                         applyLayoutRules(ts, a, out);
                     } else {
-                        t.isBrackesIndent = false;
+                        t.isBracketsIndent = false;
                         t.isArrowsIndent = true;
                         ms.shift();
                         out.push('{');
