@@ -98,14 +98,17 @@
         };
     };
     ast.Let = function(declr, expr) {
-	expectType(declr, ast.Declaration);
+	expectTypeArray(declr, ast.Declaration);
 	expectType(expr, ast.Expression);
 	this.type = "Let";
 	this.declr = declr;
 	this.expr = expr;
 	this.eval = function(env) {
 	    var newEnv = env.derive();
-	    newEnv.patternBind(this.declr.pattern, new interpreter.HeapPtr(new interpreter.Closure(newEnv, this.declr.expression)));
+	    for (var i in this.declr) {
+		var declr = this.declr[i];
+		newEnv.patternBind(declr.pattern, new interpreter.HeapPtr(new interpreter.Closure(newEnv, declr.expression)));
+	    }
 	    return this.expr.eval(newEnv);
 	};
         this.stringify = function() {
