@@ -853,7 +853,8 @@ Todo:
         
         // Step 2: Parse lexical syntax and convert to context free
         var lexer_state = {
-            indents: new Array()
+            indents: new Array(),
+            current: 0
         }
          
         var whitestuff = choice('\t', ' ');
@@ -866,6 +867,8 @@ Todo:
                     cnt += 1;
                 }
             }
+            
+            lexer_state.current += cnt;
             
             lexer_state.indents.push({ depth: cnt, bracket: false });
             var o = new LexObject(cnt, cnt);
@@ -881,17 +884,21 @@ Todo:
         var lexeme = join_action(repeat1(negate(choice('\n', '\r', ' ', '\t', ';', '{', '}'))), "");
         lexeme = choice(';', '{', '}', lexeme);
         lexeme = action(lexeme, function(ast) {
-            return new LexObject(ast, lexer_state.indents[lexer_state.indents.length - 1].depth);
+            var indent = lexer_state.current;
+            lexer_state.current += ast.length;
+            return new LexObject(ast, indent);
         });
         
         var ws_ = function(p) {
-            return action(sequence(expect(repeat0(" ")), p), function(ast) {
-               return ast[ast.length - 1]; 
+            return action(sequence(repeat0(" "), p), function(ast) {
+                lexer_state.current += ast[0].length;
+                return ast[ast.length - 1]; 
             });
         }
         
         var concat_action = function(p) {
             return action(p, function(ast) {
+                lexer_state.current = 1;
                 var a = ast[1];
                 /*for (var i in a) {
                     ast.push(a[i]);
