@@ -35,6 +35,7 @@
             	      | Let Pattern Expression Expression
                	      | Case Expression [(Pattern, Expression)]
                       | VariableLookup Identifier
+		      | Do [DoNotation]
 		      | Primitive Function
     */
     // Eval returns a whnf
@@ -147,6 +148,16 @@
             return this.identifier;
         };
     };
+    ast.Do = function(notations) {
+	expectTypeArray(notations, ast.DoNotation);
+	this.notations = notations;
+    };
+    ast.Do.prototype = new ast.Expression();
+    ast.Do.desugar = function() {
+	var rest = this.notations.concat();
+	var first = rest.shift();
+	return (first.partDesugar(rest));
+    };
     ast.Primitive = function(func) {
 	expectTypeOf(func, "function");
 	this.type="Primitive";
@@ -172,6 +183,48 @@
     ast.Case.prototype.constructor = ast.Case; 
     ast.VariableLookup.prototype.constructor = ast.VariableLookup; 
     ast.Primitive.prototype.constructor = ast.Primitive; */
+
+    /*
+      data DoNotation = DoLet [Declaration]
+                      | DoBind Pattern Expression
+		      | DoExpr Expression
+     */
+    ast.DoNotation = function(){};
+    
+    ast.DoLet = function(declrs) {
+	expectTypeArray(declrs, ast.Declaration);
+	this.declrs = declrs;
+    };
+    ast.DoLet.prototype = new ast.DoNotation();
+    ast.DoLet.prototype.partDesugar = function(rest) {
+	// let declr ; do ==> let declr in do
+	return new ast.Let(this.declr, new ast.Do(rest));
+    };
+
+    ast.DoBind = function(pattern, expression) {
+	expectType(pattern, ast.Pattern);
+	expectType(expression, ast.Expression);
+	this.pattern = pattern;
+	this.expression = expression;
+    };
+    ast.DoBind.prototype = new ast.DoNotation();
+    ast.DoBind.prototype.partDesugar = function(rest) {
+	// x <- expr ; do ==>  expr >>= (x -> do)
+	return new ast.Application(ast.Application(new ast.VariableLookup(">>="), this.expression), ast.Lambda(this.pattern, new ast.Do(rest)));
+    };
+
+    ast.DoExpr = function(expr) {
+	expectType(expr, ast.Expression);
+	this.expr = expr;
+    };
+    ast.DoExpr.prototype = new ast.DoNotation();
+    ast.DoExpr.prototype.partDesugar = function(rest) {
+	if (rest.length == 0) {
+	    return this.expr;
+	};
+	// expr ; do ==> expr >> do
+	return new ast.Application(ast.Application(new ast.VariableLookup(">>"), this.expression), new ast.Do(rest));
+    };
 
     /*
       data Value = Num Int
