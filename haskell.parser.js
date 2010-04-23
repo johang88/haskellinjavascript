@@ -300,7 +300,7 @@ Todo:
         
         var alt = sequence(ws(pat), expect(ws("->")), ws(exp));
         
-        var alts = repeat1(action(sequence(ws(alt), ws(';')), function(ast) { return ast[0]; }));
+        var alts = list(ws(alt), ws(';'));
         
         var qval = undefined;
         
@@ -808,8 +808,11 @@ Todo:
         var module = module_action(choice(sequence(ws("module"), ws(modid), optional(exports), ws("where"), body),
                             body));
         
-        
-        var program = action(sequence(choice(module, exp), ws(end_p)), function(ast) { return ast[0]; });
+        var toplevel_exp = choice(sequence(expect(ws('{')), ws(exp), expect(ws('}'))), exp);
+        toplevel_exp = action(toplevel_exp, function(ast) {
+            return ast[0];
+        });
+        var program = action(sequence(choice(toplevel_exp, module), ws(end_p)), function(ast) { return ast[0]; });
         
         // Pragma macro parser
         var pragmaId = join_action(repeat1(negate(choice('\t', ' ', '\r', '\n', "#-}"))), "");
@@ -845,14 +848,7 @@ Todo:
         // Step 1: Strip comments
         var stripped = comments(ps(code)).ast;
         
-        // Step 2: TODO: Parse lexical syntax and convert to context free
-        
-        /*
-         * Tabs are 8 spaces 
-         * A lexeme can not be less indented than the enclosing context
-         * let,where,do,of followed by { then reset indent level
-         */
-        
+        // Step 2: Parse lexical syntax and convert to context free
         var lexer_state = {
             indents: new Array()
         }
@@ -869,17 +865,196 @@ Todo:
             }
             
             lexer_state.indents.push({ depth: cnt, bracket: false });
-            return "";
+            var o = new LexObject(cnt, cnt);
+            o.isStartTab = true;
+            return o;
         });
         
-        var lexeme = join_action(repeat0(negate(choice('\n', '\r', ' ', '\t', ';', '{', '}'))), "");
-        lexeme = choice(';', '{', '}', lexeme);
+        var LexObject = function(lex, indent) {
+            this.lex = lex;
+            this.indent = indent;
+        }
         
-        var line = join_action(sequence(tab, join_action(repeat0(ws(lexeme)), " ")), " ");
-        var lines = join_action(list(line, '\n'), '\n');
+        var lexeme = join_action(repeat1(negate(choice('\n', '\r', ' ', '\t', ';', '{', '}'))), "");
+        lexeme = choice(';', '{', '}', lexeme);
+        lexeme = action(lexeme, function(ast) {
+            return new LexObject(ast, lexer_state.indents[lexer_state.indents.length - 1].depth);
+        });
+        
+        var ws_ = function(p) {
+            return action(sequence(expect(repeat0(" ")), p), function(ast) {
+               return ast[ast.length - 1]; 
+            });
+        }
+        
+        var concat_action = function(p) {
+            return action(p, function(ast) {
+                var a = ast[1];
+                /*for (var i in a) {
+                    ast.push(a[i]);
+                }*/
+                if (a.length > 0) {
+                    a[0].isFirst = true;
+                }
+                return a
+            });
+        }
+        
+        var line = concat_action(sequence(tab, repeat0(ws_(lexeme)), repeat0(choice(' ', '\t'))));
+        var lines = action(list(line, '\n'), function(ast) {
+            var a = Array();
+            for (var i in ast) {
+                var b = ast[i];
+                for (var j in b) {
+                    a.push(b[j]);
+                }
+            }
+            return a;
+        });
+        
+        var lexalized = lines(ps(stripped)).ast;
+        
+        var derivedIndentLevels = new Array();
+        
+        for (var i = 0; i < lexalized.length; i++) {
+            var lex = lexalized[i].lex;
+            
+            if ((lex == "let" || lex == "where" || lex == "do" || lex == "of") && lexalized[i + 1].lex != '{') {
+                var nextIndent = lexalized[i + 1].indent;
+                
+                if (lex == "let") {
+                    nextIndent += 1;
+                }
+                
+                var newLexo = new LexObject(nextIndent, nextIndent); // Insert {n} where n is indent level of next lexeme
+                newLexo.isBracketsIndent = true;
+                
+                derivedIndentLevels.push(lexalized[i]);
+                derivedIndentLevels.push(newLexo);
+            } else if (i == 0 && lex != '{' && lex != "module") {
+                var indent = lexalized[i].indent;
+                
+                var newLexo = new LexObject(indent, indent); // Insert {n} where n is indent level of first lexeme
+                newLexo.isBracketsIndent = true;
+                
+                derivedIndentLevels.unshift(newLexo);
+                derivedIndentLevels.push(lexalized[i]);
+            } else if (i > 0 && lexalized[i].isFirst && lexalized[i].indent > 0 && !derivedIndentLevels[derivedIndentLevels.length - 1].isBracketsIndent) {
+                var indent = lexalized[i].indent;
+                
+                var newLexo = new LexObject(indent, indent); // Insert <n< where n is indent level
+                newLexo.isArrowsIndent = true;
+                
+                derivedIndentLevels.push(newLexo);
+                derivedIndentLevels.push(lexalized[i]);
+            } else {
+                derivedIndentLevels.push(lexalized[i]);
+            }
+        }
+        
+        var layout_state = {
+            let_stack: new Array()
+        };
+        
+        var applyLayoutRules = function(ts, ms, out) {
+            if (ts.length == 0 && ms.length == 0) {
+                // done
+            } else if (ts.length == 0) {
+                var m = ms[0];
+                ms.shift();
+                
+                if (m != 0) {
+                    out.push('}');
+                    applyLayoutRules(ts, ms, out);
+                } else {
+                    console.log("layout error");
+                }
+            } else {
+                var t = ts[0];
+                
+                if (t.lex == "let") {
+                    layout_state.let_stack.push(t);
+                }
+                
+                if (t.isArrowsIndent) {
+                    if (ms[0] == t.indent) {
+                        ts.shift();
+                        out.push(';');
+                        applyLayoutRules(ts, ms, out);
+                    } else if (t.indent < ms[0]) {
+                        ms.shift();
+                        out.push('}');
+                        applyLayoutRules(ts, ms, out);
+                    } else {
+                        ts.shift();
+                        ms.shift();
+                        applyLayoutRules(ts, ms, out);
+                    }
+                } else if (t.isBracketsIndent) {
+                    var n = t.indent;
+                    
+                    if (ms.length > 0 && n > ms[0]) {
+                        var m = ms[0];
+                        out.push('{');
+                        ts.shift();
+                        ms.unshift(n);
+                        applyLayoutRules(ts, ms, out);
+                    } else if (ms.length == 0 && n > 0) {
+                        ts.shift();
+                        out.push('{');
+                        var a = new Array();
+                        a.push(n);
+                        applyLayoutRules(ts, a, out);
+                    } else {
+                        t.isBracketsIndent = false;
+                        t.isArrowsIndent = true;
+                        ms.shift();
+                        out.push('{');
+                        out.push('}');
+                        applyLayoutRules(ts, ms, out);
+                    }
+                } else if (t.lex == '}') {
+                    var n = t.indent;
+                    if (n == 0) {
+                        ts.shift();
+                        ms.shift();
+                        out.push('}');
+                        applyLayoutRules(ts, ms, out);
+                    }  else {
+                        console.log("layout error");
+                    }
+                } else if (t.lex == '{') {
+                    ts.shift();
+                    ms.unshift(0);
+                    out.push('{');
+                    applyLayoutRules(ts, ms, out);
+                } else {
+                    var m = ms[0];
+                    if (m != 0 && m != undefined && t.lex == "in" && layout_state.let_stack.length > 0) { 
+                        // parse-error(t) is more or less equals to checking for in
+                        // or maybe not, but at least it expands let ... in correctly
+                        // we also need to make sure that we are actually in a let expression
+                        // so we keep track of all nested lets in a stack
+                        layout_state.let_stack.pop();
+                        out.push('}');
+                        ms.shift();
+                        applyLayoutRules(ts, ms, out);
+                    } else {
+                        ts.shift();
+                        out.push(t.lex);
+                        applyLayoutRules(ts, ms, out);
+                    }
+                }
+            }
+        }
+        
+        var layoutApplied = new Array();
+        applyLayoutRules(derivedIndentLevels, new Array(), layoutApplied);
         
         // Step 3: Parse context free grammar
-        var result = grammar(ps(lines(ps(stripped)).ast));
+        var contextFree = layoutApplied.join(" ");
+        console.log("%o", contextFree);
+        var result = grammar(ps(contextFree));
         
         return result;
     };
