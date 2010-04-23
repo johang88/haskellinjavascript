@@ -72,13 +72,7 @@ commands[":help"] = "HELP";
             if(e.which==DOWN){
                 input.attr("value", hiss.newer(line));
             }
-<<<<<<< HEAD:haskell.hiji.js
-            if (e.which==ENTER){
-                
-=======
-            if (e.keyCode==ENTER){
-
->>>>>>> master:haskell.hiji.js
+            if (e.which==ENTER){              
                 // history
                 hiss.addHistory(line);
                 $.cookie("hiss", JSON.stringify(hiss.history_array), {expires: 3 });              
