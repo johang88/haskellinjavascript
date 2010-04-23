@@ -283,9 +283,27 @@ Todo:
         
         var fbind = undefined;
         
-        var stmt = choice( ws(exp),
-                           sequence(ws(pat), ws("<-"), ws(exp)),
-                           sequence(ws("let"), ws(decls))
+        var stmt_exp_action = function(p) {
+            return action(p, function(ast) {
+                return new haskell.ast.DoExpr(ast);
+            });
+        }
+        
+        var stmt_bind_action = function(p) {
+            return action(p, function(ast) {
+                return new haskell.ast.DoBind(ast[0], ast[1]);
+            });
+        }
+        
+        var stmt_let_action = function(p) {
+            return action(p, function(ast) {
+                return new haskell.ast.DoLet(ast);
+            });
+        };
+        
+        var stmt = choice( stmt_exp_action(ws(exp)),
+                           stmt_bind_action(sequence(ws(pat), ws("<-"), ws(exp))),
+                           stmt_let_action(sequence(ws("let"), ws(decls)))
                            );
                             
         var stmts = list(stmt, ws(";"));
