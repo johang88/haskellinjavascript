@@ -1040,7 +1040,10 @@ Todo:
                         if (m == 0) {
                             ts.shift();
                             out.push('}');
-                        }  else {
+                        } else if(m != undefined) { // TODO: see if there is a way around this stupid shit
+                                                    // or if it has any consequences.
+                            out.push('}');
+                        } else {
                             console.log("layout error");
                             break;
                         }
