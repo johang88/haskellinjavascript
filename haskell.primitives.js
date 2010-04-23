@@ -187,6 +187,7 @@
 	    return func(env, givenArgs);
 	};
 	var expr = new ast.Primitive(primitive);
+
 	var argsR = [].concat(args).reverse();
 	for (var i in argsR) {
 	    expr = new ast.Lambda(new ast.VariableBinding(argsR[i]), expr);
