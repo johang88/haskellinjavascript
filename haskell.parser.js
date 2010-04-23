@@ -826,10 +826,10 @@ Todo:
                     if (p == "MagicHash") {
                         enableHash = true;
                     }
-                    return ast;
+                    return "";
                 });
                 
-        var grammar = action(sequence(repeat0(pragma), program), function(ast) {
+        var grammar = action(sequence(program), function(ast) {
                 return ast[ast.length - 1];
             });
         
@@ -849,6 +849,8 @@ Todo:
         comments = join_action(comments, "");
         
         // Step 1: Strip comments
+        comments = join_action(sequence(repeat0(pragma), comments), "");
+        
         var stripped = comments(ps(code)).ast;
         
         // Step 2: Parse lexical syntax and convert to context free
