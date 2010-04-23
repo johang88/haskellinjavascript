@@ -747,7 +747,7 @@ Todo:
                             gendecl
                          );
         
-        var decls = action(sequence(expect(ws('{')), list(ws(decl), ws(';')), expect(ws('}'))), function(ast) { return ast[0]; });
+        var decls = action(sequence(expect(ws('{')), list(ws(decl), ws(';')), expect(ws('}'))), function(ast) { return ast; });
         
         var data_action = function(p) {
             return action(p, function(ast) {
