@@ -156,7 +156,7 @@
 	this.notations = notations;
     };
     ast.Do.prototype = new ast.Expression();
-    ast.Do.desugar = function() {
+    ast.Do.prototype.desugar = function() {
 	var rest = this.notations.concat();
 	var first = rest.shift();
 	return (first.partDesugar(rest));
