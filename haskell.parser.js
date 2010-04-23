@@ -283,9 +283,12 @@ Todo:
         
         var fbind = undefined;
         
-        var stmt = undefined;
-        
-        var stmts = epsilon_p;
+        var stmt = choice( ws(exp),
+                           sequence(ws(pat), ws("<-"), ws(exp)),
+                           sequence(ws("let"), ws(decls))
+                           );
+                            
+        var stmts = list(stmt, ws(";"));
         
         var gdpat = undefined;
         
@@ -1014,10 +1017,9 @@ Todo:
                         applyLayoutRules(ts, ms, out);
                     }
                 } else if (t.lex == '}') {
-                    var n = t.indent;
-                    if (n == 0) {
+                    var m = ms.shift();
+                    if (m == 0) {
                         ts.shift();
-                        ms.shift();
                         out.push('}');
                         applyLayoutRules(ts, ms, out);
                     }  else {
