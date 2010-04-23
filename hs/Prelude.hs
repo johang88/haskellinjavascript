@@ -64,3 +64,19 @@ data Int = I# Int#
 (*) (I# i1) (I# i2) = I# (i1 *# i2)
 
 stepDebug = stepDebug#
+
+data Maybe a = Just a | Nothing
+
+-- Maybe == Monad. wat
+
+(>>) m a = case m of
+     Nothing -> Nothing
+     Just _ -> a
+
+(>>=) m f = case m of
+       Nothing -> Nothing
+       Just a -> f a
+
+return a = Just a
+
+fail = Nothing
