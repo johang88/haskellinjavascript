@@ -148,7 +148,7 @@
                 }
                 pending = newPending;
             }
-            console.log("done: %o", step);
+            console.log("done: ", step.stringify());
 	    return new interpreter.Data("()", []);            
         }));
     };

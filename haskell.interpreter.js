@@ -124,6 +124,9 @@
             if (this.weakHead == undefined) {
                 return this.thunk.stringify();
             }
+            if (this.weakHead.stringify == undefined) {
+                return this.weakHead;
+            }
             return this.weakHead.stringify();
         };
     };
@@ -178,6 +181,12 @@
         this.getPtrs = function() {
             return this.ptrs;
         };
+
+        this.stringify = function() {
+            return "(" + this.identifier + " " + this.ptrs.map(function(ptr) {
+                return ptr.stringify();
+            }).join(" ") + ")";
+        };
     };
     interpreter.LambdaAbstraction = function(env, pattern, expression)
     {
@@ -188,6 +197,10 @@
         this.apply = function(argument) {
             var substitution = this.env.substitute(this.pattern, argument);
             return this.expression.eval(substitution);
+        };
+
+        this.stringify = function() {
+            return "(\\" + this.pattern.stringify() + " -> " + this.expression.stringify() + ")"
         };
     };
 })(haskell.interpreter, haskell.ast, haskell.primitives, haskell.utilities);

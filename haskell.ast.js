@@ -6,12 +6,27 @@
     expectTypeArray = utilities.expectTypeArray;
 
    /*
-      data Module = Module [Declaration]
+      data Module = Module VisibleNames [Import] [Declaration]
     */
     ast.Module = function(declarations) {
 	expectTypeArray(declarations, ast.Declaration);
 	this.declarations = declarations;
     };
+
+    /* 
+       data VisibleNames = Hiding [NameDef]
+                   | Showing [NameDef]
+    */
+
+    /* 
+       data NameDef = Name Identifier | ConstructorName Identifer [NameDef] | NoName
+       // NoName = ...
+    */
+
+    /* 
+       Import = Import Identifier VisibleNames
+              | ImportQualified Identifer VisibleNames Identifier
+     */
 	
     /*
       data Expression = Constant Value
@@ -24,19 +39,31 @@
     */
     // Eval returns a whnf
     ast.Expression = function(){};
+    ast.Expression.prototype = new Object();
+    // Either desugar or the other needs overriding in child objects
+    ast.Expression.prototype.eval = function(env) {
+        return this.desugar().eval(env);
+    };
+    ast.Expression.prototype.stringify = function() {
+        return this.desugar().stringify();
+    };
+    ast.Expression.prototype.desugar = function() {
+        return this;
+    };
 
     ast.Constant = function(value) {
 	expectType(value, ast.Value);
 	this.type ="Constant";
 	this.value = value;
-	this.eval = function(env) {
-	    return this.value.eval();
-	};
-
-        this.stringify = function() {
-            return this.value.stringify();
-        };
     };
+    ast.Constant.prototype = new ast.Expression();
+    ast.Constant.prototype.eval = function(env) {
+	return this.value.eval(env);
+    };
+    ast.Constant.prototype.stringify = function() {
+        return this.value.stringify();
+    };
+
     ast.Lambda = function(pattern, expression) {
 	expectType(pattern, ast.Pattern);
 	expectType(expression, ast.Expression);
@@ -100,6 +127,13 @@
 	    };
 	    alert("No matching clause");
 	};
+
+        this.stringify = function() {
+            return "case " + this.expr.stringify() + "of {" +
+                this.cases.map(function(c) {
+                    return c[0].stringify() + " -> " + c[1].stringify() + ";";
+                }).join("") + "}";
+        };
     };
     ast.VariableLookup = function(identifier) {
 	expectTypeOf(identifier, "string");
@@ -125,8 +159,6 @@
             return "{primitive}";
         };
     };
-
-    ast.Constant.prototype          = new ast.Expression();
     ast.Lambda.prototype           = new ast.Expression();
     ast.Application.prototype       = new ast.Expression();
     ast.Let.prototype               = new ast.Expression();
@@ -151,12 +183,12 @@
 	this.type = "Num";
 	this.num = num;
 
-	this.equals = function(n) {
-	    return this.num == n.num;
+	this.match = function(env, n) {
+            return (new ast.PatternConstructor("I#", [new ast.ConstantPattern(new ast.PrimitiveValue(this.num))])).match(env, n);
 	};
 
 	this.eval = function(env) {
-	    return new interpreter.ConstantThunk(this);
+            return new interpreter.Data("I#", [new interpreter.HeapPtr(new interpreter.Closure(env, new ast.Constant(new ast.PrimitiveValue(this.num))))]);
 	};
 
         this.stringify = function() {
@@ -169,8 +201,8 @@
 	this.eval = function(env) {
 	    return this.value;
 	};
-        this.equals = function(v) {
-            return this.value == v;
+        this.match = function(env, v) {
+            return this.value == v.dereference();
         };
 
         this.stringify = function()
@@ -258,6 +290,12 @@
 	    };
 	    return vars;
 	};
+
+        this.stringify = function() {
+            return this.identifier + " " + this.patterns.map(function(p) {
+                return p.stringify();
+            }).join(" ");
+        };
     };
     ast.VariableBinding = function(identifier) {
 	expectTypeOf(identifier, "string");
@@ -270,6 +308,10 @@
 	this.vars = function() {
 	    return [this.identifier];
 	};
+
+        this.stringify = function() {
+            return this.identifier;
+        };
     };
     ast.Combined = function(identifier, pattern) {
 	expectTypeOf(identifier, "string");
@@ -284,18 +326,24 @@
 	this.vars = function() {
 	    return [this.identifier].concat(this.pattern.vars());
 	};
+        this.stringify = function() {
+            return this.identifier + "@(" + this.pattern.stringify() + ")";
+        };
     };
     ast.ConstantPattern = function(value) {
 	expectType(value, ast.Value);
 	this.type = "ConstantPattern";
 	this.value = value;
 	this.match = function(env, expr) {
-            var weakHead = expr.dereference();
-	    return (this.value.equals(weakHead));
+	    return (this.value.match(env, expr));
 	};
 	this.vars = function() {
 	    return [];
 	};
+
+        this.stringify = function() {
+            return this.value.stringify();
+        };
     };
     ast.Wildcard = function() {
 	this.type = "Wildcard";
@@ -305,6 +353,9 @@
 	this.vars = function() {
 	    return [];
 	};
+        this.stringify = function() {
+            return "_";
+        };
     };
 
     ast.PatternConstructor.prototype     = new ast.Pattern();

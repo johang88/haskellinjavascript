@@ -60,4 +60,6 @@ module Prelude where {
     data Int = I# Int#;
 
     (+) (I# i1) (I# i2) = I# (i1 +# i2);
+
+    (-) (I# i1) (I# i2) = I# (i1 -# i2);
 }
