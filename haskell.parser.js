@@ -301,8 +301,10 @@ Todo:
             });
         };
         
-        var stmt = choice( stmt_exp_action(ws(exp)),
-                           stmt_bind_action(sequence(ws(pat), ws("<-"), ws(exp))),
+        var infixexp = function(state) { return infixexp(state); };
+        
+        var stmt = choice( stmt_exp_action(ws(infixexp)),
+                           stmt_bind_action(sequence(ws(pat), ws("<-"), ws(infixexp))),
                            stmt_let_action(sequence(ws("let"), ws(decls)))
                            );
                             
@@ -324,8 +326,6 @@ Todo:
         var alts = list(ws(alt), ws(';'));
         
         var qval = undefined;
-        
-        var infixexp = function(state) { return infixexp(state); };
         
         var right_section_action = function(p) {
             return action(p, function(ast) {
@@ -443,11 +443,17 @@ Todo:
             });
         }
         
+        var do_action = function(p) {
+            return action(p, function(ast) {
+                return new haskell.ast.Do(ast[0]);
+            });
+        };
+        
         var exp_10 = choice(lambda_exp_action (sequence(expect(ws('\\')), repeat1(ws(apat)), expect(ws("->")), ws(exp))),
                             let_action(sequence(expect(ws("let")), ws(decls), expect(ws("in")), ws(exp))),
                             sequence(ws("if"), ws(exp), ws("then"), ws(exp), ws("else"), ws(exp)),
                             case_action(sequence(expect(ws("case")), ws(exp), expect(ws("of")), expect(ws("{")), ws(alts), expect(ws("}")))),
-                            sequence(ws("do"), ws("{"), ws(stmts), ws("}")),
+                            do_action(sequence(expect(ws("do")), expect(ws("{")), ws(stmts), expect(ws("}")))),
                             ws(fexp)
                             );
         
