@@ -987,91 +987,81 @@ Todo:
         };
         
         var applyLayoutRules = function(ts, ms, out) {
-            if (ts.length == 0 && ms.length == 0) {
-                // done
-            } else if (ts.length == 0) {
-                var m = ms[0];
-                ms.shift();
-                
-                if (m != 0) {
-                    out.push('}');
-                    applyLayoutRules(ts, ms, out);
-                } else {
-                    console.log("layout error");
-                }
-            } else {
-                var t = ts[0];
-                
-                if (t.lex == "let") {
-                    layout_state.let_stack.push(t);
-                }
-                
-                if (t.isArrowsIndent) {
-                    if (ms[0] == t.indent) {
-                        ts.shift();
-                        out.push(';');
-                        applyLayoutRules(ts, ms, out);
-                    } else if (t.indent < ms[0]) {
-                        ms.shift();
-                        out.push('}');
-                        applyLayoutRules(ts, ms, out);
-                    } else {
-                        ts.shift();
-                        ms.shift();
-                        applyLayoutRules(ts, ms, out);
-                    }
-                } else if (t.isBracketsIndent) {
-                    var n = t.indent;
-                    
-                    if (ms.length > 0 && n > ms[0]) {
-                        var m = ms[0];
-                        out.push('{');
-                        ts.shift();
-                        ms.unshift(n);
-                        applyLayoutRules(ts, ms, out);
-                    } else if (ms.length == 0 && n > 0) {
-                        ts.shift();
-                        out.push('{');
-                        var a = new Array();
-                        a.push(n);
-                        applyLayoutRules(ts, a, out);
-                    } else {
-                        t.isBracketsIndent = false;
-                        t.isArrowsIndent = true;
-                        ms.shift();
-                        out.push('{');
-                        out.push('}');
-                        applyLayoutRules(ts, ms, out);
-                    }
-                } else if (t.lex == '}') {
-                    var m = ms.shift();
-                    if (m == 0) {
-                        ts.shift();
-                        out.push('}');
-                        applyLayoutRules(ts, ms, out);
-                    }  else {
-                        console.log("layout error");
-                    }
-                } else if (t.lex == '{') {
-                    ts.shift();
-                    ms.unshift(0);
-                    out.push('{');
-                    applyLayoutRules(ts, ms, out);
-                } else {
+            while (!(ts.length == 0 && ms.length == 0)) {
+                if (ts.length == 0) {
                     var m = ms[0];
-                    if (m != 0 && m != undefined && t.lex == "in" && layout_state.let_stack.length > 0) { 
-                        // parse-error(t) is more or less equals to checking for in
-                        // or maybe not, but at least it expands let ... in correctly
-                        // we also need to make sure that we are actually in a let expression
-                        // so we keep track of all nested lets in a stack
-                        layout_state.let_stack.pop();
+                    ms.shift();
+                    
+                    if (m != 0) {
                         out.push('}');
-                        ms.shift();
-                        applyLayoutRules(ts, ms, out);
                     } else {
+                        console.log("layout error");
+                        break;
+                    }
+                } else {
+                    var t = ts[0];
+                    
+                    if (t.lex == "let") {
+                        layout_state.let_stack.push(t);
+                    }
+                    
+                    if (t.isArrowsIndent) {
+                        if (ms[0] == t.indent) {
+                            ts.shift();
+                            out.push(';');
+                        } else if (t.indent < ms[0]) {
+                            ms.shift();
+                            out.push('}');
+                        } else {
+                            ts.shift();
+                            ms.shift();
+                        }
+                    } else if (t.isBracketsIndent) {
+                        var n = t.indent;
+                        
+                        if (ms.length > 0 && n > ms[0]) {
+                            var m = ms[0];
+                            out.push('{');
+                            ts.shift();
+                            ms.unshift(n);
+                        } else if (ms.length == 0 && n > 0) {
+                            ts.shift();
+                            out.push('{');
+                            ms.push(n);
+                        } else {
+                            t.isBracketsIndent = false;
+                            t.isArrowsIndent = true;
+                            ms.shift();
+                            out.push('{');
+                            out.push('}');
+                        }
+                    } else if (t.lex == '}') {
+                        var m = ms.shift();
+                        if (m == 0) {
+                            ts.shift();
+                            out.push('}');
+                        }  else {
+                            console.log("layout error");
+                            break;
+                        }
+                    } else if (t.lex == '{') {
                         ts.shift();
-                        out.push(t.lex);
-                        applyLayoutRules(ts, ms, out);
+                        ms.unshift(0);
+                        out.push('{');
+                    } else {
+                        var m = ms[0];
+                        if (m != 0 && m != undefined && t.lex == "in" && layout_state.let_stack.length > 0) { 
+                            // parse-error(t) is more or less equals to checking for in
+                            // or maybe not, but at least it expands let ... in correctly
+                            // we also need to make sure that we are actually in a let expression
+                            // so we keep track of all nested lets in a stack
+                            layout_state.let_stack.pop();
+                            out.push('}');
+                            ms.shift();
+                        } else {
+                            ts.shift();
+                            out.push(t.lex);
+                        }
                     }
                 }
             }
