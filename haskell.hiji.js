@@ -4,6 +4,13 @@ var DOWN  = '40';
 var is_module_loaded = false;
 var modules = new Array();
 
+
+var commands = new Array();
+commands[":l"]    = "LOAD";
+commands[":load"] = "LOAD";
+commands[":h"]    = "HELP";
+commands[":help"] = "HELP";
+
 (function($){
 
     var evaluateHaskell = function(line, env)
@@ -127,11 +134,11 @@ var modules = new Array();
         
         function runCommand(i, input2, line){
             var input   = trim(i);
-            var command = input.substr(0,2);
-            var arg     = trim(input.substr(2)); 
-            var module_name = arg.substr(0, arg.lastIndexOf('.'));  
+            var command = input.indexOf(" ") != -1 ? input.substr(0, input.indexOf(" ")) : input;
             // load module
-            if(command == ':l'){
+            if(commands[command] == "LOAD"){
+                var arg     = trim(input.substr(command.length)); 
+                var module_name = arg.substr(0, arg.lastIndexOf('.'));  
                 load_module(arg);
                 if(is_module_loaded){
                     var module_already_in_modules = false;
@@ -157,19 +164,35 @@ var modules = new Array();
                         $('.input').after(output).replaceWith(newLine);
                         $("ol").append(makeInput(modules));
                 }
+            }else if(commands[command] == "HELP"){
+                var newLine     = makeEntered(modules, line);
+                var output_row  = new Array();
+                output_row.push(makeOutput("Help"));
+                output_row.push(makeOutput(" "));
+                output_row.push(makeOutput("Commands:"));
+                output_row.push(makeOutput(":l [Module]  ... load a module"));
+                var str = "$('.input')";
+                for (var i = output_row.length-1; i>=0; i--){
+                    str += ".after(" + output_row[i] + ")";
+ //                   $('.input').after(output_row[i]).after(output).replaceWith(newLine);
+                }
+                str += ".replaceWith(newLine);";
+                alert(str);
+                eval(str);
+               // var output  = makeOutput("HELP HELP HELP" + "<br>" + "asdas");
+              //  $('.input').after(output1).after(output).replaceWith(newLine);
+             //   $('.input').after(output).replaceWith(newLine);
+             //   $('.input').after(output).replaceWith(newLine);
+                $("ol").append(makeInput(modules));
             }
         }
     };
 
 })(jQuery);
 
-
-// do nicer
 function trim(str){
     return str.replace(/^\s+|\s+$/g,"");
 }
-
-
 
 // historry-class with nice name
 // !!!WARNING!!! NICE NAME. conflict with javascript
