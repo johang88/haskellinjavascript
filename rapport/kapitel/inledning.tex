@@ -1,12 +1,11 @@
 ﻿\section{Inledning}
 
 \subsection{Bakgrund}
-På vissa av Chalmers och Göteborgs Universitets program så är den första programmeringskursen i Haskell \citep{haskell98} och för en del av de nya eleverna är inlärningströskeln relativt hög. Vi tror att ett interaktivt webbverktyg skulle kunna sänka den här tröskeln och underlätta undervisningen. Ett webbverktyg medför även att man slipper installera och lära sig extra verktyg så som Glasgow Haskell Compiler (GHC) \citep{ghc}. Webbens stöd för interaktivitet gör det möjligt att snabbt visa funktionsdeklarationerna för de inbyggda funktionerna och att enkelt evaluera funktionerna och testa sig fram till olika resultat. 
+På vissa av Chalmers och Göteborgs Universitets program så är den första programmeringskursen i Haskell \citep{haskell98} och för en del av de nya eleverna är inlärningströskeln relativt hög. De studenter som börjar på de datavetenskapliga programmen på Chalmers och Göteborgs Universitet är allt från nybörjare till mycket kompetenta inom programmering. Det som dock förenar de flesta är att de saknar kunskaper kring funktionell programmering. De flesta som tidigare har programmerat har gjort det i något av de stora mainstream-programmeringsspråken, vilket i nästan alla fall innebär ett objektorienterat programmeringsspråk. Skillnaden mellan ett funktionellt programmeringsspråk och ett objektorienterat är stora och omställningen hur man behöver angripa programmeringsrelaterade problem är inte helt enkel för de flesta nybörjare. Vi tror att ett interaktivt webverktyg skulle kunna sänka den här tröskeln och underlätta undervisningen. Ett webverktyg medför även att man slipper installera och lära sig extra verktyg så som Glasgow Haskell Compiler \citep{ghc}. Webbens stöd för interaktivitet gör det möjligt att snabbt visa funktionsdeklarationerna för de inbyggda funktionerna och att enkelt evaluera funktionerna och testa sig fram till olika resultat.
 
-En stor fördel med att ha tolken på webben är att det enda som behövs för att använda den är en javascriptkompatibel webbläsare, något som följer med i princip i alla moderna operativsystem.
+En stor fördel med att ha tolken på webben är att det enda som behövs för att använda den är en javascriptkompatibel webbläsare, något som följer med i princip i alla moderna operativsystem. Detta betyder att alla tänkbara användare som vi riktar in oss mot redan har det som behövs på sina hemdatorer för att använda sig utav vårat program.
 
-Det är även så att många programmerare inte kommer i kontakt med funktionell programmering  och med hjälp utav ett interaktivt webbverktyg som är enkelt för användaren att använda så är våran förhoppning att fler människor ska komma i kontakt med funktionell programmering, och i synnerhet Haskell. Då flera moderna objektorienterade programmeringsspråk börjar ta begrepp och funktionalitet ifrån funktionella programmeringsspråk så är det extra viktigt att programmerare kommer i kontakt med funktionell programering. Ett exempel på detta är C\# som i senare versioner har fått stöd för bland annat lambdafunktioner \citep{csharp}. 
-
+Det är även så att många programmerare inte kommer i kontakt med funktionell programmering  och med hjälp utav ett interaktivt webbverktyg som är enkelt för användaren att använda så är våran förhoppning att fler programmerare och studenter ska komma i kontakt med funktionell programmering, och i synnerhet Haskell. Då flera moderna objektorienterade programmeringsspråk börjar ta begrepp och funktionalitet ifrån funktionella programmeringsspråk så är det extra viktigt att programmerare kommer i kontakt med funktionell programering. Ett exempel på detta är C\# som i senare versioner har fått stöd för bland annat lambdafunktioner \citep{csharp}. 
 
 % TODO teori eller bakgrund?
 Haskell är ett starkt statiskt typcheckat och funktionellt programeringsspråk med icke-strikt semantik. 
@@ -19,10 +18,10 @@ Lazy evaluation gör det också möjligt att använda sig utav oändliga datastr
 
 Funktionella programmeringsspråk såsom Haskell anses också vara det naturliga steget att ta när man vill nå en högre abstraktionsnivå än den som imperativa programmeringsspråk tillåter.
 Detta för att funktionella programmeringsspråk tillåter programmeraren att skriva program som är mer modulära, lättare att dela upp i separata delar, än imperativa programmeringsspråk. Den ökade modulariteten beror på att de stödjer tekniker såsom lazy evaluation och higher order functions.
-Detta bidrar i sin tur yill att program skrivna i Haskell är generellt sätt kortare än ett program skrivet i ett imperativt programmeringsspråk. Detta gör att programmeraren blir mer produktiv i ett funktionellt programmeringsspråk kontra ett imperativt \citep{why}.
+Detta bidrar i sin tur yill att program skrivna i Haskell är generellt sätt kortare än ett program skrivet i ett imperativt programmeringsspråk  \citep{why}.
 
-Med ovan nämnda resonemang ser vi det som ovärderligt för programmerare att komma i kontakt och ta del utav funktionell programmering. 
-Vår förhoppning är att våran Haskelltolk i Javascript ska vara en inkörsport för programmerare till funktionell programmering.
+Med ovan nämnda resonemang ser vi det som ovärderligt för programmerare att komma i kontakt och lära sig funktionell programmering. 
+Vår förhoppning är att våran Haskelltolk i Javascript i första hand ska kunna användas som en interaktiv läroplattform för studenter ska vara en inkörsport för programmerare till funktionell programmering. 
 
 \subsection{Syfte}
 Syftet är en implementera en fungerande implementation av en haskkeltolk i Javascript. Den ska kunna tolka en delmängd utav Haskell-specifikationen så att den kan användas för att göra exempelvis interaktiva tutorials för nybörjare.
@@ -30,13 +29,11 @@ Meningen är att dessa ska kunna köras i en vanlig webbläsare utan att ladda n
 
 \subsection{Problem} 
 
-\subsection{Metod} 
+\subsection{Metod}
 Det normala tillvägagångssättet när man skriver en tolk är att man först
 skapar en parser för den aktuella syntaxen, sedan en typcheckare med 
 hjälp av de för språket definierade typereglerna och sist en interpreter
-som tolkar språket utefter dess specifikation.
-
-Vi hade tänkt följa den här planen genom varje milstolpe genom att utöka parsern, typecheckaren och interpretern med ny funktionalitet.
+som tolkar språket utefter dess specifikation. Vi hade tänkt följa den här planen genom varje milstolpe genom att utöka parsern, typecheckaren och interpretern med ny funktionalitet.
 
 Ett lämpligt delmål är att först göra en enkel implementation utav lambda calculus då mer avancerade funktionella programspråksegenskaper kan implementeras som detta \citep{jones87}.
 
