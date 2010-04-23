@@ -56,7 +56,7 @@ Todo:
         var integerlit = function(state) {
                 if (enableHash) {
                     return choice( action(sequence(repeat1(range('0', '9')), '#'), function(ast) {
-                                    return parseInt(ast[0].join(""));
+				return new haskell.ast.PrimitiveValue(parseInt(ast[0].join("")));
                                 }),
                                 integer)(state);
                 } else {
