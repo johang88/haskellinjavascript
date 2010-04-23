@@ -283,9 +283,12 @@ Todo:
         
         var fbind = undefined;
         
-        var stmt = undefined;
-        
-        var stmts = epsilon_p;
+        var stmt = choice( ws(exp),
+                           sequence(ws(pat), ws("<-"), ws(exp)),
+                           sequence(ws("let"), ws(decls))
+                           );
+                            
+        var stmts = list(stmt, ws(";"));
         
         var gdpat = undefined;
         
