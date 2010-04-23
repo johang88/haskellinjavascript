@@ -650,7 +650,7 @@ haskell.parser.parse = function(code) {
     
     var cdecl = undefined;
     
-    var cdecls = epsilon=;
+    var cdecls = epsilon_p;
     
     var fun_action = function(p) {
         return action(p, function(ast) {
