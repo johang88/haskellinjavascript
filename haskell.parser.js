@@ -1017,10 +1017,9 @@ Todo:
                         applyLayoutRules(ts, ms, out);
                     }
                 } else if (t.lex == '}') {
-                    var n = t.indent;
-                    if (n == 0) {
+                    var m = ms.shift();
+                    if (m == 0) {
                         ts.shift();
-                        ms.shift();
                         out.push('}');
                         applyLayoutRules(ts, ms, out);
                     }  else {
