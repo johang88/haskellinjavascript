@@ -16,6 +16,13 @@ Parsern består i sig av tre mindre parsers, den första är väldigt enkel pars
 I det andra steget identifieras haskellkod som inte följer de kontextfria reglerna och görs enligt Haskellstandardens regler om till kod som är kontextfri. 
 I det sista steget görs den kontextfria haskellkoden om till vår interna AST.
 
+\begin{figure}[H]
+    \begin{center}
+        \includegraphics[width=.4\textwidth]{parser_1.png}
+        \caption{Parserns olika steg}
+    \end{center}
+\end{figure}
+
 Att ha olika steg i parsern var ett naturligt resultat av vårat arbetssätt då vi först gjorde en parser för den kontextfria varianten av Haskell och 
 senare valde att stödja den icke kontextfria varianten. När vi väl hade en parser för den kontextfri varianten så var det mycket 
 enklare att göra en till parser för att identifier och gör om icke kontextfri kod till kontextfri för att sedan låta våran kontextfria parser ta hand om den 
