@@ -1020,7 +1020,6 @@ Todo:
                             out.push('}');
                         } else {
                             ts.shift();
-                            ms.shift();
                         }
                     } else if (t.isBracketsIndent) {
                         var n = t.indent;
