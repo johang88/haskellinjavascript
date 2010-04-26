@@ -907,8 +907,8 @@ Todo:
             this.indent = indent;
         }
         
-        var lexeme = join_action(repeat1(negate(choice('\n', '\r', ' ', '\t', ';', '{', '}', '(', ')'))), "");
-        lexeme = choice(';', '{', '}', join_action(sequence('(', sym, ')'), ""), '(', ')', lexeme);
+        var lexeme = join_action(repeat1(negate(choice('\n', '\r', ' ', '\t', ';', '{', '}', '(', ')', '[', ']', ','))), "");
+        lexeme = choice(';', '{', '}', join_action(sequence('(', sym, ')'), ""), '(', ')', '[', ']', ',', lexeme);
         lexeme = action(lexeme, function(ast) {
             var indent = lexer_state.current;
             lexer_state.current += ast.length;
