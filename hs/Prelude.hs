@@ -36,11 +36,11 @@ map f xs = case xs of
 
 foldr1 f xs = case xs of
     [x] -> x
-    (x:xs) -> f x (foldr1 f xs)
+    (x:xs) -> f x $ foldr1 f xs
 
 filter f xs = case xs of
     [] -> []
-    (x:xs) -> case (f x) of
+    (x:xs) -> case f x of
         True -> x : filter f xs
         False -> filter f xs
 
