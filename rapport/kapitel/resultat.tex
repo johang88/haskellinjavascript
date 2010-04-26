@@ -3,14 +3,23 @@ todo
 
 \subsection{Parser} 
 %TODO
-Parsern uppgift är att ta användarens indata och konvertera den till en datastruktur som är lättare att hantera internt. 
-Denna datastruktur brukar kalls AST (Abstract Syntax Tree). 
-Till parserns hjälp har Haskellstandarden definerat upp en grammatik, ett antal regler som definerar hur korrekt Haskellkod ser ut och hur den ska tolka tvetydiga definitioner.
+Parsern uppgift är att ta användarens indata och konvertera den till en datastruktur 
+som är lättare att hantera internt. Denna datastruktur brukar kalls AST (Abstract Syntax Tree). 
+Till parserns hjälp har Haskellstandarden definerat upp en grammatik, 
+ett antal regler som definerar hur korrekt Haskellkod ser ut och hur den ska tolka tvetydiga definitioner.
 
 För att parsa indatan använder vi ett bibliotek för att bygga parsers kallat JSParse \citep{jsparse}. 
-Detta bibliotek ger oss ett antal primtiver med vars hjälp vi kan definera upp grammatiken och enkelt konvertera denna till vår interna struktur.
+Detta bibliotek ger oss ett antal primtiver med vars hjälp vi kan definera upp grammatiken 
+och enkelt konvertera denna till vår interna struktur.
 
-Parsern klarar av att parsa hela den context-fria varianten av Haskell. Detta innebär att användaren är tvungen att använda måsvingar för att avgränsa block och semikolon för att avsluta deklarationer och statements.
+Parsern består i sig av tre mindre parsers, den första är väldigt enkel parser som hittar kommentarer och tar bort dessa. 
+I det andra steget identifieras haskellkod som inte följer de kontextfria reglerna och görs enligt Haskellstandardens regler om till kod som är kontextfri. 
+I det sista steget görs den kontextfria haskellkoden om till vår interna AST.
+
+Att ha olika steg i parsern var ett naturligt resultat av vårat arbetssätt då vi först gjorde en parser för den kontextfria varianten av Haskell och 
+senare valde att stödja den icke kontextfria varianten. När vi väl hade en parser för den kontextfri varianten så var det mycket 
+enklare att göra en till parser för att identifier och gör om icke kontextfri kod till kontextfri för att sedan låta våran kontextfria parser ta hand om den 
+n att göra om den kontextfria parsern till klara av icke kontextfri kod.
 
 \subsection{Abstrakt syntaxträd} 
 %TODO
