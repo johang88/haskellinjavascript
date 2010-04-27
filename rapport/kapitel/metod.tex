@@ -26,7 +26,7 @@ När en commit görs måste denna standard följas.
 Ett problem som alla mjukvaruprojekt av icke trivial storlek är att hantera den stora mängden filer, och distrubera uppdaterade kopior till samtliga utvecklare att arbeta på.
 För att lösa detta problemet brukar man använda sig utav en versionshanteringsmjukvara. 
 
-Under de första veckorna av projektet användes SVN. Valet berodde på att det var det som alla i medlemmar i projektet hade erfarenhet från tidigare. Tyvärr har SVN vissa problem när det kommer till att skapa nya förgreningar och sedan sammanfoga dem. Därför gick valet till att använda sig utav Git. Git är designat från grunden för att på ett enkelt sätt skapa nya och slå samman förgreningar under utvecklingens gång. Vi kunde därmed skapa en förgrening för varje modul och under arbetets gång sammanlänka allas arbeten på ett effektivt sätt. 
+Under de första veckorna av projektet användes SVN. Valet berodde på att det var det som alla i medlemmar i projektet hade erfarenhet från tidigare. Tyvärr har SVN vissa problem när det kommer till att skapa nya förgreningar och sammanfoga dem. Därför gick valet till att använda sig utav Git. Git är designat från grunden för att på ett enkelt sätt skapa nya och slå samman förgreningar under utvecklingens gång. Vi kunde därmed skapa en förgrening för varje modul och under arbetets gång sammanlänka allas arbeten på ett effektivt sätt. 
 
 \subsection{Javascript} 
 Javascript \citep{javascript} är ett programmeringsspråk som framförallt används på klientsidan på webben. Javascript är ett dynamiskt objektorienterat skriptspråk.
@@ -42,13 +42,11 @@ Därför har ett antal kodbibliotek används i projektet.
 Genom att använda dessa kodbibliotek kan fokus läggas på implementeringen av de kärnområden som projektet behandlar.
 Nedan följer en kort beskrivning av de olika kodbibliotek som vi använt i projektet.
 
- \subsubsection{JSparse}  
+\subsubsection{JSparse}  
+Parsern implementeras med hjälp av ett parser combinator bibliotek kallat JSParse. 
+En parser combinator består av olika funktioner som parsar olika saker exempeliv strängar, listor och blanksteg. Dessa funktioner kombineras för att skapa mer komplexa parsers.
 
- %% Johan kanske kan skriva nåogt mer och vettigt här?
-Parsern implementeras med hjälp av ett parser combinator bibliotek kallat JSParse.
-En parser combinator använder sig utav olika regler som man kan kombinera för att skapa komplexa parsers. 
-Denna parser combinator ger oss möjlighet att på ett enkelt sätt
-implementera den del av  Haskells syntax som inte är context free.
+Denna parser combinator ger oss möjlighet att enkelt implementera både den kontextfria och den del som inte är det av Haskells syntax.
 
 \subsubsection{jQuery} 
 
