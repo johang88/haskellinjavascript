@@ -4,29 +4,78 @@ todo
 \subsection{Parser} 
 %TODO
 Parsern uppgift är att ta användarens indata och konvertera den till en datastruktur 
-som är lättare att hantera internt. Denna datastruktur brukar kalls AST (Abstract Syntax Tree). 
-Till parserns hjälp har Haskellstandarden definerat upp en grammatik, 
-ett antal regler som definerar hur korrekt Haskellkod ser ut och hur den ska tolka tvetydiga definitioner.
+som är lättare att hantera internt. Denna datastruktur kallas AST (Abstract Syntax Tree). 
+Haskellstandarden definerat upp en grammatik, ett antal regler som definerar hur korrekt Haskellkod ser ut och hur den ska tolkas.
 
-För att parsa indatan använder vi ett bibliotek för att bygga parsers kallat JSParse \citep{jsparse}. 
-Detta bibliotek ger oss ett antal primtiver med vars hjälp vi kan definera upp grammatiken 
-och enkelt konvertera denna till vår interna struktur.
+För att parsa indatan använder vi ett bibliotek för att bygga parsers kallat JSParse \citep{jsparse}.
+JSParse ger os ett antal funktioner som vi använder för att definera grammatiken och konvetera den till vår interna struktur.
 
-Parsern består i sig av tre mindre parsers, den första är väldigt enkel parser som hittar kommentarer och tar bort dessa. 
-I det andra steget identifieras haskellkod som inte följer de kontextfria reglerna och görs enligt Haskellstandardens regler om till kod som är kontextfri. 
-I det sista steget görs den kontextfria haskellkoden om till vår interna AST.
+Parsern består av tre mindre parsers, den första är en parser som hittar kommentarer och tar bort dessa. 
+Den andra identifierar haskellkod som inte är kontextfri och gör om den till kontextfri kod. Den tredje gör om den kontextfria koden till vår AST.
 
 \begin{figure}[H]
     \begin{center}
-        \includegraphics[width=.4\textwidth]{parser_1.png}
+        \includegraphics[width=.5\textwidth]{parser_1.png}
         \caption{Parserns olika steg}
     \end{center}
 \end{figure}
 
-Att ha olika steg i parsern var ett naturligt resultat av vårat arbetssätt då vi först gjorde en parser för den kontextfria varianten av Haskell och 
-senare valde att stödja den icke kontextfria varianten. När vi väl hade en parser för den kontextfri varianten så var det mycket 
-enklare att göra en till parser för att identifier och gör om icke kontextfri kod till kontextfri för att sedan låta våran kontextfria parser ta hand om den 
-n att göra om den kontextfria parsern till klara av icke kontextfri kod.
+Det var naturligt att dela upp parsern i tre olika steg. De tre olika stegen är skilda från varandra och vi kunde utveckla och testa dem individuellt.
+
+Nedan följer ett exempel på parserns arbetssätt och de tre olika stegen:
+\begin{lstlisting}
+-- Kommentar
+f x = case x of
+    True -> False
+    False -> True
+\end{lstlisting}
+
+Efter första steget:
+\begin{lstlisting}
+f x = case x of
+    True -> False
+    False -> True
+\end{lstlisting}
+
+Efter andra steget:
+\begin{lstlisting}
+f x = case x of {
+    True -> False;
+    False -> True
+}
+\end{lstlisting}
+
+Efter det tredje steget har vi en AST.
+\begin{lstlisting}
+Function("f", Lambda("x", 
+    Case(ast.VariableLookup("x"), [
+        [PatternConstructor("True"), PatterConstructor("False")],
+        [PatternConstructor("False"), PatterConstructor("True")],
+    ])
+))
+\end{lstlisting}
+
+\subsubsection{Steg 1}
+Det första steget använder en parser som identifierar och tar bort kommentarer. 
+Haskell har två olika kommentarsstiler, enkelradiga som börjar med '--' och slutar vid första radbytet och 
+nästlade som kan gå över flera rader börjar med '{-' och slutar med '-}.
+
+\subsubsection{Steg 2}
+Det andra steget delar upp koden i dess ord och symboler samtidigt som den dekoreras med indenteringsnivåer enligt en algoritm 
+som är specifierad i Haskellstandarden. Därefter användads en annan algoritm från samma standard för att sätta in måsvingar och semikolon på rätt ställen. 
+När de två algoritmerna är klara sätts koden ihop igen och skickas vidare till steg 3.
+
+\subsubsection{Steg 3}
+Det tredje steget är en parser för hela den kontextfria varianten av Haskell som den är definerad i standarden. 
+Samtidigt som koden tolkas byggs en AST upp. Parsern består av en liten parser för varje grammatisk regel som är definerat i Haskellstandarden 
+dessa parsers kombineras ihop för att bilda den slutgiltliga parsern.
+
+\subsubsection{Framtida förbättringar}
+Hjälpsamma och förklarande felmeddalnden är en viktigt del av ett utvecklingsverktyg och det generars för tillfället inte av parsern. 
+Om parsern stöter på ett fel rapporterar den endast att ett fel har inträffat och avslutar parsningsprocessen. 
+Att förbättra dessa felmeddelanden med exempelivs rad- och kolumnnummer skulle göra parsern mer användbar.
+
+För att implentera detta behöver man kombinera steg 1 och 2 för att rad- och kolumn-nummer ska bevaras korrekt då borttagning av nästlade kommentarer kan påverka dessa.
 
 \subsection{Abstrakt syntaxträd} 
 %TODO
