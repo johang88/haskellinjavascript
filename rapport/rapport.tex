@@ -13,6 +13,7 @@
 \setlength{\parskip}{12pt}
 \setlength{\parindent}{0pt}
 
+
 \begin{document}
     \title{Haskell in Javascript}
     \author{
@@ -29,23 +30,31 @@
     }
     \date{\today}
     \maketitle
+    \thispagestyle{empty}
+    \newpage
+    \input{kapitel/sammanfattning.tex}
+    \thispagestyle{empty}
+    \newpage
+    \input{kapitel/abstract.tex}
+    \thispagestyle{empty}
     \newpage
 
+    \thispagestyle{empty}
     \tableofcontents
+    \thispagestyle{empty}
+    \thispagestyle{empty}
     \newpage
 
     \listoffigures
+    \thispagestyle{empty}
     % include all parts
     \newpage
-    \input{kapitel/forord.tex}
-    \newpage
-    \input{kapitel/sammanfattning.tex}
-    \newpage
-    \input{kapitel/abstract.tex}
-    \newpage
-    \input{kapitel/forkortningslista.tex}
-    \newpage
+ %   \input{kapitel/forord.tex}
+ %   \newpage
+ %   \input{kapitel/forkortningslista.tex}
+ %   \newpage
     \input{kapitel/inledning.tex}
+    \setcounter{page}{10}
     \newpage
     \input{kapitel/teori.tex}
     \newpage
