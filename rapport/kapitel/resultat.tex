@@ -38,13 +38,13 @@ n att göra om den kontextfria parsern till klara av icke kontextfri kod.
 
 
 \subsection{HIJi}
-HIJi, Haskell in Javascript Interpreter, är den del av projektet som användaren tydligast kommer märka av eftersom det är fasaden in i hela programmet.
+HIJi, Haskell in Javascript Interactive, är den del av projektet som användaren tydligast kommer märka av eftersom det är fasaden in i programmet.
 HIJi erbjuder användaren ett GHCi-liknande användargränssnitt direkt i webläsaren. 
 HIJi tar input genom att användaren skriver funktioner och uttryck i HIJi. När användaren klickar på retur tolkas inputen av parsern och bygger upp det abstrakta syntaxträdet. Därefter evalueras uttrycket utav interpretern.
 Det går även att ladda moduler till HIJi. Det gör man genom att skriva :l \emph{namn-på-modul}. Man får då tillgång till alla de funktioner som är skrivna i den modulen. 
 %Resultatet av uttrycket visas på raden under.
 
-HIJi är skapat för att likna GHCi i så stor utsträckning som möjligt. Det finns väldigt goda anledningar till att göra detta. Dels är GHCi ett mycket kompetent verktyg när man programmerar i Haskell. Att kolla upp funktionsdeklarationer och testa kodfragment är något som varje professionell haskellprogrammerare gör varje dag. Genom att efterlikna GHCi så kommer användare känna igen sig när de tar steget från HIJi till GHCi. Det blir för dem ett naturligt steg och kortar inlärningströskeln. Även för haskellprogrammerare som är väl införstådda i GHCi's möjligheter blir det lättare att använda sig utav HIJi, de behöver inte fundera hur verktyget ska användas.
+HIJi är skapat för att likna GHCi i så stor utsträckning som möjligt. Det finns väldigt goda anledningar till att göra detta. Dels är GHCi ett mycket kompetent verktyg när man programmerar i Haskell. Att kolla upp funktionsdeklarationer och testa kodfragment är något som varje professionell haskellprogrammerare gör varje dag. Genom att efterlikna GHCi kommer användare känna igen sig när de tar steget från HIJi till GHCi. Det blir för dem ett naturligt steg och kortar inlärningströskeln. Även för haskellprogrammerare som är väl införstådda i GHCi's möjligheter blir det lättare att använda sig utav HIJi, de behöver inte fundera hur verktyget ska användas.
 Dock finns det vissa nackdelar med ett terminalbaserat användargränssnitt. Terminalbaserade användargränssnitt anses inte vara lika enkelt och intuitivt att förstå som ett grafiskt användargränssnitt. 
 
 
@@ -74,8 +74,8 @@ Ett stort problem för alla webbutvecklare idag är att de idag marknadsledande 
 
 
 \subsubsection{Framtida förbättringar av HIJi}
-HIJi är tänkt som ett webbaserat verktyg för nybörjare att komma igång med funktionell programmering. Ur det perspektivet så når HIJi ännu inte upp till de krav som en nybörjare kan förvänta sig. Avsaknaden av interaktivitet är den i dagsläget största nackdelen. Vi presenterar därför här de förbättringar som vi anser vara nödvändiga för att nybörjare ska kunna använda sig utav HIJi.
+HIJi är tänkt som ett webbaserat verktyg för nybörjare att komma igång med funktionell programmering. Ur det perspektivet når HIJi ännu inte upp till de krav som en nybörjare kan förvänta sig. Avsaknaden av interaktivitet är den i dagsläget största nackdelen. Vi presenterar därför här de förbättringar som vi anser vara nödvändiga för att nybörjare ska kunna använda sig utav HIJi.
 
-Erbjuda en interaktiv tutorial där användaren får instruktioner vad som ska skrivas in i HIJi. Om använaren skriver in rätt uttryck så fortsätter tutorialen till nästa nivå.
+Erbjuda en interaktiv tutorial där användaren får instruktioner vad som ska skrivas in i HIJi. Om använaren skriver in rätt uttryck fortsätter tutorialen till nästa nivå.
 
 Få ut typinformation ur funktioner genom att hålla musen över funktionsnamnet. 
