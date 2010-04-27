@@ -11,8 +11,8 @@ En fördel med att ha tolken på webben är att det enda som behövs för att an
 Haskell är ett starkt statiskt typcheckat och funktionellt programmeringsspråk med icke-strikt semantik. % TODO: Citera, skriv om ifall det är direktöversatt
 Att språket är funktionellt innebär bland annat att funktioner är \emph{first-class citizens} och kan därmed användas som parametrar och returneras från andra funktioner precis som vilken annan typ som helst.
 
-% TODO teori eller bakgrund?
-Icke strikt semantik, även kallat \emph{lazy evaluation}, innebär mer konkret att evalueringen av ett uttryck inte kommer utföras förrän resultatet av uttrycket behövs. % TODO: är inte laxy evaluation ett specialfall av strikt semantik?
+% TODO teori eller bakkgrund?
+Icke strikt semantik, även kallat \emph{lazy evaluation}, innebär mer konkret att evalueringen av ett uttryck inte kommer utföras förrän resultatet av uttrycket behövs. Om uttrycket inte behövs  kommer interpretatorn att ignorera det. % TODO: är inte laxy evaluation ett specialfall av strikt semantik?
 %skriva in kod XD    \lstinputlisting[language=Haskell, numbers=left]{kapitel/ex1.hs}
 
 Lazy evaluation gör att programmeraren inte behöver bry sig om exekveringsordningen av ett program. Detta ger prestandaförbättringar eftersom ett uttryck inte evalueras alls om det inte behövs \citep{hudak89}.
@@ -44,10 +44,15 @@ Ett lämpligt delmål är att först göra en enkel implementation av lambda cal
 
 Vi kommer även att använda \emph{JSParse} för att bygga ett eget syntaxträd som skickas vidare till typcheckaren och interpretatorn. I typcheckaren dekoreras syntaxträdet med typinformation.
 
+<<<<<<< HEAD:rapport/kapitel/inledning.tex
 Vi kommer att integrera \emph{jQuery} \citep{jquery} för att få unisont stöd över samtliga webbläsare utan att behöva tänka på det. JQuery kommer också hjälpa oss med att få till ett enkelt och stilrent interaktivt gränssnitt.
+=======
+
+En interaktiv prompt som kan köras i en webbläsare kommer att utvecklas. Den ska ge användaren möjlighet att skriva Haskell-funktioner och exekvera dem på ett liknande sätt som i GHCi. 
+Vi kommer att integrera jQuery \citep{jquery} för att få unisont stöd över samtliga webbläsare. JQuery kommer även underlätta arbetet med att skapa ett enkelt och stilrent interaktivt gränssnitt.
+>>>>>>> f8b92f6214d30e5670c3feefaec31b985ccae170:rapport/kapitel/inledning.tex
 
 \subsubsection{Avgränsningar}
-Haskell
 Att tolka Haskell i Javascript är inget trivialt projekt och därför kommer inte hela Haskell att implementeras. 
 Endast en delmängd av Haskell98 specifikationen kommer att implementeras. De delar som prioriterades är
         \begin{enumerate}
