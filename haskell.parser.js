@@ -300,15 +300,15 @@ Todo:
         
         var stmt_let_action = function(p) {
             return action(p, function(ast) {
-                return new haskell.ast.DoLet(ast);
+                return new haskell.ast.DoLet(ast[0][0]);
             });
         };
         
         var infixexp = function(state) { return infixexp(state); };
         
         var stmt = choice( stmt_exp_action(ws(infixexp)),
-                           stmt_bind_action(sequence(ws(pat), ws("<-"), ws(infixexp))),
-                           stmt_let_action(sequence(ws("let"), ws(decls)))
+                           stmt_bind_action(sequence(ws(pat), expect(ws("<-")), ws(infixexp))),
+                           stmt_let_action(sequence(expect(ws("let")), ws(decls)))
                            );
                             
         var stmts = list(stmt, ws(";"));
