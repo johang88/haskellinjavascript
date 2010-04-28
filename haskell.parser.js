@@ -306,8 +306,8 @@ Todo:
         
         var infixexp = function(state) { return infixexp(state); };
         
-        var stmt = choice( stmt_exp_action(ws(infixexp)),
-                           stmt_bind_action(sequence(ws(pat), expect(ws("<-")), ws(infixexp))),
+        var stmt = choice( stmt_bind_action(sequence(ws(pat), expect(ws("<-")), ws(infixexp))),
+			   stmt_exp_action(ws(infixexp)),
                            stmt_let_action(sequence(expect(ws("let")), ws(decls)))
                            );
                             
@@ -691,7 +691,7 @@ Todo:
                 
                 var prec = 9;
                 if (ast[1] != false)
-                    prec = ast[1].value.num;
+                    prec = ast[1].num;
                     
                 var ops = ast[2];
                 
