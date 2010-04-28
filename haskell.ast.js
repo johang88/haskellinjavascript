@@ -201,7 +201,7 @@
     ast.DoLet.prototype = new ast.DoNotation();
     ast.DoLet.prototype.partDesugar = function(rest) {
 	// let declr ; do ==> let declr in do
-	return new ast.Let(this.declr, new ast.Do(rest));
+	return new ast.Let(this.declrs, new ast.Do(rest));
     };
 
     ast.DoBind = function(pattern, expression) {
@@ -213,7 +213,7 @@
     ast.DoBind.prototype = new ast.DoNotation();
     ast.DoBind.prototype.partDesugar = function(rest) {
 	// x <- expr ; do ==>  expr >>= (x -> do)
-	return new ast.Application(ast.Application(new ast.VariableLookup(">>="), this.expression), ast.Lambda(this.pattern, new ast.Do(rest)));
+	return new ast.Application(new ast.Application(new ast.VariableLookup(">>="), this.expression), new ast.Lambda(this.pattern, new ast.Do(rest)));
     };
 
     ast.DoExpr = function(expr) {
