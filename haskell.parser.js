@@ -283,6 +283,9 @@ Todo:
         
         var fbind = undefined;
         
+	// Redefined later with the proper definition
+        var decls = function(state) { return decls(state); };
+
         var stmt_exp_action = function(p) {
             return action(p, function(ast) {
                 return new haskell.ast.DoExpr(ast);
@@ -423,7 +426,6 @@ Todo:
             });
         };
         
-        var decls = function(state) { return decls(state); };
         
         var let_action = function(p) {
             return action(p, function(ast) {
@@ -753,7 +755,8 @@ Todo:
                             gendecl
                          );
         
-        var decls = action(sequence(expect(ws('{')), list(ws(decl), ws(';')), expect(ws('}'))), function(ast) { return ast; });
+	// Redefinition, see "var decls"
+        decls = action(sequence(expect(ws('{')), list(ws(decl), ws(';')), expect(ws('}'))), function(ast) { return ast; });
         
         var data_action = function(p) {
             return action(p, function(ast) {
