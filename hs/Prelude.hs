@@ -80,3 +80,14 @@ data Maybe a = Just a | Nothing
 return a = Just a
 
 fail = Nothing
+
+
+catMaybes a = case a of 
+	  []            -> []
+	  (Nothing:xs)  -> catMaybes xs
+	  ((Just a) : xs) -> a : catMaybes xs
+
+double m = do
+       let doubleFunc = (*2)
+       x <- m
+       return (doubleFunc x)
