@@ -65,10 +65,28 @@ Det andra steget delar upp koden i dess ord och symboler samtidigt som den dekor
 som är specifierad i Haskellstandarden. Därefter användads en annan algoritm från samma standard för att sätta in måsvingar och semikolon på rätt ställen. 
 När de två algoritmerna är klara sätts koden ihop igen och skickas vidare till steg 3.
 
+En av reglerna är att ett inre block inte får vara mindre indenterat än det omslutande blocket, exempelivs:
+\begin{lstlisting}
+case x of
+    True -> ...
+\end{lstlisting}
+Här är "True -> ..." ett inre block till "case" och därmed mer indenterat.
+
+Ett annat exempel är:
+\begin{lstlisting}
+let x = 5 in x
+\end{lstlisting}
+Den korrekta översättningen är:
+\begin{lstlisting}
+let { x = 5 } in x
+\end{lstlisting}
+För att kunna översätta detta korrekt kommer parsern ihåg den aktuella nästlingsnivån av "let"-uttryck och var deras repsektive "in"-uttryck befinner sig. 
+Den avslutande måsvingen sätts in där ett matchande "in"-uttryck påträffas.
+
 \subsubsection{Steg 3}
 Det tredje steget är en parser för hela den kontextfria varianten av Haskell som den är definerad i standarden. 
-Samtidigt som koden tolkas byggs en AST upp. Parsern består av en liten parser för varje grammatisk regel som är definerat i Haskellstandarden 
-dessa parsers kombineras ihop för att bilda den slutgiltliga parsern.
+Samtidigt som koden tolkas byggs en AST upp. Parsern består av en liten parser för varje grammatisk regel som är definerad i Haskellstandarden 
+dessa parsers kombineras ihop för att bilda den slutgiltliga parsern. Det resulterar i ett träd av parsers, en parser för hela programmet som har flera mindre parsers under sig.
 
 \subsection{Abstrakt syntaxträd} 
 %TODO
