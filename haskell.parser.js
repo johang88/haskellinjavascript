@@ -732,10 +732,17 @@ Todo:
                     } else {        
                         var patterns = ast[0][1];
                         var fun_ident = ast[0][0];
+			if (patterns.length == 0) {
+			    return new haskell.ast.Variable(
+							    new haskell.ast.VariableBinding(fun_ident),
+							    ast[1]
+							    );
+			}
                         
-                        var name = new haskell.ast.VariableBinding(fun_ident);
+                        //var name = new haskell.ast.VariableBinding(fun_ident);
                         
                         var fun = ast[1];
+			return new haskell.ast.Function(fun_ident, patterns, fun);
                         for (var i = patterns.length - 1; i >= 0; i--) {
                             fun = new haskell.ast.Lambda(patterns[i], fun);
                         }
@@ -778,7 +785,7 @@ Todo:
         var topdecls_action = function(p) {
             return action(p, function(ast) {
                 return ast.filter(function(element) {
-                    return element instanceof haskell.ast.Variable || element instanceof haskell.ast.Data;
+                    return element instanceof haskell.ast.Declaration;
                 });
             });
         };
