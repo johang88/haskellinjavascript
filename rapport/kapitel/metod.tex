@@ -33,25 +33,19 @@ Javascript \citep{javascript} är ett programmeringsspråk som framförallt anv�
 Javascript är det programmeringsspråk som används uteslutande i detta projektet.
 
 \subsection{Kodbibliotek}
-
-\emph{Standing on the Shoulder of Giants}
-
-Detta projektet följer en fin tradition inom datorvetenskapen att om ett problem redan är löst så ska det inte behöva lösas igen. Att återuppfinna hjulet varje gång är både tidsödande och onödigt. 
-Därför har ett antal kodbibliotek används i projektet. 
-Genom att använda dessa kodbibliotek kan fokus läggas på implementeringen av de kärnområden som projektet behandlar.
+I projektet har använt oss av ett antal kodbibliotek för att snabbare kunna utveckla haskelltolken. Detta för att snabba på utvecklingen av haskelltolken och slippa göra allt från grunden.  
 Nedan följer en kort beskrivning av de olika kodbibliotek som vi använt i projektet.
 
 \subsubsection{JSParse}  
 Parsern implementeras med hjälp av ett parser combinator bibliotek kallat JSParse. 
-En parser combinator består av olika funktioner som parsar exempeliv strängar, listor och blanksteg. 
-Dessa funktioner kombineras för att skapa mer komplexa parsers. Det ger oss möjlighet att enkelt implementera komplexa 
+En parser combinator består av olika funktioner som parsar exempeliv strängar, listor och blanksteg.
+Dessa funktioner kombineras för att skapa mer komplexa parsers. Det ger oss möjlighet att enkelt implementera komplexa
 parsers för både dem kontextfria och den icke kontextfria varianterna av Haskell.
 
 \subsubsection{jQuery} 
-
 jQuery är ett öppet kodbibliotek till Javascript som är dubeellicenserat under MIT License och GPL version 2.  
 jQuery är designat för att underlätta för utvecklare att modifiera DOM-träd, HTML, och göra asynkrona javascript-anrop.
 
-jQuery används i projektet för att få enkelt cross browser stöd utan att behöva tänka på det. 
+jQuery används i projektet för att få enkelt cross browser stöd i den kommandotolk vi kommer utveckla. 
 jQuery ger även möjlighet att skapa ett enkelt och stilrent interaktivt gränssnitt utan att behöva göra allt från grunden.
 Ett tillägg till jQuery kallat jQuery.Cookie används även för att förenkla användandet utav kakor.
