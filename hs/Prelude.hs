@@ -14,9 +14,8 @@ infixr 3 &&
 ($) f x = f x
 (.) f g = \x -> f $ g x
 
-(&&) x y = case x of
-    False -> False
-    True -> y
+(&&) False _ = False
+(&&) True  y = y 
 
 (||) x y = case x of
     True -> True
@@ -82,12 +81,11 @@ return a = Just a
 fail = Nothing
 
 
-catMaybes a = case a of 
-	  []            -> []
-	  (Nothing:xs)  -> catMaybes xs
-	  ((Just a) : xs) -> a : catMaybes xs
+catMaybes []           = []
+catMaybes (Nothing:xs) = catMaybes xs
+catMaybes ((Just a):xs)= a : catMaybes xs
 
-double m = do
+{- double m = do
        let doubleFunc = (*2)
        x <- m
-       return (doubleFunc x)
+       return (doubleFunc x) -}

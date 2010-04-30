@@ -88,7 +88,7 @@
 	this.arg = arg;
 	this.eval = function(env) {
             var continuation = this.func.eval(env);
-            while (!(continuation instanceof interpreter.LambdaAbstraction)) {
+            while (!(continuation instanceof interpreter.WeakHead)) {
                 continuation = continuation.force();
             };
             return continuation.apply(new interpreter.HeapPtr(new interpreter.Closure(env, this.arg)));
@@ -271,6 +271,7 @@
     ast.PrimitiveValue.prototype = new ast.Value();
     /*
       data Declaration = Variable Pattern Expression
+                       | Function Identifier [Pattern] [(Guard, Expression)]|Expression 
                        | Data Identifier [Constructor]
     */
 
@@ -296,9 +297,29 @@
 	this.constructors = constructors;
     };
 
+    // expression can either be an expression or a list of [guard, expression]
+    // where guard is an expression of type Boolean.
+    ast.Function = function(identifier, patterns, expression) {
+	expectTypeOf(identifier, "string");
+	expectTypeArray(patterns, ast.Pattern);
+	// expression can be two different kinds... TODO: fix this?
+	this.type = "Function";
+	this.identifier = identifier;
+	this.patterns = patterns;
+	this.expression = expression;
+	this.patternMatch = function(env, givenArgs) {
+	    for (var i in this.patterns) {
+		if (!this.patterns[i].match(env, givenArgs[i])) {
+		    return false;
+		}
+	    };
+	    return true;
+	};
+    };
+
     ast.Variable.prototype = new ast.Declaration();
     ast.Data.prototype = new ast.Declaration();
-
+    ast.Function.prototype = new ast.Declaration();
 
     /*
       data Constructor = Constructor Identifier Integer

@@ -1,19 +1,44 @@
 (function(interpreter, ast, primitives, utilities){
     // Creates env from an ast and returns it !
     interpreter.prepare = function(astt, env) {
+	var lastfunname = null;
+	var lastfunenv = [];
+	// TODO: Remove duplication of Function addition.
         for (var i in astt.declarations) {
             var decl = astt.declarations[i];
+	    if (decl.type=="Function") {
+		if (lastfunname == decl.identifier) {
+		    lastfunenv.push(decl);
+		} else {
+		    if (lastfunenv.length > 0) {
+			// perhaps the intial HeapPtr shouldn't point to a weakhead, but here it does...
+			env.bind(lastfunname, new interpreter.HeapPtr(new interpreter.DelayedApplication(env, lastfunenv[0].patterns.length, lastfunenv, [])));
+		    }
+		    lastfunname = decl.identifier;
+		    lastfunenv = [decl];
+		}
+		continue;
+	    }
+	    if (lastfunenv.length > 0) {
+		// perhaps the intial HeapPtr shouldn't point to a weakhead, but here it does...
+		env.bind(lastfunname, new interpreter.HeapPtr(new interpreter.DelayedApplication(env, lastfunenv[0].patterns.length, lastfunenv, [])));
+		lastfunname = "";
+		lastfunenv = [];
+	    }
 	    if (decl.type=="Variable") {
 		env.patternBind(decl.pattern, new interpreter.HeapPtr(new interpreter.Closure(env, decl.expression)));
 	    }
 	    else if (decl.type=="Data") {
-                console.log("%s", decl);
 		for (var i in decl.constructors) {
 		    constr = decl.constructors[i];
 		    env.bind(constr.identifier, primitives.createDataConstructorKludge(env, constr.identifier, constr.number));
-		};
-	    };
-        };
+		}
+	    }
+        }
+	if (lastfunenv.length > 0) {
+	    // perhaps the intial HeapPtr shouldn't point to a weakhead, but here it does...
+	    env.bind(lastfunname, new interpreter.HeapPtr(new interpreter.DelayedApplication(env, lastfunenv[0].patterns.length, lastfunenv, [])));
+	}
         return env;
     };
 
@@ -29,7 +54,7 @@
     // Evaluates an expression under an env
     interpreter.eval = function(astt, env) {
 	return (new interpreter.HeapPtr(new interpreter.Closure(env, astt))).dereference();
-    }; 
+    };
 
      // Live data
     /*
@@ -110,7 +135,7 @@
         this.dereference = function() {
             if (this.weakHead == undefined) {
                 // We'll drive the execution here instead of recursing in the force method
-                var continuation = this.thunk.force();
+                var continuation = this.thunk;
                 while (continuation instanceof interpreter.Thunk) {
                     continuation = continuation.force();
                 }
@@ -173,6 +198,8 @@
                      | LambdaAbstraction Env Pattern Expression
                      | Primitive
     */
+    interpreter.WeakHead = function() {};
+
     interpreter.Data = function(identifier, ptrs) {
         utilities.expectTypeArray(ptrs, interpreter.HeapPtr);
 	this.type = "Data";
@@ -188,6 +215,8 @@
             }).join(" ") + ")";
         };
     };
+    interpreter.Data.prototype = new interpreter.WeakHead();
+
     interpreter.LambdaAbstraction = function(env, pattern, expression)
     {
         this.type="LambdaAbstraction";
@@ -203,4 +232,44 @@
             return "(\\" + this.pattern.stringify() + " -> " + this.expression.stringify() + ")"
         };
     };
+    interpreter.LambdaAbstraction.prototype = new interpreter.WeakHead();
+
+    // A delayed application represents pattern/guard matches which aren't
+    // desugered. Eg: f 1 = 2; f 2 = 3;
+    interpreter.DelayedApplication = function(env, numArgs, funcs, givenArgs) {
+	this.type="DelayedApplication";
+	this.env = env;
+	this.funcs = funcs;
+	this.numArgs = numArgs;
+	this.givenArgs = givenArgs;
+	this.apply = function(argument) {
+	    var givenArgs = this.givenArgs.concat();
+	    givenArgs.push(argument);
+	    if (this.numArgs == 1) {
+		for (var i in this.funcs) {
+		    var newEnv = this.env.derive();
+		    if (this.funcs[i].patternMatch(env, givenArgs)) {
+			var matchedFunc = this.funcs[i];
+			if (matchedFunc.expression instanceof Array) {
+			    for (var j in matchedFunc.expression) {
+				var guard = matchedFunc.expression[j][0];
+				var expression = matchedFunc.expression[j][1];
+				var guardResult = guard.eval(newEnv);
+				if (guardResult.identifier == "True") {
+				    return expression.eval(newEnv);
+				}
+			    }
+			} else {
+			    return matchedFunc.expression.eval(newEnv);
+			}
+		    }
+		}
+		// failed pattern.
+	    } else {
+		return new interpreter.DelayedApplication(this.env, this.numArgs - 1, this.funcs, givenArgs);
+	    }
+	};
+    };
+    interpreter.DelayedApplication.prototype = new interpreter.WeakHead();
+
 })(haskell.interpreter, haskell.ast, haskell.primitives, haskell.utilities);
