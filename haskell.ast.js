@@ -77,7 +77,7 @@
 	};
 
         this.stringify = function() {
-            return "(" + this.pattern.stringify() + " -> " + this.expression.stringify() + ")";
+            return "(\\" + this.pattern.stringify() + " -> " + this.expression.stringify() + ")";
         };
     };
     ast.Application = function(func, arg) {
@@ -133,7 +133,7 @@
 	};
 
         this.stringify = function() {
-            return "case " + this.expr.stringify() + "of {" +
+            return "case " + this.expr.stringify() + " of {" +
                 this.cases.map(function(c) {
                     return c[0].stringify() + " -> " + c[1].stringify() + ";";
                 }).join("") + "}";
@@ -212,8 +212,18 @@
     };
     ast.DoBind.prototype = new ast.DoNotation();
     ast.DoBind.prototype.partDesugar = function(rest) {
-	// x <- expr ; do ==>  expr >>= (x -> do)
-	return new ast.Application(new ast.Application(new ast.VariableLookup(">>="), this.expression), new ast.Lambda(this.pattern, new ast.Do(rest)));
+	// x <- expr ; do ==>  expr >>= (a -> case a of x -> do; _ -> fail)
+	return new ast.Application(
+				   new ast.Application(
+						       new ast.VariableLookup(">>="), 
+						       this.expression
+						       ),
+				   new ast.Lambda(new ast.VariableBinding("__todoGenerateunique"), 
+						  new ast.Case(new ast.VariableLookup("__todoGenerateunique"), 
+							       [[this.pattern, new ast.Do(rest)], 
+								[new ast.Wildcard(),new ast.Application(new ast.VariableLookup("fail"), new ast.VariableLookup("undefined"))]])
+						  )
+				   );
     };
 
     ast.DoExpr = function(expr) {
@@ -226,7 +236,7 @@
 	    return this.expr;
 	};
 	// expr ; do ==> expr >> do
-	return new ast.Application(ast.Application(new ast.VariableLookup(">>"), this.expression), new ast.Do(rest));
+	return new ast.Application(new ast.Application(new ast.VariableLookup(">>"), this.expr), new ast.Do(rest));
     };
 
     /*
