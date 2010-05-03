@@ -129,7 +129,7 @@
 		    return this.cases[i][1].eval(newEnv);
 		};
 	    };
-	    alert("No matching clause");
+	    throw new Error("No matching clause");
 	};
 
         this.stringify = function() {
