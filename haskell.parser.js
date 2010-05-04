@@ -1,10 +1,5 @@
 // The parser
 
-/* 
-Todo:
-  - List comp.
-*/
-
 (function(parser, ast) {
     parser.lastInternalName = 0;
 
@@ -124,18 +119,18 @@ Todo:
         
         var qtycon = action(sequence(range('A', 'Z'), ident_), function(ast) { return ast.join(""); });
         
-        var qtycls = ident;
-        
         var conid = action(sequence(range('A', 'Z'), ident_), function(ast) { return ast.join(""); });
         var consym = butnot(sym, reservedop);
+        
+        var tycls = conid;
+        
+        var qtycls = tycls;
         
         var qconsym = consym;
         var qconid = conid;
 
         var tycon = qtycon;
-        var tyvar = ident;
-        
-        var tycls = epsilon_p;        
+        var tyvar = varid;        
         var gconsym = choice(':', qconsym);
         
         var qconop = choice(gconsym, sequence(expect(ws('`')), qconid, expect(ws('`'))));
@@ -368,6 +363,29 @@ Todo:
             });
         };
         
+        var qual_generator_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        }
+        
+        var qual_let_action = function(p) {
+            return action(p, function(ast) {
+               return ast; 
+            });
+        }
+        
+        var qual_exp_action = function(p) {
+            return action(p, function(ast) {
+               return ast; 
+            });
+        }
+        
+        var qual = choice(  qual_generator_action(sequence(ws(pat), expectws("<-"), ws(exp))),
+                            qual_let_action(sequence(ws("let"), ws(decls))),
+                            qual_exp_action(ws(exp))
+                         );
+        
         var qvar_exp_action = function(p) {
             return action(p, function(ast) {
                 return new haskell.ast.VariableLookup(ast);
@@ -380,6 +398,18 @@ Todo:
             });
         };
         
+        var aexp_list_comp_action = function(p) {
+            return action(p, function(ast) {
+               return ast; 
+            });
+        }
+        
+        var aexp_arithmetic_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        }
+        
         var aexp = choice(  qvar_exp_action(ws(qvar)),
                             qvar_exp_action(ws(gcon)),
                             aexp_constant_action(ws(literal)),
@@ -387,10 +417,10 @@ Todo:
                             sequence(ws('('), ws(exp), ws(','), ws(exp), repeat0(sequence(ws(','), ws(exp))) , ws(')')), // tuple
                             list_action(sequence(expect(ws('[')), optional(wlist(exp, ',')), expect(ws(']')))),  // list constructor
                             left_section_action(sequence(expect(ws('(')), ws(infixexp), ws(qop), expect(ws(')')))), // left section
-                            right_section_action(sequence(expect(ws('(')), ws(qop), ws(infixexp), expect(ws(')')))) // right section, todo: look into resolution of infixexp in this case, see Haskell Report Chapter 3
+                            right_section_action(sequence(expect(ws('(')), ws(qop), ws(infixexp), expect(ws(')')))), // right section, todo: look into resolution of infixexp in this case, see Haskell Report Chapter 3
+                            aexp_arithmetic_action(sequence(expectws('['), exp, repeat0(exp), expectws('..'), optional(ws(exp)), expectws(']'))), // arithmetic sequence
+                            aexp_list_comp_action(sequence(expectws('['), ws(exp), list(qual), expectws(']'))) // list comprehension
                             // Todo:
-                            //  Arithmetic sequence
-                            //  List comprehension
                             //  Labeled construction
                             //  Labeled update
                           );
@@ -623,15 +653,75 @@ Todo:
         //       operators so it's not very important right now
         var funlhs = sequence(ws(var_), repeat0(ws(apat)));
         
-        var inst = undefined;
+        var inst_gtycon_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        };
         
-        var dclass = undefined;
+        var inst_gtycon_tyvars_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        };
         
-        var deriving = epsilon_p;
+        var inst_tyvars_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        };
         
-        var fielddecl = undefined;
+        var inst_tyvar_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        };
         
-        var newconstr = epsilon_p;
+        var inst_tyvar_arrow = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        };
+        
+        var inst = choice(  inst_gtycon_action(ws(gtycon)),
+                            inst_gtycon_tyvars_action(sequence(expectws('('), gtycon, list(ws(tyvar), ws(',')), expectws(')'))),
+                            inst_tyvars_action(list(ws(tyvar), ws(','))),
+                            inst_tyvar_action(sequence(expectws('['), tyvar, expectws(']'))),
+                            inst_tyvar_arrow(sequence(expectws('('), tyvar, expectws("->"), tyvar, expectws(')')))
+                        );
+        
+        var dclass = qtycls;
+        
+        var deriving_action = function(p) {
+            return action(p, function(ast) {
+                // if(ast[0] instanceof Array) 
+                //      ast = ast[0];
+                return ast;
+            });
+        };
+        
+        var deriving = deriving_action(sequence(expectws("deriving"), choice(
+                                    ws(dclass),
+                                    sequence(expectws('('), list(ws(dclass), ws(',')), expectws(')'))
+                                )));
+        
+        var fielddecl = sequence(ws(vars), expectws("::"), choice(ws(type), sequence(optional(ws('!')), ws(atype))));
+        
+        var newconstr_con_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        };
+        
+        var newconstr_var_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        };
+        
+        var newconstr = choice( newconstr_con_action(sequence(con, atype)),
+                                newconstr_var_action(sequence(con, expectws('{'), var_, expectws("::"), type, expectws('}')))
+                        );
         
         var constr_action = function(p) {
             return action(p, function(ast) {
@@ -641,18 +731,51 @@ Todo:
             });
         };
         
+        var constr_op_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        };
+        
+        var constr_fielddecl_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        };
+        
         var atype = function(state) { return atype(state); };
-        var constr = choice(constr_action(sequence(ws(con), repeat0(sequence(optional(ws('!')), ws(atype)))))
-                          //  sequence(choice(ws(btype), sequence(optional(ws('!')), ws(atype))), ws(conop), choice(ws(btype), sequence(optional(ws('!')), ws(atype))))
+        var constr = choice(constr_action(sequence(ws(con), repeat0(sequence(optional(ws('!')), ws(atype))))),
+                            constr_op_action(sequence(choice(ws(btype), sequence(optional(ws('!')), ws(atype))), ws(conop), choice(ws(btype), sequence(optional(ws('!')), ws(atype))))),
+                            constr_fielddecl_action(sequence(ws(con), expectws('{'), list(ws(fielddecl), ws(',')), expectws('}')))
                            ); // Todo: fielddecl stuffz
         
         var constrs = list(ws(constr), ws('|'));
         
         var simpletype = sequence(ws(tycon), optional(ws(list(tyvar, ' '))));
         
-        var simpleclass = undefined;
+        var simpleclass_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        };
         
-        var scontext = undefined;
+        var simpleclass = simpleclass_action(sequence(ws(qtycls), ws(tyvar)));
+        
+        var scontext_one_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        }
+        
+        var scontext_many_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        }
+        
+        var scontext = choice(  scontext_one_action(simpleclass),
+                                scontext_many_action(sequence(expectws('('), list(ws(simpleclass), ws(',')), expectws(')')))
+                             );
 
         var gtycon = choice(qtycon,
                             sequence(repeat1(ws(var_)), repeat0(ws(apat))),
@@ -722,9 +845,28 @@ Todo:
         
         var idecls = epsilon_p;
         
-        var cdecl = undefined;
+        var cdecl_gendecl_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        };
         
-        var cdecls = epsilon_p;
+        var cdecl_fun_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        };
+        
+        var cdecl = choice( cdecl_gendecl_action(gendecl),
+                            cdecl_fun_action(sequence(choice(ws(funlhs), ws(pat)), ws(rhs))));
+        
+        var cdecls_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        };
+        
+        var cdecls = cdecls_action(list(ws(decl), ws(';')));
         
         var fun_action = function(p) {
             return action(p, function(ast) {
@@ -767,6 +909,12 @@ Todo:
 	// Redefinition, see "var decls"
         decls = action(sequence(expect(ws('{')), list(ws(decl), ws(';')), expect(ws('}'))), function(ast) { return ast; });
         
+        var type_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        };
+        
         var data_action = function(p) {
             return action(p, function(ast) {
                 var ident = ast[1][0];
@@ -775,12 +923,36 @@ Todo:
             });
         };
         
-        var topdecl = choice(   sequence(ws("type"), ws(simpletype), ws('='), ws(type)),
+        var newtype_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        };
+        
+        var class_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        }
+        
+        var instance_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        };
+        
+        var default_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        };
+        
+        var topdecl = choice(   type_action(sequence(ws(qtycls), ws(simpletype), ws('='), ws(type))),
                                 data_action(sequence(expect(ws("data")), optional(sequence(context, expect("=>"))), ws(simpletype), expect(ws('=')), constrs, optional(deriving))),
-                                sequence(ws("newtype"), optional(sequence(context, "=>")), ws(simpletype), ws('='), newconstr, optional(deriving)),
-                                sequence(ws("class"), optional(sequence(scontext, "=>")), tycls, tyvar, optional(sequence(ws("where"), cdecls))),
-                                sequence(ws("instance"), optional(sequence(scontext, "=>")), qtycls, inst, optional(sequence(ws("where"), idecls))),
-                                sequence(ws("default"), ws('('), list(type, ','), ws(')')),
+                                newtype_action(sequence(ws("newtype"), optional(sequence(context, "=>")), ws(simpletype), ws('='), newconstr, optional(deriving))),
+                                class_action(sequence(expectws("class"), optional(sequence(scontext, expectws("=>"))), tycls, tyvar, optional(sequence(expectws("where"), cdecls)))),
+                                instance_action(sequence(expectws("instance"), optional(sequence(scontext, "=>")), qtycls, inst, optional(sequence(expectws("where"), idecls)))),
+                                default_action(sequence(expectws("default"), expectws('('), list(type, ','), expectws(')'))),
                                 ws(decl)
                             );
         
@@ -928,7 +1100,13 @@ Todo:
         });
         
         var ws_ = function(p) {
-            return action(sequence(repeat0(" "), p), function(ast) {
+            return action(sequence(repeat0(choice(' ', '\t')), p), function(ast) {
+                for (var i = 0; i < ast[0].length; i++) {
+                    if (ast[0][i] == '\t')
+                        lexer_state.current += 8;
+                    else
+                        lexer_state.current += 1;
+                }
                 lexer_state.current += ast[0].length;
                 return ast[ast.length - 1]; 
             });
