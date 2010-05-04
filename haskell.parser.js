@@ -1,10 +1,5 @@
 // The parser
 
-/* 
-Todo:
-  - List comp.
-*/
-
 (function(parser, ast) {
     parser.lastInternalName = 0;
 
