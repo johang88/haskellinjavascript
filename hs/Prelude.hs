@@ -85,7 +85,9 @@ catMaybes []           = []
 catMaybes (Nothing:xs) = catMaybes xs
 catMaybes ((Just a):xs)= a : catMaybes xs
 
-{- double m = do
+alert = alert#
+
+double m = do
        let doubleFunc = (*2)
        x <- m
-       return (doubleFunc x) -}
+       return (doubleFunc x)
