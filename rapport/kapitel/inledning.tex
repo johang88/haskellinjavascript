@@ -12,8 +12,8 @@ Haskell är ett starkt statiskt typcheckat och funktionellt programmeringsspråk
 Att språket är funktionellt innebär bland annat att funktioner är \emph{first-class citizens} och kan därmed användas som parametrar och returneras från andra funktioner precis som vilken annan typ som helst.
 
 Lat evaluering innebär mer konkret att evalueringen av ett uttryck inte kommer utföras förrän resultatet av uttrycket behövs. Om uttrycket inte behövs  kommer interpretatorn att ignorera det. 
-Lazy evaluation gör att programmeraren inte behöver bry sig om exekveringsordningen av ett program. Detta ger prestandaförbättringar eftersom ett uttryck inte evalueras alls om det inte behövs \citep{hudak89}.
-Lazy evaluation gör det också möjligt att använda sig av oändliga datastrukturer, till exempel oändliga listor. Språket blir därmed mer uttrycksfullt. 
+Lat evaluering gör att programmeraren inte behöver bry sig om exekveringsordningen av ett program. Detta ger prestandaförbättringar eftersom ett uttryck inte evalueras alls om det inte behövs \citep{hudak89}.
+Lat evaluering gör det också möjligt att använda sig av oändliga datastrukturer, till exempel oändliga listor. Språket blir därmed mer uttrycksfullt. 
 
 %Funktionella programmeringsspråk såsom Haskell anses också vara det naturliga steget att ta när man vill nå en högre abstraktionsnivå än den som imperativa programmeringsspråk tillåter. % TODO: citera
 John Hughes argumenterar för att  funktionella språk som stödjer lat evaluering erbjuder större möjligheter än imperativa språk att skriva modulära program. Detta för att funktionella språk såsom Haskell stödjer higher order functions och lat evaluering vilket är tekniker som kan användas för att binda samman olika moduler.
@@ -24,8 +24,8 @@ Förhoppningen är att vår Haskelltolk i Javascript ska kunna användas som gru
 
 
 \subsection{Syfte}
-Syftet är en implementera en fungerande haskelltolk i Javascript. Den ska kunna tolka en delmängd av Haskell-specifikationen så att den kan användas för att göra exempelvis interaktiva tutorials för nybörjare.
-Meningen är att dessa ska kunna köras i en vanlig webbläsare utan att ladda ner en haskellkompilator, till exempel GHC, eller behöva lära sig svårbegripliga kommandon.
+Syftet är en implementera en fungerande Haskelltolk i Javascript. Den ska kunna tolka en delmängd av Haskell-specifikationen så att den kan användas för att göra exempelvis interaktiva tutorials för nybörjare.
+Meningen är att dessa ska kunna köras i en vanlig webbläsare utan att ladda ner en Haskellkompilator, till exempel GHC, eller behöva lära sig svårbegripliga kommandon.
 
 \subsection{Problembeskrivning} 
 %% WHAT THE FACK SKA VI SKRIVE HEAR?!!Ö!
@@ -38,9 +38,9 @@ som tolkar språket utefter dess specifikation. Vi hade tänkt följa den här p
 
 Ett lämpligt delmål är att först göra en enkel implementation av lambda calculus då mer avancerade funktionella programspråksegenskaper kan implementeras som detta \citep{jones87}.
 
- Parsern implementeras med hjälp av ett parser combinator bibliotek kallat \emph{JSParse} \citep{jsparse}. Detta ger oss möjlighet att att på ett enkelt sätt implementera den del av Haskells syntax som inte är context free.
+ Parsern implementeras med hjälp av ett parser combinator bibliotek kallat JSParse  \citep{jsparse}. Detta ger oss möjlighet att att på ett enkelt sätt implementera både den kontextfria och icke kontextfria delen av Haskell.
 
-Vi kommer även att använda \emph{JSParse} för att bygga ett eget syntaxträd som skickas vidare till typcheckaren och interpretatorn. I typcheckaren dekoreras syntaxträdet med typinformation.
+Vi kommer även att använda JSParse för att bygga ett eget syntaxträd som skickas vidare till typcheckaren och interpretatorn. I typcheckaren dekoreras syntaxträdet med typinformation.
 
 En interaktiv prompt som kan köras i en webbläsare kommer att utvecklas. Den ska ge användaren möjlighet att skriva Haskell-funktioner och exekvera dem på ett liknande sätt som i GHCi. 
 Vi kommer att integrera jQuery \citep{jquery} för att få ett unisont stöd över samtliga webbläsare. jQuery kommer även underlätta arbetet med att skapa ett enkelt och stilrent interaktivt gränssnitt.
@@ -55,6 +55,6 @@ De delar som prioriteras är
             \item{pattern matching}
             \item{Guards}
         \end{enumerate}
-Med dessa delar implementerade kan de flesta enklare haskellprogram köras och bör vara tillräckligt för det stora flertalet nybörjare. Vi kommer ej lägga någon tid på att skapa en användarvänlig webbsida utan fokus kommer ligga på att skapa haskelltolken. Dock kommer en kommandotolk som körs på en webbsida utvecklas i demonstrationssyfte för att kunna kommunicera med våran haskelltolk. 
-Vi kommer inte lägga någon nämnvärd tid på att optimera haskelltolken utan målet är att göra en fungerande implementation. 
+Med dessa delar implementerade kan de flesta enklare Haskellprogram köras och bör vara tillräckligt för det stora flertalet nybörjare. Vi kommer ej lägga någon tid på att skapa en användarvänlig webbsida utan fokus kommer ligga på att skapa Haskelltolken. Dock kommer en kommandotolk som körs på en webbsida utvecklas i för att kunna kommunicera med våran Haskelltolk. 
+Vi kommer inte lägga någon nämnvärd tid på att optimera Haskelltolken utan målet är att göra en fungerande implementation. 
 
