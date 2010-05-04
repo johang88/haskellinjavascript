@@ -656,7 +656,42 @@ Todo:
         //       operators so it's not very important right now
         var funlhs = sequence(ws(var_), repeat0(ws(apat)));
         
-        var inst = undefined;
+        var inst_gtycon_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        };
+        
+        var inst_gtycon_tyvars_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        };
+        
+        var inst_tyvars_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        };
+        
+        var inst_tyvar_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        };
+        
+        var inst_tyvar_arrow = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        };
+        
+        var inst = choice(  inst_gtycon_action(ws(gtycon)),
+                            inst_gtycon_tyvars_action(sequence(expectws('('), gtycon, list(ws(tyvar), ws(',')), expectws(')'))),
+                            inst_tyvars_action(list(ws(tyvar), ws(','))),
+                            inst_tyvar_action(sequence(expectws('['), tyvar, expectws(']'))),
+                            inst_tyvar_arrow(sequence(expectws('('), tyvar, expectws("->"), tyvar, expectws(')')))
+                        );
         
         var dclass = undefined;
         
@@ -853,11 +888,17 @@ Todo:
             });
         }
         
+        var instance_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        };
+        
         var topdecl = choice(   sequence(ws("type"), ws(simpletype), ws('='), ws(type)),
                                 data_action(sequence(expect(ws("data")), optional(sequence(context, expect("=>"))), ws(simpletype), expect(ws('=')), constrs, optional(deriving))),
                                 sequence(ws("newtype"), optional(sequence(context, "=>")), ws(simpletype), ws('='), newconstr, optional(deriving)),
                                 class_action(sequence(expectws("class"), optional(sequence(scontext, expectws("=>"))), tycls, tyvar, optional(sequence(expectws("where"), cdecls)))),
-                                sequence(ws("instance"), optional(sequence(scontext, "=>")), qtycls, inst, optional(sequence(ws("where"), idecls))),
+                                instance_action(sequence(expectws("instance"), optional(sequence(scontext, "=>")), qtycls, inst, optional(sequence(expectws("where"), idecls)))),
                                 sequence(ws("default"), ws('('), list(type, ','), ws(')')),
                                 ws(decl)
                             );
