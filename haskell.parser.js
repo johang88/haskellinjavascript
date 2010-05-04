@@ -894,12 +894,18 @@ Todo:
             });
         };
         
+        var default_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        };
+        
         var topdecl = choice(   sequence(ws("type"), ws(simpletype), ws('='), ws(type)),
                                 data_action(sequence(expect(ws("data")), optional(sequence(context, expect("=>"))), ws(simpletype), expect(ws('=')), constrs, optional(deriving))),
                                 sequence(ws("newtype"), optional(sequence(context, "=>")), ws(simpletype), ws('='), newconstr, optional(deriving)),
                                 class_action(sequence(expectws("class"), optional(sequence(scontext, expectws("=>"))), tycls, tyvar, optional(sequence(expectws("where"), cdecls)))),
                                 instance_action(sequence(expectws("instance"), optional(sequence(scontext, "=>")), qtycls, inst, optional(sequence(expectws("where"), idecls)))),
-                                sequence(ws("default"), ws('('), list(type, ','), ws(')')),
+                                default_action(sequence(expectws("default"), expectws('('), list(type, ','), expectws(')'))),
                                 ws(decl)
                             );
         
