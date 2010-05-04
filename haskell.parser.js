@@ -688,9 +688,20 @@
                             inst_tyvar_arrow(sequence(expectws('('), tyvar, expectws("->"), tyvar, expectws(')')))
                         );
         
-        var dclass = undefined;
+        var dclass = qtycls;
         
-        var deriving = epsilon_p;
+        var deriving_action = function(p) {
+            return action(p, function(ast) {
+                // if(ast[0] instanceof Array) 
+                //      ast = ast[0];
+                return ast;
+            });
+        };
+        
+        var deriving = deriving_action(sequence(expectws("deriving"), choice(
+                                    ws(dclass),
+                                    sequence(expectws('('), list(ws(dclass), ws(',')), expectws(')'))
+                                )));
         
         var fielddecl = undefined;
         
@@ -883,7 +894,7 @@
             });
         };
         
-        var type_action = function(p) {
+        var newtype_action = function(p) {
             return action(p, function(ast) {
                 return ast;
             });
