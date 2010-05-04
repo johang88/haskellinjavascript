@@ -174,6 +174,8 @@ Todo:
         
         var list_action = function(p) {
             return action(p, function(ast) {
+		    if (ast[0] == false) ast[0] = [];
+		    return new haskell.ast.List(ast[0]);
                 // 0,1,2
                 // 0 : 1 : 2 : []
                 // ((: 0) 1)

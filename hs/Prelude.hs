@@ -33,6 +33,12 @@ map f xs = case xs of
     [] -> []
     (x:xs) -> f x : map f xs
 
+(++) [] ys = ys
+(++) (x:xs) ys = x : (xs ++ ys)
+
+concat [] = []
+concat (x:xs) = x ++ concat xs
+
 foldr1 f xs = case xs of
     [x] -> x
     (x:xs) -> f x $ foldr1 f xs
@@ -53,6 +59,10 @@ tail xs = case xs of
 
 fix f = let x = f x in x
 
+fib n = case n of 
+    0 -> 0
+    1 -> 1
+    _ -> fib (n-2) + fib (n-1)
 
 data Int = I# Int#
 
@@ -66,19 +76,19 @@ stepDebug = stepDebug#
 
 data Maybe a = Just a | Nothing
 
--- Maybe == Monad. wat
+concatMap f xs = concat (map f xs)
 
-(>>) m a = case m of
-     Nothing -> Nothing
-     Just _ -> a
 
-(>>=) m f = case m of
-       Nothing -> Nothing
-       Just a -> f a
+-- List monad -_-
+(>>) m a = m >>= (\_ -> a) 
 
-return a = Just a
+(>>=) m f = concatMap f m
 
-fail = Nothing
+return a = [a]
+
+fail _ = []
+
+undefined = undefined
 
 
 catMaybes []           = []

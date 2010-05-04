@@ -36,6 +36,9 @@
                	      | Case Expression [(Pattern, Expression)]
                       | VariableLookup Identifier
 		      | Do [DoNotation]
+		      | List [Expression]
+		      | ArithmeticSequence Expression (Maybe Expression) (Maybe Expression)
+		      | ListComprehension Expression [ListNotation]
 		      | Primitive Function
     */
     // Eval returns a whnf
@@ -161,6 +164,67 @@
 	var first = rest.shift();
 	return (first.partDesugar(rest));
     };
+
+    ast.List = function(expressions) {
+	expectTypeArray(expressions, ast.Expression);
+	this.expressions = expressions;
+    };
+    ast.List.prototype = new ast.Expression();
+    ast.List.prototype.desugar = function() {
+	// [] = []
+	// [1] = 1:[]
+	// [1,2] = 1:[2]
+	if (this.expressions.length == 0) {
+	    return new ast.VariableLookup("[]");
+	};
+	var first = this.expressions[0];
+	return new ast.Application(new ast.Application(new ast.VariableLookup(":"), 
+						       first), 
+				   new ast.List(this.expressions.slice(1))
+				   );
+    };
+
+    ast.ArithmeticSequence = function(e1, e2, e3) {
+	expectType(e1, ast.Expression);
+	if (e2) expectType(e2, ast.Expression);
+	if (e3) expectType(e3, ast.Expression);
+	this.e1 = e1;
+	this.e2 = e2;
+	this.e3 = e3;
+    };
+    ast.ArithmeticSequence.prototype = new ast.Expression();
+    ast.ArithmeticSequence.prototype.desugar = function() {
+	// [e1..]      = enumFrom e1
+	// [e1,e2..]   = enumFromThen e1 e2
+	// [e1..e3]    = enumFromTo e1 e3
+	// [e1,e2..e3] = enumFromThenTo e1 e2 e3
+	var funname = 'enumFrom';
+	if (this.e2) funname = funname + 'Then';
+	if (this.e3) funname = funname + 'To';
+	var application = new ast.Application(ast.VariableLookup(funname), this.e1);
+	if (this.e2) application = new ast.Application(application, this.e2);
+	if (this.e3) application = new ast.Application(application, this.e3);
+	return application;
+    };
+
+    ast.ListComprehension = function(ret, notations) {
+	expectType(ret, ast.Expression);
+	expectTypeArray(notations, ast.ListNotation);
+	this.ret = ret;
+	this.notations = notations;
+    };
+    ast.ListComprehension.prototype = new ast.Expression();
+    ast.ListComprehension.prototype.desugar = function() {
+	if (this.notations.length == 0) {
+	    return (ast.Application(ast.VariableLookup("return"), this.ret));
+	}
+	var first = this.notations[0];
+	return new ast.Do([first.partDesugar(), new ast.DoExpr(new ast.ListComprehension(this.ret,
+											 this.notations.slice(1)))]);
+    };
+
+
+
     ast.Primitive = function(func) {
 	expectTypeOf(func, "function");
 	this.type="Primitive";
@@ -239,11 +303,39 @@
 	return new ast.Application(new ast.Application(new ast.VariableLookup(">>"), this.expr), new ast.Do(rest));
     };
 
+    /* 
+       data ListNotation = ListGuard Expression
+                         | ListBind Pattern Expression
+     */
+    
+    ast.ListNotation = function() {};
+ 
+    ast.ListGuard = function(expr) {
+	expectType(expr, ast.Expression);
+	this.expr = expr;
+    };
+    ast.ListGuard.prototype = new ast.ListNotation();
+    ast.ListGuard.partDesugar = function() {
+	return new ast.DoExpr(new ast.Application(new ast.VariableLookup("guard"),
+						  this.expr));
+    };
+
+    ast.ListBind = function(pattern, expr) {
+	expectType(pattern, ast.Pattern);
+	expectType(expr, ast.Expression);
+	this.pattern = pattern;
+	this.expr = expr;
+    };
+    ast.ListBind.prototype = new ast.ListNotation();
+    ast.ListBind.prototype.partDesugar = function() {
+	// x <- expr ==> x <- expr ...
+	return new ast.DoBind(this.pattern, this.expr);
+    };
+
     /*
       data Value = Num Int
     */
-    ast.Value = function(){};
-
+    ast.Value = function() {};
     ast.Num = function(num) {
 	expectTypeOf(num, "number");
 	this.type = "Num";

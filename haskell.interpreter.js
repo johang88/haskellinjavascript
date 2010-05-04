@@ -97,7 +97,7 @@
 	return this.env[identifier];
     };
     interpreter.Env.prototype.onUndefined = function(identifier) {
-	return undefined;
+	throw new Error("Identifier not in env " + identifier );
     };
 
   
@@ -106,15 +106,14 @@
 	this.type = "RootEnv";
     };
     interpreter.RootEnv.prototype = new interpreter.Env();
-    interpreter.RootEnv.prototype.constructor = interpreter.RootEnv;
-
+    var childId = 0;
     interpreter.ChildEnv = function(parent) {
 	this.env = {};
 	this.type = "ChildEnv";
 	this.parent = parent;
+	this.id = childId++;
     };
     interpreter.ChildEnv.prototype = new interpreter.Env();
-    interpreter.ChildEnv.prototype.constructor = interpreter.ChildEnv;
 
     interpreter.ChildEnv.prototype.onUndefined = function(identifier) {
 	return this.parent.lookup(identifier);
@@ -248,7 +247,7 @@
 	    if (this.numArgs == 1) {
 		for (var i in this.funcs) {
 		    var newEnv = this.env.derive();
-		    if (this.funcs[i].patternMatch(env, givenArgs)) {
+		    if (this.funcs[i].patternMatch(newEnv, givenArgs)) {
 			var matchedFunc = this.funcs[i];
 			if (matchedFunc.expression instanceof Array) {
 			    for (var j in matchedFunc.expression) {
@@ -264,7 +263,7 @@
 			}
 		    }
 		}
-		// failed pattern.
+		throw new Error("Failed pattern match");
 	    } else {
 		return new interpreter.DelayedApplication(this.env, this.numArgs - 1, this.funcs, givenArgs);
 	    }
