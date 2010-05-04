@@ -366,6 +366,29 @@ Todo:
             });
         };
         
+        var qual_generator_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        }
+        
+        var qual_let_action = function(p) {
+            return action(p, function(ast) {
+               return ast; 
+            });
+        }
+        
+        var qual_exp_action = function(p) {
+            return action(p, function(ast) {
+               return ast; 
+            });
+        }
+        
+        var qual = choice(  qual_generator_action(sequence(ws(pat), expectws("<-"), ws(exp))),
+                            qual_let_action(sequence(ws("let"), ws(decls))),
+                            qual_exp_action(ws(exp))
+                         );
+        
         var qvar_exp_action = function(p) {
             return action(p, function(ast) {
                 return new haskell.ast.VariableLookup(ast);
@@ -378,6 +401,18 @@ Todo:
             });
         };
         
+        var aexp_list_comp_action = function(p) {
+            return action(p, function(ast) {
+               return ast; 
+            });
+        }
+        
+        var aexp_arithmetic_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        }
+        
         var aexp = choice(  qvar_exp_action(ws(qvar)),
                             qvar_exp_action(ws(gcon)),
                             aexp_constant_action(ws(literal)),
@@ -385,10 +420,10 @@ Todo:
                             sequence(ws('('), ws(exp), ws(','), ws(exp), repeat0(sequence(ws(','), ws(exp))) , ws(')')), // tuple
                             list_action(sequence(expect(ws('[')), optional(wlist(exp, ',')), expect(ws(']')))),  // list constructor
                             left_section_action(sequence(expect(ws('(')), ws(infixexp), ws(qop), expect(ws(')')))), // left section
-                            right_section_action(sequence(expect(ws('(')), ws(qop), ws(infixexp), expect(ws(')')))) // right section, todo: look into resolution of infixexp in this case, see Haskell Report Chapter 3
+                            right_section_action(sequence(expect(ws('(')), ws(qop), ws(infixexp), expect(ws(')')))), // right section, todo: look into resolution of infixexp in this case, see Haskell Report Chapter 3
+                            aexp_arithmetic_action(sequence(expectws('['), exp, repeat0(exp), expectws('..'), optional(ws(exp)), expectws(']'))), // arithmetic sequence
+                            aexp_list_comp_action(sequence(expectws('['), ws(exp), list(qual), expectws(']'))) // list comprehension
                             // Todo:
-                            //  Arithmetic sequence
-                            //  List comprehension
                             //  Labeled construction
                             //  Labeled update
                           );
