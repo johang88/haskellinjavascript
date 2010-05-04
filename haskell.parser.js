@@ -703,7 +703,7 @@
                                     sequence(expectws('('), list(ws(dclass), ws(',')), expectws(')'))
                                 )));
         
-        var fielddecl = undefined;
+        var fielddecl = sequence(ws(vars), expectws("::"), choice(ws(type), sequence(optional(ws('!')), ws(atype))));
         
         var newconstr_con_action = function(p) {
             return action(p, function(ast) {
@@ -729,9 +729,22 @@
             });
         };
         
+        var constr_op_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        };
+        
+        var constr_fielddecl_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        };
+        
         var atype = function(state) { return atype(state); };
-        var constr = choice(constr_action(sequence(ws(con), repeat0(sequence(optional(ws('!')), ws(atype)))))
-                          //  sequence(choice(ws(btype), sequence(optional(ws('!')), ws(atype))), ws(conop), choice(ws(btype), sequence(optional(ws('!')), ws(atype))))
+        var constr = choice(constr_action(sequence(ws(con), repeat0(sequence(optional(ws('!')), ws(atype))))),
+                            constr_op_action(sequence(choice(ws(btype), sequence(optional(ws('!')), ws(atype))), ws(conop), choice(ws(btype), sequence(optional(ws('!')), ws(atype))))),
+                            constr_fielddecl_action(sequence(ws(con), expectws('{'), list(ws(fielddecl), ws(',')), expectws('}')))
                            ); // Todo: fielddecl stuffz
         
         var constrs = list(ws(constr), ws('|'));
@@ -1085,7 +1098,13 @@
         });
         
         var ws_ = function(p) {
-            return action(sequence(repeat0(" "), p), function(ast) {
+            return action(sequence(repeat0(choice(' ', '\t')), p), function(ast) {
+                for (var i = 0; i < ast[0].length; i++) {
+                    if (ast[0][i] == '\t')
+                        lexer_state.current += 8;
+                    else
+                        lexer_state.current += 1;
+                }
                 lexer_state.current += ast[0].length;
                 return ast[ast.length - 1]; 
             });
