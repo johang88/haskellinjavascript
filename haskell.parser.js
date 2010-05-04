@@ -124,18 +124,18 @@ Todo:
         
         var qtycon = action(sequence(range('A', 'Z'), ident_), function(ast) { return ast.join(""); });
         
-        var qtycls = ident;
-        
         var conid = action(sequence(range('A', 'Z'), ident_), function(ast) { return ast.join(""); });
         var consym = butnot(sym, reservedop);
+        
+        var tycls = conid;
+        
+        var qtycls = tycls;
         
         var qconsym = consym;
         var qconid = conid;
 
         var tycon = qtycon;
-        var tyvar = ident;
-        
-        var tycls = epsilon_p;        
+        var tyvar = varid;        
         var gconsym = choice(':', qconsym);
         
         var qconop = choice(gconsym, sequence(expect(ws('`')), qconid, expect(ws('`'))));
@@ -683,9 +683,29 @@ Todo:
         
         var simpletype = sequence(ws(tycon), optional(ws(list(tyvar, ' '))));
         
-        var simpleclass = undefined;
+        var simpleclass_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        };
         
-        var scontext = undefined;
+        var simpleclass = simpleclass_action(sequence(ws(qtycls), ws(tyvar)));
+        
+        var scontext_one_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        }
+        
+        var scontext_many_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        }
+        
+        var scontext = choice(  scontext_one_action(simpleclass),
+                                scontext_many_action(sequence(expectws('('), list(ws(simpleclass), ws(',')), expectws(')')))
+                             );
 
         var gtycon = choice(qtycon,
                             sequence(repeat1(ws(var_)), repeat0(ws(apat))),
@@ -755,9 +775,28 @@ Todo:
         
         var idecls = epsilon_p;
         
-        var cdecl = undefined;
+        var cdecl_gendecl_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        };
         
-        var cdecls = epsilon_p;
+        var cdecl_fun_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        };
+        
+        var cdecl = choice( cdecl_gendecl_action(gendecl),
+                            cdecl_fun_action(sequence(choice(ws(funlhs), ws(pat)), ws(rhs))));
+        
+        var cdecls_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        };
+        
+        var cdecls = cdecls_action(list(ws(decl), ws(';')));
         
         var fun_action = function(p) {
             return action(p, function(ast) {
@@ -808,10 +847,16 @@ Todo:
             });
         };
         
+        var class_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        }
+        
         var topdecl = choice(   sequence(ws("type"), ws(simpletype), ws('='), ws(type)),
                                 data_action(sequence(expect(ws("data")), optional(sequence(context, expect("=>"))), ws(simpletype), expect(ws('=')), constrs, optional(deriving))),
                                 sequence(ws("newtype"), optional(sequence(context, "=>")), ws(simpletype), ws('='), newconstr, optional(deriving)),
-                                sequence(ws("class"), optional(sequence(scontext, "=>")), tycls, tyvar, optional(sequence(ws("where"), cdecls))),
+                                class_action(sequence(expectws("class"), optional(sequence(scontext, expectws("=>"))), tycls, tyvar, optional(sequence(expectws("where"), cdecls)))),
                                 sequence(ws("instance"), optional(sequence(scontext, "=>")), qtycls, inst, optional(sequence(ws("where"), idecls))),
                                 sequence(ws("default"), ws('('), list(type, ','), ws(')')),
                                 ws(decl)
