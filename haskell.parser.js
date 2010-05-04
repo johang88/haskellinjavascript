@@ -705,7 +705,21 @@
         
         var fielddecl = undefined;
         
-        var newconstr = epsilon_p;
+        var newconstr_con_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        };
+        
+        var newconstr_var_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        };
+        
+        var newconstr = choice( newconstr_con_action(sequence(con, atype)),
+                                newconstr_var_action(sequence(con, expectws('{'), var_, expectws("::"), type, expectws('}')))
+                        );
         
         var constr_action = function(p) {
             return action(p, function(ast) {
@@ -918,7 +932,7 @@
             });
         };
         
-        var topdecl = choice(   type_action(sequence(ws("type"), ws(simpletype), ws('='), ws(type))),
+        var topdecl = choice(   type_action(sequence(ws(qtycls), ws(simpletype), ws('='), ws(type))),
                                 data_action(sequence(expect(ws("data")), optional(sequence(context, expect("=>"))), ws(simpletype), expect(ws('=')), constrs, optional(deriving))),
                                 newtype_action(sequence(ws("newtype"), optional(sequence(context, "=>")), ws(simpletype), ws('='), newconstr, optional(deriving))),
                                 class_action(sequence(expectws("class"), optional(sequence(scontext, expectws("=>"))), tycls, tyvar, optional(sequence(expectws("where"), cdecls)))),
