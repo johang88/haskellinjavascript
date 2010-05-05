@@ -1,11 +1,11 @@
 (function(interpreter, ast, primitives, utilities){
-    // Creates env from an ast and returns it !
-    interpreter.prepare = function(astt, env) {
+
+    interpreter.loadDeclarations = function(declrs, env) {
 	var lastfunname = null;
 	var lastfunenv = [];
 	// TODO: Remove duplication of Function addition.
-        for (var i in astt.declarations) {
-            var decl = astt.declarations[i];
+        for (var i in declrs) {
+            var decl = declrs[i];
 	    if (decl.type=="Function") {
 		if (lastfunname == decl.identifier) {
 		    lastfunenv.push(decl);
@@ -40,6 +40,11 @@
 	    env.bind(lastfunname, new interpreter.HeapPtr(new interpreter.DelayedApplication(env, lastfunenv[0].patterns.length, lastfunenv, [])));
 	}
         return env;
+    };
+
+    // Creates env from an ast and returns it !
+    interpreter.prepare = function(astt, env) {
+	return interpreter.loadDeclarations(astt.declarations, env);
     };
 
     // Executes a haskell program

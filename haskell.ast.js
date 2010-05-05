@@ -107,15 +107,13 @@
 	this.declr = declr;
 	this.expr = expr;
 	this.eval = function(env) {
-	    var newEnv = env.derive();
-	    for (var i in this.declr) {
-		var declr = this.declr[i];
-		newEnv.patternBind(declr.pattern, new interpreter.HeapPtr(new interpreter.Closure(newEnv, declr.expression)));
-	    }
+	    var newEnv = interpreter.loadDeclarations(this.declr, env.derive());
 	    return this.expr.eval(newEnv);
 	};
         this.stringify = function() {
-            return "let " + this.declr.stringify() + " in " + this.expr.stringify();
+            return "let {" + this.declr.map(function (d) {
+		    return d.stringify();
+		}).join(";") + "} in " + this.expr.stringify();
         };
     };
     ast.Case = function(expr, cases) {
@@ -439,6 +437,20 @@
 		}
 	    };
 	    return true;
+	};
+
+	this.stringify = function() {
+	    var exprstr;
+	    if (this.expression instanceof Array) {
+		exprstr = this.expression.map(function(e) {
+			return e[0].stringify() + " -> " + e[1].stringify();
+		    }).join("|");
+	    } else {
+		exprstr = this.expression.stringify();
+	    };
+	    return this.identifier + this.patterns.map(function(p) {
+		    return p.stringify();
+		}).join(" ") + " = " + exprstr;
 	};
     };
 
