@@ -101,7 +101,7 @@ dessa parsers kombineras ihop för att bilda den slutgiltliga parsern. Det resul
 HIJi, Haskell in Javascript Interactive, är den del av projektet som användaren tydligast kommer märka av eftersom det är fasaden in i programmet.
 HIJi erbjuder användaren ett GHCi-liknande användargränssnitt direkt i webläsaren. 
 HIJi tar input genom att användaren skriver funktioner och uttryck i HIJi. När användaren klickar på retur tolkas inputen av parsern och bygger upp det abstrakta syntaxträdet. Därefter evalueras uttrycket utav interpretern.
-Det går även att ladda moduler till HIJi. Det gör man genom att skriva :l \emph{namn-på-modul}. Man får då tillgång till alla de funktioner som är skrivna i den modulen. 
+Det går även att ladda moduler till HIJi. Det gör man genom att skriva :l \emph{namn-på-modul}. Man får då tillgång till alla de funktioner som är skrivna i den modulen. HIJi har även en förladdad modul, Prelude, som innehåller en delmängd av de funktioner som finns i GHCs motsvarighet.  
 
 Den indata som användaren skriver till HIJi sparas i ett objekt för att hantera historiken. Man bläddrar i historiken med piltangenterna Upp och Ner. Hela historik-objektet sparas även i en kaka som ett JSON-objekt. Av detta skäl är det möjligt att få tillgång till historiken när man startar en ny session av webbläsaren. Historiken laddas in när HIJi startar. 
 
@@ -116,11 +116,7 @@ Dock finns det vissa nackdelar med ett terminalbaserat användargränssnitt. Ter
     \end{center}
 \end{figure}
 
-Figur 2 visar hur HIJi ser ut för användaren. De första raderna visar precis som i GHCi vilka moduler som för närvarande är laddade. I detta exemplet är det en modul laddad med namnet Prelude. Därefter följer en prompt där användaren fritt kan skriva in egna funktioner. I figuren visas en lambda-funktion.
-
-%ODO get source from cp-book at home
-
-%HIJi är tänkt att erbjuda användaren liknande möjligheter som GHCi. 
+Figur 2 visar hur HIJi ser ut för användaren. De första raderna visar precis som i GHCi vilka moduler som för närvarande är laddade. I detta exemplet är den förladdade modulen Prelude laddad. Därefter följer en prompt där användaren fritt kan skriva in egna funktioner. I figuren har användaren skrivit en lambda-funktion.
 
 Fördelen med HIJi framför GHCi är att användaren ej behöver ladda ner den stora GHC-kompilatorn på sin personliga dator för att testa enkla Haskelluttryck direkt i webbläsaren. Den åtgångna tiden från  att man vill testa Haskell till dess att man faktiskt sitter med det framför sig kortas. 
 Nackdelar gentemot GHCI är att HIJi är en nedbandat version utav GHCi. HIJi kan bara evaluera enklare uttryck. Det finns i dagsläget inga möjligheter att ladda upp hela Haskell-filer för att köra dem. Att som i GHCi på ett enkelt sätt kolla upp  typen av en funktion stöds ej.
