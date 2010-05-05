@@ -371,7 +371,7 @@
         
         var qual_let_action = function(p) {
             return action(p, function(ast) {
-		    return new haskell.ast.ListLet(ast); 
+		    return new haskell.ast.ListLet(ast[0]); 
             });
         }
         
@@ -382,7 +382,7 @@
         }
         
         var qual = choice(  qual_generator_action(sequence(ws(pat), expectws("<-"), ws(exp))),
-                            qual_let_action(sequence(ws("let"), ws(decls))),
+                            qual_let_action(sequence(expectws("let"), ws(decls))),
                             qual_exp_action(ws(exp))
                          );
         
@@ -410,11 +410,24 @@
             });
         }
         
+        var aexp_empty_tuple_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        };
+        
+        var aexp_tuple_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        };
+        
         var aexp = choice(  qvar_exp_action(ws(qvar)),
                             qvar_exp_action(ws(gcon)),
                             aexp_constant_action(ws(literal)),
                             action(sequence(expect(ws('(')), ws(exp), expect(ws(')'))), function(ast) { return ast[0]; }), // parans
-                            sequence(ws('('), ws(exp), ws(','), ws(exp), repeat0(sequence(ws(','), ws(exp))) , ws(')')), // tuple
+                            aexp_empty_tuple_action(sequence(expectws('('), expectws(')'))), // empty tuple
+                            aexp_tuple_action(sequence(expectws('('), ws(exp), repeat1(sequence(ws(','), ws(exp))) , expectws(')'))), // tuple
                             list_action(sequence(expect(ws('[')), optional(wlist(exp, ',')), expect(ws(']')))),  // list constructor
                             left_section_action(sequence(expect(ws('(')), ws(infixexp), ws(qop), expect(ws(')')))), // left section
                             right_section_action(sequence(expect(ws('(')), ws(qop), ws(infixexp), expect(ws(')')))), // right section, todo: look into resolution of infixexp in this case, see Haskell Report Chapter 3
@@ -1100,8 +1113,13 @@
             this.indent = indent;
         }
         
-        var lexeme = join_action(repeat1(negate(choice('\n', '\r', ' ', '\t', ';', '{', '}', '(', ')', '[', ']', ','))), "");
-        lexeme = choice(';', '{', '}', join_action(sequence('(', sym, ')'), ""), '(', ')', '[', ']', ',', lexeme);
+        var sym_lexer = sym;
+        if (enableHash) {
+            sym_lexer = butnot(sym, '#')
+        }
+        
+        var lexeme = join_action(repeat1(negate(choice('\n', '\r', ' ', '\t', ';', '{', '}', '(', ')', '[', ']', ',', sym_lexer))), "");
+        lexeme = choice(';', '{', '}', join_action(sequence('(', sym, ')'), ""), '(', ')', '[', ']', ',', sym, lexeme);
         lexeme = action(lexeme, function(ast) {
             var indent = lexer_state.current;
             lexer_state.current += ast.length;
