@@ -88,6 +88,13 @@ return a = [a]
 
 fail _ = []
 
+guard True = return undefined
+guard False = mzero
+
+
+mzero = []
+
+
 undefined = undefined
 
 
