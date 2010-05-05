@@ -156,6 +156,7 @@
     };
     ast.Do = function(notations) {
 	expectTypeArray(notations, ast.DoNotation);
+	this.type="Do";
 	this.notations = notations;
     };
     ast.Do.prototype = new ast.Expression();
@@ -167,6 +168,7 @@
 
     ast.List = function(expressions) {
 	expectTypeArray(expressions, ast.Expression);
+	this.type="List";
 	this.expressions = expressions;
     };
     ast.List.prototype = new ast.Expression();
@@ -188,6 +190,7 @@
 	expectType(e1, ast.Expression);
 	if (e2) expectType(e2, ast.Expression);
 	if (e3) expectType(e3, ast.Expression);
+	this.type="ArithmeticSequence";
 	this.e1 = e1;
 	this.e2 = e2;
 	this.e3 = e3;
@@ -210,13 +213,14 @@
     ast.ListComprehension = function(ret, notations) {
 	expectType(ret, ast.Expression);
 	expectTypeArray(notations, ast.ListNotation);
+	this.type="ListComprehensions";
 	this.ret = ret;
 	this.notations = notations;
     };
     ast.ListComprehension.prototype = new ast.Expression();
     ast.ListComprehension.prototype.desugar = function() {
 	if (this.notations.length == 0) {
-	    return (ast.Application(ast.VariableLookup("return"), this.ret));
+	    return (new ast.Application(new ast.VariableLookup("return"), this.ret));
 	}
 	var first = this.notations[0];
 	return new ast.Do([first.partDesugar(), new ast.DoExpr(new ast.ListComprehension(this.ret,
@@ -234,7 +238,7 @@
 	};
 
         this.stringify = function() {
-            return "{primitive}";
+            return "{primitive function}";
         };
     };
     ast.Lambda.prototype           = new ast.Expression();
@@ -260,6 +264,7 @@
     
     ast.DoLet = function(declrs) {
 	expectTypeArray(declrs, ast.Declaration);
+	this.type="DoLet";
 	this.declrs = declrs;
     };
     ast.DoLet.prototype = new ast.DoNotation();
@@ -271,6 +276,7 @@
     ast.DoBind = function(pattern, expression) {
 	expectType(pattern, ast.Pattern);
 	expectType(expression, ast.Expression);
+	this.type="DoBind";
 	this.pattern = pattern;
 	this.expression = expression;
     };
@@ -292,6 +298,7 @@
 
     ast.DoExpr = function(expr) {
 	expectType(expr, ast.Expression);
+	this.type="DoExpr";
 	this.expr = expr;
     };
     ast.DoExpr.prototype = new ast.DoNotation();
@@ -306,16 +313,18 @@
     /* 
        data ListNotation = ListGuard Expression
                          | ListBind Pattern Expression
+			 | ListLet Pattern Expression
      */
     
     ast.ListNotation = function() {};
  
     ast.ListGuard = function(expr) {
 	expectType(expr, ast.Expression);
+	this.type="ListGuard";
 	this.expr = expr;
     };
     ast.ListGuard.prototype = new ast.ListNotation();
-    ast.ListGuard.partDesugar = function() {
+    ast.ListGuard.prototype.partDesugar = function() {
 	return new ast.DoExpr(new ast.Application(new ast.VariableLookup("guard"),
 						  this.expr));
     };
@@ -323,6 +332,7 @@
     ast.ListBind = function(pattern, expr) {
 	expectType(pattern, ast.Pattern);
 	expectType(expr, ast.Expression);
+	this.type="ListBind";
 	this.pattern = pattern;
 	this.expr = expr;
     };
@@ -331,6 +341,19 @@
 	// x <- expr ==> x <- expr ...
 	return new ast.DoBind(this.pattern, this.expr);
     };
+
+    ast.ListLet = function(decls) {
+	expectType(decls, ast.Declaration);
+	this.type="ListLet";
+	this.decls = decls
+    };
+    ast.ListLet.prototype = new ast.ListNotation();
+    ast.ListLet.prototype.partDesugar = function() {
+	// let p = expr ==> let p = expr ...
+	return new ast.DoLet(this.decls);
+    };
+
+    
 
     /*
       data Value = Num Int

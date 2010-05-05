@@ -56,7 +56,7 @@ commands[":help"] = "HELP";
             }
         }
         catch(err){
-            alert("HAHA:");
+            console.log("Error: History not loaded from cookie");
         }
 
         var env = new haskell.interpreter.RootEnv();

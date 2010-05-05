@@ -230,9 +230,9 @@
 
     function boxBool(env, b) {
 	if (b) {
-	    return env.lookup("True");
+	    return env.lookup("True").dereference();
 	};
-	return env.lookup("False");
+	return env.lookup("False").dereference();
     };
 
     function gtPrim(env, args) {
