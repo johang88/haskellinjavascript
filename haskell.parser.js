@@ -496,9 +496,15 @@
             });
         };
         
+        var if_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        };
+        
         var exp_10 = choice(lambda_exp_action (sequence(expect(ws('\\')), repeat1(ws(apat)), expect(ws("->")), ws(exp))),
                             let_action(sequence(expect(ws("let")), ws(decls), expect(ws("in")), ws(exp))),
-                            sequence(ws("if"), ws(exp), ws("then"), ws(exp), ws("else"), ws(exp)),
+                            if_action(sequence(expectws("if"), ws(exp), expectws("then"), ws(exp), expectws("else"), ws(exp))),
                             case_action(sequence(expect(ws("case")), ws(exp), expect(ws("of")), expect(ws("{")), ws(alts), expect(ws("}")))),
                             do_action(sequence(expect(ws("do")), expect(ws("{")), ws(stmts), expect(ws("}")))),
                             ws(fexp)
