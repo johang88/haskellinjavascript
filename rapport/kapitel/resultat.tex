@@ -103,7 +103,7 @@ HIJi erbjuder användaren ett GHCi-liknande användargränssnitt direkt i weblä
 HIJi tar input genom att användaren skriver funktioner och uttryck i HIJi. När användaren klickar på retur tolkas inputen av parsern och bygger upp det abstrakta syntaxträdet. Därefter evalueras uttrycket utav interpretern.
 Det går även att ladda moduler till HIJi. Det gör man genom att skriva :l \emph{namn-på-modul}. Man får då tillgång till alla de funktioner som är skrivna i den modulen. HIJi har även en förladdad modul, Prelude, som innehåller en delmängd av de funktioner som finns i GHCs motsvarighet.  
 
-Den indata som användaren skriver till HIJi sparas i ett objekt för att hantera historiken. Man bläddrar i historiken med piltangenterna Upp och Ner. Hela historik-objektet sparas även i en kaka som ett JSON-objekt. Av detta skäl är det möjligt att få tillgång till historiken när man startar en ny session av webbläsaren. Historiken laddas in när HIJi startar. 
+Den indata som användaren skriver till HIJi sparas i ett objekt för att hantera historiken. Man bläddrar i historiken med piltangenterna Upp och Ner. Hela historik-objektet sparas även i en kaka som ett JSON-objekt. Av detta skäl är det möjligt att få tillgång till historiken när man startar en ny session av webbläsaren. Historiken laddas in när HIJi startar.
 
 HIJi är skapat för att likna GHCi i så stor utsträckning som möjligt.
 Genom att efterlikna GHCi kommer användare känna igen sig när de tar steget från HIJi till GHCi. Det blir för dem ett naturligt steg och kortar inlärningströskeln. Även för haskellprogrammerare som är väl införstådda i GHCi's möjligheter blir det lättare att använda sig utav HIJi, de behöver inte fundera hur verktyget ska användas.
