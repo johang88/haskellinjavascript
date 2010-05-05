@@ -371,7 +371,7 @@
         
         var qual_let_action = function(p) {
             return action(p, function(ast) {
-		    return new haskell.ast.ListLet(ast); 
+		    return new haskell.ast.ListLet(ast[0]); 
             });
         }
         
@@ -382,7 +382,7 @@
         }
         
         var qual = choice(  qual_generator_action(sequence(ws(pat), expectws("<-"), ws(exp))),
-                            qual_let_action(sequence(ws("let"), ws(decls))),
+                            qual_let_action(sequence(expectws("let"), ws(decls))),
                             qual_exp_action(ws(exp))
                          );
         
@@ -1113,8 +1113,13 @@
             this.indent = indent;
         }
         
-        var lexeme = join_action(repeat1(negate(choice('\n', '\r', ' ', '\t', ';', '{', '}', '(', ')', '[', ']', ','))), "");
-        lexeme = choice(';', '{', '}', join_action(sequence('(', sym, ')'), ""), '(', ')', '[', ']', ',', lexeme);
+        var sym_lexer = sym;
+        if (enableHash) {
+            sym_lexer = butnot(sym, '#')
+        }
+        
+        var lexeme = join_action(repeat1(negate(choice('\n', '\r', ' ', '\t', ';', '{', '}', '(', ')', '[', ']', ',', sym_lexer))), "");
+        lexeme = choice(';', '{', '}', join_action(sequence('(', sym, ')'), ""), '(', ')', '[', ']', ',', sym, lexeme);
         lexeme = action(lexeme, function(ast) {
             var indent = lexer_state.current;
             lexer_state.current += ast.length;
