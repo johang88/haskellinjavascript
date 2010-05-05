@@ -139,11 +139,11 @@
         
         var qop = choice(qvarop, qconop);
         
-        var op = choice(varop, conop);
-        
         var conop = choice(consym, sequence(expect(ws('`')), conid, expect(ws('`'))));
         
         var varop = choice(varsym, sequence(expect(ws('`')), varid, expect(ws('`'))));
+
+        var op = choice(varop, conop);
         
         var qcon = choice(qconid, sequence(expect(ws('(')), gconsym, expect(ws(')'))));
         
@@ -365,19 +365,19 @@
         
         var qual_generator_action = function(p) {
             return action(p, function(ast) {
-                return ast;
+		    return haskell.ast.ListBind(ast[0], ast[1]);
             });
         }
         
         var qual_let_action = function(p) {
             return action(p, function(ast) {
-               return ast; 
+		    return new haskell.ast.ListLet(ast); 
             });
         }
         
         var qual_exp_action = function(p) {
             return action(p, function(ast) {
-               return ast; 
+		    return new haskell.ast.ListGuard(ast); 
             });
         }
         
@@ -400,13 +400,13 @@
         
         var aexp_list_comp_action = function(p) {
             return action(p, function(ast) {
-               return ast; 
+		    return new haskell.ast.ListComprehension(ast[0], ast[1]);
             });
         }
         
         var aexp_arithmetic_action = function(p) {
             return action(p, function(ast) {
-                return ast;
+               return ast; 
             });
         }
         
@@ -419,7 +419,7 @@
                             left_section_action(sequence(expect(ws('(')), ws(infixexp), ws(qop), expect(ws(')')))), // left section
                             right_section_action(sequence(expect(ws('(')), ws(qop), ws(infixexp), expect(ws(')')))), // right section, todo: look into resolution of infixexp in this case, see Haskell Report Chapter 3
                             aexp_arithmetic_action(sequence(expectws('['), exp, repeat0(exp), expectws('..'), optional(ws(exp)), expectws(']'))), // arithmetic sequence
-                            aexp_list_comp_action(sequence(expectws('['), ws(exp), list(qual), expectws(']'))) // list comprehension
+                            aexp_list_comp_action(sequence(expectws('['), ws(exp), expectws('|'), list(qual, expectws(',')), expectws(']'))) // list comprehension
                             // Todo:
                             //  Labeled construction
                             //  Labeled update
@@ -682,7 +682,10 @@
                 return ast;
             });
         };
-        
+
+	// redefined later
+        var gtycon = function(state) { return gtycon(state); };
+
         var inst = choice(  inst_gtycon_action(ws(gtycon)),
                             inst_gtycon_tyvars_action(sequence(expectws('('), gtycon, list(ws(tyvar), ws(',')), expectws(')'))),
                             inst_tyvars_action(list(ws(tyvar), ws(','))),
@@ -718,7 +721,11 @@
                 return ast;
             });
         };
-        
+
+	// redefined later
+        var atype = function(state) { return atype(state); };
+        var type = function(state) { return type(state); };
+
         var newconstr = choice( newconstr_con_action(sequence(con, atype)),
                                 newconstr_var_action(sequence(con, expectws('{'), var_, expectws("::"), type, expectws('}')))
                         );
@@ -743,7 +750,6 @@
             });
         };
         
-        var atype = function(state) { return atype(state); };
         var constr = choice(constr_action(sequence(ws(con), repeat0(sequence(optional(ws('!')), ws(atype))))),
                             constr_op_action(sequence(choice(ws(btype), sequence(optional(ws('!')), ws(atype))), ws(conop), choice(ws(btype), sequence(optional(ws('!')), ws(atype))))),
                             constr_fielddecl_action(sequence(ws(con), expectws('{'), list(ws(fielddecl), ws(',')), expectws('}')))
@@ -777,7 +783,8 @@
                                 scontext_many_action(sequence(expectws('('), list(ws(simpleclass), ws(',')), expectws(')')))
                              );
 
-        var gtycon = choice(qtycon,
+	// redefinition
+        gtycon = choice(qtycon,
                             sequence(repeat1(ws(var_)), repeat0(ws(apat))),
                             "()",
                             "[]",
@@ -785,16 +792,18 @@
                             sequence(ws('('), repeat1(ws(',')), ws(')'))
                             );
         
-        var type = function(state) { return type(state); };
-        var atype = choice( gtycon,
-                            tyvar,
-                            sequence(ws('('), list(ws(type), ','), ws(')')),
-                            sequence(ws('['), ws(type), ws(']')),
-                            sequence(ws('('), ws(type), ws(')'))
-                            );
+        
+	// redefinition
+	atype = choice( gtycon,
+			tyvar,
+			sequence(ws('('), list(ws(type), ','), ws(')')),
+			sequence(ws('['), ws(type), ws(']')),
+			sequence(ws('('), ws(type), ws(')'))
+			);
         
         var btype = repeat1(ws(atype));
-        var type = list(ws(btype), ws("->"));
+	// redefinition
+        type = list(ws(btype), ws("->"));
         
         var fixity = choice(ws("infixl"), ws("infixr"), ws("infix"));
         
