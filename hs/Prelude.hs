@@ -72,6 +72,8 @@ data Int = I# Int#
 
 (*) (I# i1) (I# i2) = I# (i1 *# i2)
 
+(==) (I# i1) (I# i2) = i1 ==# i2
+
 stepDebug = stepDebug#
 
 data Maybe a = Just a | Nothing
@@ -90,7 +92,6 @@ fail _ = []
 
 guard True = return undefined
 guard False = mzero
-
 
 mzero = []
 

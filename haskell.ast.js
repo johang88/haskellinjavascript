@@ -237,9 +237,8 @@
 	    return this.func(env);
 	};
 
-
         this.stringify = function() {
-            return "{primitive}";
+            return "{primitive function}";
         };
     };
     ast.Lambda.prototype           = new ast.Expression();
