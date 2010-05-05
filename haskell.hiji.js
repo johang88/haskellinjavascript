@@ -47,10 +47,16 @@ commands[":help"] = "HELP";
         
         // history
         var hiss = new historry;
-        // load history from cookie
-        hiss_cookie = $.cookie("hiss");
-        if(hiss_cookie != null){
-            hiss.history_array = JSON.parse(hiss_cookie);
+
+        try{
+            // load history from cookie
+            hiss_cookie = $.cookie("hiss");
+            if(hiss_cookie != null){
+                hiss.history_array = JSON.parse(hiss_cookie);
+            }
+        }
+        catch(err){
+            alert("HAHA:");
         }
 
         var env = new haskell.interpreter.RootEnv();
@@ -75,7 +81,12 @@ commands[":help"] = "HELP";
             if (e.which==ENTER){              
                 // history
                 hiss.addHistory(line);
-                $.cookie("hiss", JSON.stringify(hiss.history_array), {expires: 3 });              
+                try{
+                   $.cookie("hiss", JSON.stringify(hiss.history_array), {expires: 3 });              
+                }
+                catch(err){
+                    console.log("Error: History not saved to cookie");
+                }
                 input.attr("value","");
 
                 if(isCommand(line)){
