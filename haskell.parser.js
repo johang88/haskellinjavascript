@@ -496,9 +496,15 @@
             });
         };
         
+        var if_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        };
+        
         var exp_10 = choice(lambda_exp_action (sequence(expect(ws('\\')), repeat1(ws(apat)), expect(ws("->")), ws(exp))),
                             let_action(sequence(expect(ws("let")), ws(decls), expect(ws("in")), ws(exp))),
-                            sequence(ws("if"), ws(exp), ws("then"), ws(exp), ws("else"), ws(exp)),
+                            if_action(sequence(expectws("if"), ws(exp), expectws("then"), ws(exp), expectws("else"), ws(exp))),
                             case_action(sequence(expect(ws("case")), ws(exp), expect(ws("of")), expect(ws("{")), ws(alts), expect(ws("}")))),
                             do_action(sequence(expect(ws("do")), expect(ws("{")), ws(stmts), expect(ws("}")))),
                             ws(fexp)
@@ -649,18 +655,44 @@
         var exp = choice(sequence(ws(infixexp), ws("::"), optional(ws(context), ws("=>")), ws(type)),
                             exp_action(ws(infixexp)));
         
-        var gd = undefined;
+        var gd_action = function(p) {
+            return action(p, function(ast) {
+                return ast[0];
+            });
+        };
         
-        var gdrhs = undefined;
+        var gd = gd_action(sequence(expectws('|'), ws(exp)));
         
-        // todo: missing second choice
+        var gdrhs_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        };
+        
+        var gdrhs_fix_list_action = function(p) {
+            return action(p, function(ast) {
+                return ast[0];
+            });  
+        };
+        
+        var gdrhs = gdrhs_action(repeat1(gdrhs_fix_list_action(sequence(ws(gd), expectws('='), ws(exp)))));
+        
         var decl_rhs_action = function(p) {
             return action(p, function(ast) {
                 // todo: desugar where
                 return ast[0];
             });
         };
-        var rhs = decl_rhs_action(sequence(expect(ws('=')), ws(exp), optional(sequence(expect(ws("where")), ws(decls)))));
+        
+        var rhs_gurad_action = function(p) {
+            return action(p, function(ast) {
+                return ast[0];
+            });  
+        };
+        
+        var rhs = choice(   decl_rhs_action(sequence(expect(ws('=')), ws(exp), optional(sequence(expect(ws("where")), ws(decls))))),
+                            sequence(ws(gdrhs), optional(sequence(expect(ws("where")), ws(decls))))
+                        );
         
         // todo: Should be quite a lot of choices here, but those are for 
         //       operators so it's not very important right now
@@ -898,22 +930,19 @@
                     } else {        
                         var patterns = ast[0][1];
                         var fun_ident = ast[0][0];
-			if (patterns.length == 0) {
-			    return new haskell.ast.Variable(
+                        
+                        if (patterns.length == 0) {
+                            return new haskell.ast.Variable(
 							    new haskell.ast.VariableBinding(fun_ident),
 							    ast[1]
-							    );
-			}
+                            );
+                        }
                         
                         //var name = new haskell.ast.VariableBinding(fun_ident);
                         
                         var fun = ast[1];
-			return new haskell.ast.Function(fun_ident, patterns, fun);
-                        for (var i = patterns.length - 1; i >= 0; i--) {
-                            fun = new haskell.ast.Lambda(patterns[i], fun);
-                        }
-
-                        return new haskell.ast.Variable(name, fun);
+                        
+                        return new haskell.ast.Function(fun_ident, patterns, fun);
                     }
                 } catch (e) {
                     console.log("%o", e);
