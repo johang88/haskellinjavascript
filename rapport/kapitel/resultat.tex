@@ -148,7 +148,24 @@ Interpretatorn är...
 
 Non strict, att evaluera ett uttryck resulterar i en thunk. En thunk kan tvingas till ett Weak Head Normal Form (WHNF) [referens] under flera olika omständigheter.
 ~ Pattern Matchning
+~ funktionsapplikation
 ~ Argument till primitiv funktion
+
+~ dereferencing a pointer returns a whnf.
+
+~ Env är en samling HeapPtr.
+
+
+~ konvetionellt desugar efter typchecking för att få bra felmedelanden vid typfel
+Vi desugar under runtime, för att få bra möjligheter till interaktion.
+
+~ Desugaring do
+
+~ Desugaring list comprehension
+
+~ Desugaring arithmetic sequence
+
+~ Regler för evaluering (retunerar en WHNF eller closure)
 
 
 
