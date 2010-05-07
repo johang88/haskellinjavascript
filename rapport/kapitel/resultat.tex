@@ -70,7 +70,7 @@ En av reglerna är att ett inre block inte får vara mindre indenterat än det o
 case x of
     True -> ...
 \end{lstlisting}
-Här är "True -> ..." ett inre block till "case" och därmed mer indenterat.
+Här är \emph{True -> ...} ett inre block till \emph{case} och mer indenterat.
 
 Ett annat exempel är:
 \begin{lstlisting}
@@ -80,13 +80,61 @@ Den korrekta översättningen är:
 \begin{lstlisting}
 let { x = 5 } in x
 \end{lstlisting}
-För att kunna översätta detta korrekt kommer parsern ihåg den aktuella nästlingsnivån av "let"-uttryck och var deras repsektive "in"-uttryck befinner sig. 
+För att översätta detta korrekt kommer parsern ihåg den aktuella nästlingsnivån av "let"-uttryck och var deras repsektive "in"-uttryck befinner sig. 
 Den avslutande måsvingen sätts in där ett matchande "in"-uttryck påträffas.
+
+Ett exempel som inte översätts korrekt:
+\begin{lstlisting}
+[x | let x = 2]
+\end{lstlisting}
+Den korrekta översättningen är:
+\begin{lstlisting}
+[x | let { x = 2 }]
+\end{lstlisting}
+Men det blir:
+\begin{lstlisting}
+[ x | let { x = 2 ] }
+\end{lstlisting}
+Anledningen är att endast nästlingen av \emph{let} och \emph{in} sparas, men här finns inget \emph{in}.
+För att lösa felet måste man hålla reda på antalet paranteser, måsvingar, hakparanteser och komman efter ett let-uttryck och när en symbol som gör det ogiltligt 
+med en avslutande måsvinge påträffas sätts måsvingen in precis innan symbolen.
 
 \subsubsection{Steg 3}
 Det tredje steget är en parser för hela den kontextfria varianten av Haskell som den är definerad i standarden. 
 Samtidigt som koden tolkas byggs en AST upp. Parsern består av en liten parser för varje grammatisk regel som är definerad i Haskellstandarden 
 dessa parsers kombineras ihop för att bilda den slutgiltliga parsern. Det resulterar i ett träd av parsers, en parser för hela programmet som har flera mindre parsers under sig.
+
+Exempel:
+Definitionen i Haskellstandarden:
+\begin{lstlisting}
+rhs -> exp [where decls]
+     | gdrhs [where decls]
+gdrhs -> gd = exp [gdrhs]
+\end{lstlisting}
+Dess respektive parsers:
+\begin{lstlisting}
+var gdrhs = gdrhs_action(
+    repeat1(gdrhs_fix_list_action(sequence(ws(gd), 
+                expectws('='), ws(exp)))));´
+
+var rhs = choice(
+    decl_rhs_action(sequence(expect(ws('=')), ws(exp), 
+         optional(sequence(expect(ws("where")), ws(decls))))),
+     sequence(ws(gdrhs), optional(sequence(expect(ws("where")), 
+         ws(decls))))
+);
+\end{lstlisting}
+
+\subsubsection{JSParse}
+Vi använder en modifierad version av JSParse där vi har korrigerat två fel och lagt till fler parsers. Felen vi korrigerade var i butnot-parsern och i choice-parserns cachefunktion. 
+Choice-parsern cachade resultat från parsers som misslyckades och det cachade resultatet användes i senare parsers, 
+vi löste det med en stackbaserad cache där cachen för en parser som misslyckas raderas.
+
+Parsers som vi har lagt till:
+\begin{enumerate}
+    \item{\emph{repeatn}: en parser som upprepar en parser minst \emph{n} antal gånger}
+    \item{\emph{expectws}: en parser som tillåter blanksteg och inte retunerar någon ast}
+\end{enumerate}
 
 \subsection{Abstrakt syntaxträd} 
 %TODO
