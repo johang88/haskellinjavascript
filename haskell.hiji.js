@@ -1,3 +1,4 @@
+// TODO omm man bläddrar upp i historyn så ska det man skrivit in sparas
 var ENTER = '13';
 var UP    = '38';
 var DOWN  = '40';
@@ -65,6 +66,7 @@ commands[":help"] = "HELP";
         load_module('hs/Prelude.hs');
 
         modules[0] = "Prelude";
+
         this.html("<ol>" + makeInput(modules) + "</ol>");
 
         $("input:text:visible:first").focus();
