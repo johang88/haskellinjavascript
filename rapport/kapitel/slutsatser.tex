@@ -4,11 +4,16 @@
 
 
 \subsubsection{Parser}
-Hjälpsamma och förklarande felmeddalnden är en viktigt del av ett utvecklingsverktyg och det generars för tillfället inte av parsern. 
+Hjälpsamma och förklarande felmeddelanden är en viktigt del av ett utvecklingsverktyg och det generars för tillfället inte av parsern. 
 Om parsern stöter på ett fel rapporterar den endast att ett fel har inträffat och avslutar parsningsprocessen. 
 Att förbättra dessa felmeddelanden med exempelivs rad- och kolumnnummer skulle göra parsern mer användbar.
 
 För att implentera detta behöver man kombinera steg 1 och 2 i parsningen för att rad- och kolumn-nummer ska bevaras korrekt då borttagning av nästlade kommentarer kan påverka dessa.
+
+Konverteringen av icke kontextfri Haskellkod till kontextfri kan förbättras 
+för att klara av att expandera måsvingar i \empth{[x | let x = 5]}, 
+för att klara av detta behövs en parser som räknar antal måsvingar, paranteser, 
+komman och hakparanteser efter \emph{let} och avgöra när det är korrekt att sätta in avslutande måsvingar.
 
 \subsubsection{HIJi}
 HIJi är tänkt som ett webbaserat verktyg för nybörjare att komma igång med funktionell programmering. Ur det perspektivet når HIJi ännu inte upp till de krav som en nybörjare kan förvänta sig. Avsaknaden av interaktivitet är den i dagsläget största nackdelen. Här är de förbättringar som vi anser vara nödvändiga för att nybörjare ska kunna använda sig utav HIJi.
