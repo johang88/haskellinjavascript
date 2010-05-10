@@ -10,8 +10,8 @@ Haskellstandarden definerat upp en grammatik, ett antal regler som definerar hur
 För att parsa indatan använder vi ett bibliotek för att bygga parsers kallat JSParse \citep{jsparse}.
 JSParse ger os ett antal funktioner som vi använder för att definera grammatiken och konvetera den till vår interna struktur.
 
-Parsern består av tre mindre parsers, den första är en parser som hittar kommentarer och tar bort dessa. 
-Den andra identifierar haskellkod som inte är kontextfri och gör om den till kontextfri kod. Den tredje gör om den kontextfria koden till vår AST.
+Parsern består av tre parsers, den första är en parser som hittar kommentarer och tar bort dessa. 
+Den andra identifierar haskellkod som inte är kontextfri och gör om till kontextfri kod. Den tredje gör om den kontextfria koden till vår AST.
 
 \begin{figure}[H]
     \begin{center}
@@ -57,15 +57,15 @@ Function("f", Lambda("x",
 
 \subsubsection{Steg 1}
 Det första steget använder en parser som identifierar och tar bort kommentarer. 
-Haskell har två olika kommentarsstiler, enkelradiga som börjar med '--' och slutar vid första radbytet och 
-nästlade som kan gå över flera rader börjar med '{-' och slutar med '-}.
+Haskell har två olika kommentarsstiler, enkelradiga börjar med '--' och slutar vid första radbytet och 
+nästlade som kan gå över flera rader börjar med '{-' och slutar med '-}'.
 
 \subsubsection{Steg 2}
 Det andra steget delar upp koden i dess ord och symboler samtidigt som den dekoreras med indenteringsnivåer enligt en algoritm 
-som är specifierad i Haskellstandarden. Därefter användads en annan algoritm från samma standard för att sätta in måsvingar och semikolon på rätt ställen. 
-När de två algoritmerna är klara sätts koden ihop igen och skickas vidare till steg 3.
+som är specifierad i Haskellstandarden. Därefter användads en annan algoritm från standarden för att sätta in måsvingar och semikolon på rätt platser. 
+När de två algoritmerna är klara sätts koden ihop igen och skickas vidare till nästa steg.
 
-En av reglerna är att ett inre block inte får vara mindre indenterat än det omslutande blocket, exempelivs:
+En regel är att ett inre block inte får vara mindre indenterat än det omslutande blocket, exempelivs:
 \begin{lstlisting}
 case x of
     True -> ...
@@ -133,7 +133,7 @@ vi löste det med en stackbaserad cache där cachen för en parser som misslycka
 Parsers som vi har lagt till:
 \begin{enumerate}
     \item{\emph{repeatn}: en parser som upprepar en parser minst \emph{n} antal gånger}
-    \item{\emph{expectws}: en parser som tillåter blanksteg och inte retunerar någon ast}
+    \item{\emph{expectws}: en parser som tillåter blanksteg och inte retunerar någon ast, är en kombination av JSParse inbyggda parsers \emph{expect} och \empth{whitespace}}
 \end{enumerate}
 
 \subsection{Abstrakt syntaxträd} 
