@@ -899,6 +899,22 @@
         
         var idecls = epsilon_p;
         
+        var idecl_fun_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        };
+        
+        var idecl = idecl_fun_action(sequence(choice(ws(funlhs), ws(var_)), ws(rhs)));
+        
+        var idecls_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        };
+        
+        var idecls = idecls_action(list(ws(idecl), ws(';')));
+        
         var cdecl_gendecl_action = function(p) {
             return action(p, function(ast) {
                 return ast;
@@ -912,7 +928,7 @@
         };
         
         var cdecl = choice( cdecl_gendecl_action(gendecl),
-                            cdecl_fun_action(sequence(choice(ws(funlhs), ws(pat)), ws(rhs))));
+                            cdecl_fun_action(sequence(choice(ws(funlhs), ws(var_)), ws(rhs))));
         
         var cdecls_action = function(p) {
             return action(p, function(ast) {
@@ -920,7 +936,7 @@
             });
         };
         
-        var cdecls = cdecls_action(list(ws(decl), ws(';')));
+        var cdecls = cdecls_action(list(ws(cdecl), ws(';')));
         
         var fun_action = function(p) {
             return action(p, function(ast) {
