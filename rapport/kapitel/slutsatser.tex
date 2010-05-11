@@ -1,7 +1,11 @@
-\section{Slutsatser}
+\section{Diskussion och slutsatser}
+
+
+
 
 \subsection{Framtida förbättringar}
 
+Syftet med projektet, att skapa en fungerande Haskelltolk i javascript, har vi lyckats implementera om man tar hänsyn till de avgränsningar vi gjort angående Haskell 98 specifikationen. Dock om man ser till motivationen, att vår Haskelltolk ska kunna användas för att skapa en webbaserad interaktiv läroplattform, så finns det fortfarande mycket kvar att utveckla. Framförallt handlar det om att göra Haskelltolken och HIJi mer lättanvänd för nybörjare inom funktionell programmering. Här presenterar vi några av de framtida förbättringar som kan göras.
 
 \subsubsection{Parser}
 Hjälpsamma och förklarande felmeddelanden är en viktigt del av ett utvecklingsverktyg och genereras för tillfället inte av parsern. 
@@ -16,8 +20,7 @@ för att lösa det behöver parsern modifieras så att den räknar antalet måsv
 \emph{let} och avgör när det är korrekt att sätta in avlsutande måsvingar.
 
 \subsubsection{HIJi}
-HIJi är tänkt som ett webbaserat verktyg för nybörjare att komma igång med funktionell programmering. Ur det perspektivet når HIJi ännu inte upp till de krav som en nybörjare kan förvänta sig. Avsaknaden av interaktivitet är den i dagsläget största nackdelen. Här är de förbättringar som vi anser vara nödvändiga för att nybörjare ska kunna använda sig utav HIJi.
-
-Erbjuda en interaktiv tutorial där användaren får instruktioner vad som ska skrivas in i HIJi. Om använaren skriver in rätt uttryck fortsätter tutorialen till nästa nivå.
-
-Få ut typinformation ur funktioner genom att hålla musen över funktionsnamnet. 
+HIJi är tänkt som ett webbaserat verktyg för nybörjare att komma igång med funktionell programmering. Ur det perspektivet når HIJi ännu inte upp till de krav som en nybörjare kan förvänta sig. Avsaknaden av interaktivitet  är den i dagsläget största bristen.
+Det som framförallt behöver utvecklas är, för det första, erbjuda en interaktiv tutorial där användaren får instruktioner vad som ska skrivas in i HIJi. Om användaren skriver in rätt uttryck fortsätter tutorialen till nästa nivå.
+För det andra, visa typinformation från funktioner genom att hålla musen över funktionsnamnet. Detta tror vi skulle kunna underlätta förståelsen för Haskells typsystem om man kan se hur typerna förändras i olika delar av en funktion. 
+Och tillsist, kunna stega igenom ett program eller funktion för att kunna se vad som händer i varje evalutionssteg. 
