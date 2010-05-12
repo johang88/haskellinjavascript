@@ -281,7 +281,74 @@ En VariableBinding matchar alla uttryck och binder uttrycket till identifiern. E
 
 
 \subsection{Typcheckare} 
-%TODO
+Typcheckarens uppgift är att analysera AST:n, inferera typerna på dess olika
+beståndsdelar och avgöra om sättet på vilket de används och interagerar med
+andra beståndsdelar är konsekvent. Om så inte är fallet sägs programmet ha
+typfel.
+
+\subsubsection{Haskells typsystem}
+Jämfört med mer konventionella språk (C, C++, Java etc) skiljer sig Haskell
+och övriga statiskt typade funktionella språk på flera sätt. I de senare
+medges i många fall att programmeraren själv inte behöver ge explicita
+typdeklarationer för variabler och funktioner. Istället arbetar typcheckaren
+med en process där kriterier samlas in för varje enskild beståndsdel och
+sedan utifrån detta försöker finna en så allmän typ som möjligt eller om
+detta inte är möjligt; meddela programmeraren om typfel. Denna process
+kallas typinferens.
+
+Typinferens möjliggör även för polymorfiska typer vilket innebär att
+typcheckaren alltid försöker hålla en typ så allmän som möjligt. Om
+exempelvis en funktion inte är beroende av funktionalitet associerad med en
+specifik typ hos något av sina argument kan data av alla typer användas som
+argumentet.
+
+Utöver polymorfiska typer stödjer Haskell typklasser som gör överlagring av
+funktioner möjligt. Typklasser är väldigt centralt i Haskell och ändrar
+typcheckarens arbetssätt markant jämfört med liknande språk.
+
+\subsubsection{Typvariabler och subtitutioner}
+För att kunna arbeta på en hög abstraktionsnivå har typcheckaren sin egen
+interna representation av typer.
+
+\begin{lstlisting}
+data Type = TVar Id Kind
+          | TAp Type Type
+          | TCon Id Kind
+          | TGen Int     
+\end{lstlisting}
+
+TVar representerar typvariabler, TAp representerar applicering av typer och
+TCon representerar typkonstruktorer för konkreta typer. TGen representerar
+generiska typer och kommer bara användas i samband med kvantifiering av
+typer internt i 
+
+För att veta om en typvariabel ska appliceras med andra typer eller om det
+är en enkel typ (nullary type) används kinds där * representerar en enkel
+typ och exempelvis * -> * och * -> ( * -> * ) representerar komplexare
+typer som beror är beroende av andra typer. Ett exempel på en enkel typ är
+Integer (*) medan typkonstruktorn för listor [] har kind * -> * .
+
+\begin{lstlisting}
+data Kind = Star
+          | Kfun Star Star
+\end{lstlisting}
+
+Att konstruera en typ med den här notationen är enkelt. Typen [a] ->
+Integer som är typen för standardfunktionen length i Haskell beskrivs med
+\begin{lstlisting}
+(TAp
+  (TAp
+    (TCon "(->)" (Kfun Star (Kfun Star Star)))
+    (TAp
+      (TCon "[]" (Kfun Star Star))
+      (TVar "a" Star)))
+  (TCon "Integer" Star))
+\end{lstlisting}
+
+Substitutioner är funktioner som mappar typvariabler till andra typer och
+används av typcheckaren för att hålla typer uppdaterade efterhand som
+typcheckaren får med information. Ofta vill man finna en substitution som gör
+två typer ekvivalenta. Detta görs genom något som kallas unifiering.
 
 \subsection{HIJi}
 
