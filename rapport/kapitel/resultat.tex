@@ -9,7 +9,7 @@ som är lättare att hantera internt. Denna datastruktur kallas AST (Abstract Sy
 Haskellstandarden definerat upp en grammatik, ett antal regler som definerar hur korrekt Haskellkod ser ut och hur den ska tolkas.
 
 För att parsa indatan använder vi ett bibliotek för att bygga parsers kallat JSParse \citep{jsparse}.
-JSParse ger os ett antal funktioner som vi använder för att definera grammatiken och konvetera den till vår interna struktur.
+JSParse ger oss ett antal funktioner som vi använder för att definera grammatiken och konvetera den till vår interna struktur.
 
 Som figur \ref{fig:parser_steg} visar, så består parsern av tre mindre parsers, den första är en parser som hittar kommentarer och tar bort dessa. 
 Den andra identifierar Haskellkod som inte är kontextfri och gör om till kontextfri kod. Den tredje gör om den kontextfria koden till vår AST.
@@ -258,8 +258,8 @@ Vi desugar under runtime, för att få bra möjligheter till interaktion.
 
 
 \subsection{HIJi}
-HIJi, Haskell in Javascript Interactive, är den del av projektet som användaren tydligast kommer märka av eftersom det är fasaden in i programmet.
-HIJi funktion är att ge användaren ett GHCi-liknande användargränssnitt direkt i webläsaren. 
+
+HIJi är ett program som ska ge  användaren ett GHCi-liknande användargränssnitt till Haskelltolken direkt i webläsaren. 
 HIJi tar indata genom att funktioner skrivs in i HIJi som sedan tolkas av parsern och i sin tur bygger upp det abstrakta syntaxträdet. Därefter evalueras uttrycket utav interpretern.
 
 Det går även att ladda moduler till HIJi. Det gör man genom att skriva :l \emph{namn-på-modul}. Man får då tillgång till alla de funktioner som är skrivna i den modulen. Modulerna måste vara placerade på servern som HIJi laddades ifrån. Modulerna kan ej laddas direkt från användarens hårddisk på grund utav att javascript av säkerhetsskäl ej har tillgång till användarens filsystem. HIJi har även en förladdad modul, Prelude, som innehåller en delmängd av de funktioner som finns i GHCIs motsvarighet. 
