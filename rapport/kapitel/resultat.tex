@@ -149,10 +149,10 @@ En Thunk är en avstannad beräkning, en continuation. En Thunk består av en En
 data Thunk = Closure Env Expression
 \end{lstlisting}
 
-Haskell måste använda sig av non-strict evaluation vilket innebär att en uträkning inte får köras ifall den inte behövs. När en uträkning körs så innebär det att den resulterar i flertalet Thunks för de delar av beräkningen som ännu inte behövs. När värdet av en Thunk behövs så kommer den att tvingas till en WHNF eller en ny Thunk. Anledningen till detta är att vi på så sätt minskar användandet av rekursion vilket minskar risken att vi får ett runtime error.
+Haskell måste använda sig av non-strict evaluation vilket innebär att en uträkning inte får köras ifall den inte behövs. När en uträkning körs så innebär det att den resulterar i flertalet Thunks för de delar av beräkningen som ännu inte behövs. När värdet av en Thunk behövs kommer den att tvingas till en WHNF eller en ny Thunk. Anledningen till detta är att vi på så sätt minskar användandet av rekursion vilket minskar risken att vi får ett runtime error.
 
 \subsection{Weak Head Normal Form}
-En WHNF är ett partiellt evaluerat uttryck. Uttrycket har blivit evaluerat så långt att vi är säkra på att det retunerar något typ av värde, alltså något som inte är undefined. Ofta så innehåller en WHNF referenser till ännu icke evaluerade uttryck, om de inte gör det så sägs uttrycket vara i Normal Form.
+En WHNF är ett partiellt evaluerat uttryck. Uttrycket har blivit evaluerat så långt att vi är säkra på att det retunerar något typ av värde, alltså något som inte är undefined. Ofta innehåller en WHNF referenser till ännu icke evaluerade uttryck, om de inte gör det sägs uttrycket vara i Normal Form.
 
 \begin{lstlisting}
 data WeakHead = Data Identifier [HeapPtr]
@@ -161,7 +161,7 @@ data WeakHead = Data Identifier [HeapPtr]
               | Primitive
 \end{lstlisting}
 
-En Data är resultatet av att applicera en algebraisk datakonstruktor på dess argument. Argumenten ges som en lista av HeapPtrs, det vill säga en lista av evaluerade eller icke evaluerade uttryck. Exemplevis så resulterar Just 1 i en Data med Identifiern Just och en HeapPtr till det icke evaluerade uttrycket 1.
+En Data är resultatet av att applicera en algebraisk datakonstruktor på dess argument. Argumenten ges som en lista av HeapPtrs, det vill säga en lista av evaluerade eller icke evaluerade uttryck. Exemplevis resulterar Just 1 i en Data med Identifiern Just och en HeapPtr till det icke evaluerade uttrycket 1.
 
 En LambdaAbstraction är körningsrepresentationen av en lambdafunktion, en environment är bunden till lambdafunktionen.
 
