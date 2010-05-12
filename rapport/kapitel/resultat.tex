@@ -11,18 +11,18 @@ Haskellstandarden definerat upp en grammatik, ett antal regler som definerar hur
 För att parsa indatan använder vi ett bibliotek för att bygga parsers kallat JSParse \citep{jsparse}.
 JSParse ger os ett antal funktioner som vi använder för att definera grammatiken och konvetera den till vår interna struktur.
 
-Parsern består av tre parsers, den första är en parser som hittar kommentarer och tar bort dessa. 
-Den andra identifierar haskellkod som inte är kontextfri och gör om till kontextfri kod. Den tredje gör om den kontextfria koden till vår AST.
+Som figur \ref{fig:parser_steg} visar, så består parsern av tre mindre parsers, den första är en parser som hittar kommentarer och tar bort dessa. 
+Den andra identifierar Haskellkod som inte är kontextfri och gör om till kontextfri kod. Den tredje gör om den kontextfria koden till vår AST.
 
 \begin{figure}[H]
     \begin{center}
         \includegraphics[width=.5\textwidth]{parser_1.png}
         \caption{Parserns olika steg}
+        \label{fig:parser_steg} % Labels must come after caption!
     \end{center}
 \end{figure}
 
 Det var naturligt att dela upp parsern i tre olika steg. De tre olika stegen är skilda från varandra och vi kunde utveckla och testa dem individuellt.
-
 Nedan följer ett exempel på parserns arbetssätt och de tre olika stegen:
 \begin{lstlisting}
 -- Kommentar
@@ -46,7 +46,7 @@ f x = case x of {
 }
 \end{lstlisting}
 
-Efter det tredje steget har vi en AST.
+Efter det tredje steget är en AST genererad.
 \begin{lstlisting}[language=javascript]
 Function("f", Lambda("x", 
     Case(ast.VariableLookup("x"), [
@@ -271,10 +271,11 @@ Den indata som användaren skriver till HIJi sparas i ett objekt för att hanter
     \begin{center}
         \includegraphics[width=1\textwidth]{hiji_screen3.png}
         \caption{HIJi användargränssnitt}
+        \label{fig:hiji} % Labels must come after caption!
     \end{center}
 \end{figure}
 
-Figur 2 visar hur HIJi ser ut för användaren. De första raderna visar, precis som i GHCi, vilka moduler som för närvarande är laddade. I det här exemplet är den förladdade modulen Prelude laddad. Därefter följer en kommandotolk där användaren fritt kan skriva in egna funktioner. I figuren är en enkel lambda-funktion inskriven.
+Figur \ref{fig:hiji} visar hur HIJi ser ut för användaren. De första raderna visar, precis som i GHCi, vilka moduler som för närvarande är laddade. I det här exemplet är den förladdade modulen Prelude laddad. Därefter följer en kommandotolk där användaren fritt kan skriva in egna funktioner. I figuren är en enkel lambda-funktion inskriven.
 
 %Fördelen med HIJi framför GHCi är att användaren ej behöver ladda ner den stora GHC-kompilatorn på sin personliga dator för att testa enkla Haskelluttryck direkt i webbläsaren. Den åtgångna tiden från  att man vill testa Haskell till dess att man faktiskt sitter med det framför sig kortas. 
 %Nackdelar gentemot GHCI är att HIJi är en nedbandat version utav GHCi. HIJi kan bara evaluera enklare uttryck. Det finns i dagsläget inga möjligheter att ladda upp hela Haskell-filer för att köra dem. Att som i GHCi på ett enkelt sätt kolla upp  typen av en funktion stöds ej.

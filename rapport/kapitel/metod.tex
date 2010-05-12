@@ -5,12 +5,13 @@ Nedan följer en beskrivning av de arbetsmetoder vi använt oss utav och de mjuk
 \subsection{Arbetsmetodik}
 
 % modulbaserat arbete..
-Under planeringsstadiet upptäcktes tidigt att projektet kunde med delas upp i tre separata moduler; parser, interpretator och typcheckare. Dessa tre moduler intergrerar enbart med varandra genom det abstrakta syntaxträdet. Detta medför att det är väldigt lätt att utveckla de olika modulerna helt frånskilt från varandra. Figur 1 visar hur denna interaktion mellan de olika modulerna är tänkt att gå till. Figur 1 visar även att webbläsaren kommunicerar genom ett Javascript API och det abstrakta syntaxträdet och inte direkt med de olika komponenterna. 
+Det upptäcktes tidigt att arbetet kunde delas upp i tre separata moduler; parser, interpretator och typcheckare. Dessa tre moduler intergrerar enbart med varandra genom det abstrakta syntaxträdet. Detta medför att det är väldigt lätt att utveckla de olika modulerna helt frånskilt från varandra. Figur \ref{fig:parser_steg} visar hur denna interaktion mellan de olika modulerna är tänkt att gå till. Figur \ref{fig:parser_steg} visar även att webbläsaren kommunicerar genom ett Javascript API och det abstrakta syntaxträdet och inte direkt med de olika komponenterna. 
 
 \begin{figure}[h]
     \begin{center}
         \includegraphics[width=1.0\textwidth]{image1.png}
         \caption{Överblick över tolkens struktur och interaktion}
+        \label{fig:tolkens_struktur} % Labels must come after caption!
     \end{center}
 \end{figure}
 
