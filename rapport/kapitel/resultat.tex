@@ -173,11 +173,38 @@ En Primitiv är ett Javascript-värde, till exempel en integer eller en double.
 \subsubsection{HeapPtr}
 De flesta implementationer av Haskell använder sig av Lazy Evaluation, vilket innebär att en Thunk kommer att tvingas maximalt en gång. I vår implementation används HeapPtr som en wrapper runt en Thunk, när en HeapPtr dereferenceras kommer Thunken att tvingas till en WHNF och HeapPtr uppdateras att peka till denna. Eftersom att tvingandet av en Thunk kan resultera i en ny Thunk så tvingas thunken en loop tills vi får en WHNF.
 
+\begin{lstlisting}
+this.dereference = function() {
+    if (this.weakHead == undefined) {
+        // We'll drive the execution here instead of recursing in the force method
+        var continuation = this.thunk;
+        while (continuation instanceof interpreter.Thunk) {
+            continuation = continuation.force();
+        }
+        this.weakHead = continuation;
+        this.thunk = null;
+     }
+     return this.weakHead;
+};
+\end{lstlisting}
+
 \subsubsection{Env}
-TODO
+Environmenten är en stack av javascript hashes, hasherna består av en bindning mellan en Identifier och antingen en HeapPtr eller ett (Pattern, HeapPtr) par.  Den andra bindingstypen är resultatet av en Variable deklaration där man måste utföra en pattern match för att avgöra vilken HeapPtr som hör till vilken Identifier. När man läser ut en identifier som är bunden enligt den andra typen av binding så kommer en pattern match att utföras och alla identifiers i patternet kommer att bindas om som den första type alternativt en pattern match fail inträffar och en exception genereras.
+
+\begin{lstlisting}
+Env {
+    a => ([a, b, 2], [1,2,3])
+    b => ([a, b, 2], [1,2,3])
+}
+Env.find(a)
+Env {
+    a => 1
+    b => 2
+}
+\end{lstlisting}
 
 \subsection{Abstrakt syntaxträd} 
-AST:en representeras av javascript-object men men dess strukturella uppbyggnad ges här av Haskell datadefinitioner.
+AST:en representeras av javascript-object men dess strukturella uppbyggnad ges här av Haskell datadefinitioner.
 
 \subsection{Declaration}
 Den första datatypen av intresse är Declaration. En declaration representerar en namnbindning antigen i en moduls globala definitionsområde eller i en let eller where bindning.
@@ -197,19 +224,7 @@ En Data deklaration definierar en algebraisk datatyp med konstruktorerna definie
 data Constructor = Constructor Identifier Int
 Värt att notera här är avsaknaden av typvariabler och -argument, detta kommer att åtgärdas när typchekaren är integrerad.
 
-Under interprenteringen av en dekleration binds de namn (Identifiers) sin defubueras av deklaratuibeb till envioromenten. En bindning kan vara av två typer, antingen Identifier => HeapPtr eller Identifier => (Pattern, HeapPtr). Den andra bindingstypen är resultatet av en Variable deklaration där man måste utföra en pattern match för att avgöra vilken HeapPtr som hör till vilken Identifier. När man läser ut en identifier som är bunden enligt den andra typen av binding så kommer en pattern match att utföras och alla identifiers i patternet kommer att bindas om som den första type alternativt en pattern match fail inträffar och en exception genereras.
-
-\begin{lstlisting}
-Env {
-    a => ([a, b, 2], [1,2,3])
-    b => ([a, b, 2], [1,2,3])
-}
-Env.find(a)
-Env {
-    a => 1
-    b => 2
-}
-\end{lstlisting}
+Under interprenteringen av en dekleration binds de namn (Identifiers) som definieras av deklarationen till envioromenten. Vilken typ av binding som används beror på typen av deklaration, en Variable deklaration ger en Identifier => (Pattern, Expression) bindning.
 
 \subsection{Expression}
 En Expression är ett haskelluttryck.
@@ -227,38 +242,41 @@ data Expression
     | Primitive JavascriptFunction
 \end{lstlisting}
 
-När en Expression evalueras under en environment är resultatet antingen en Thunk (continuation, closure) eller en WHNF. 
+När en Expression evalueras under en environment är resultatet antingen en Thunk (continuation, closure) eller en WHNF. Evaluering av en Constant resulterar antigen i en Primitiv en en avsockring av konstanten. I interprentatorn så är konstanta nummer (1) egentligen en algegraisk datatype (I\# 1\#) och denna avsockring sker fört under körning. När en Lambda evalueras returneras en LambdaAbstraction med evaluerings environmenten bunden. En Let evalueras genom att binda dess Declarations till environmenten och returnera en Closure över den nya environmenten och Let Expressionen. En Case evalueras genom att den första Expressionen i tuple listan vars Pattern matchar evalueras under den environmenten som resulterar från pattern matchen.
+\begin{lstlisting}
+this.eval = function(env) {
+    var expr = new interpreter.HeapPtr(new interpreter.Closure(env, this.expr));
+    for (var i in this.cases) {
+        var newEnv = env.derive();
+        if (this.cases[i][0].match(newEnv, expr)) {
+            return this.cases[i][1].eval(newEnv);
+        }
+    }
+    throw new Error("No matching clause");
+};
+\end{lstlisting}
+Att evaluera en VariableLookup under en environment är det samma som att leta upp den Identifiern i environmenten.
+
+Do, List och ArithmeticSequence är inte evaluerade direkt utan de är avsockrade och sedan evalueras det avsockrade uttrycket. Avsockringsreglerna ges i Haskell 98 standarden \citep{haskell98chap3}.
+
+En Primitive är en wrapper runt en javascript funktion. Att evaluera en primitive är det samma som att evaluera funktionen med environmenten som argument.
+
+\subsection{Pattern}
+Vi har implementerat fem stycken olika pattern matches från Haskell.
+\begin{lstlisting}
+Pattern = Constructor Identifier [Pattern]
+    | VariableBinding Identifier
+    | Combined Identifier Pattern
+    | ConstantPattern Value
+    | Wildcard
+\end{lstlisting}
+Under en pattern match händer två saker. Dels så kontrolleras att uttrycket som matchas verkligen stämmer överens med patternet, dels så binds de variabler som definieras i patternet till environmenten. 
+
+En VariableBinding matchar alla uttryck och binder uttrycket till identifiern. En Constructor matchar de uttryck vars WHNF är en Data med samma identifier (samt samma typ, detta enforcas dock av typcheckaren) och alla sub-patterns matchar Data argumenten. Combined är en sammanslagning av en VariableBinding och en annan Pattern, i källkod så har de formen \emph{v@p}. Combined matchar de uttryck som matchar dess Pattern och binder ett matchat uttryck till Identifiern. En ConstantPattern matchar de uttryck som är exakt lika med värdet. Till sist så matchar en Wildcard alla uttryck.
 
 
 \subsection{Typcheckare} 
 %TODO
-
-\subsection{Interpretator}
-
-Interpretatorn är...
-
-Non strict, att evaluera ett uttryck resulterar i en thunk. En thunk kan tvingas till ett Weak Head Normal Form (WHNF) [referens] under flera olika omständigheter.
-~ Pattern Matchning
-~ funktionsapplikation
-~ Argument till primitiv funktion
-
-~ dereferencing a pointer returns a whnf.
-
-~ Env är en samling HeapPtr.
-
-
-~ konvetionellt desugar efter typchecking för att få bra felmedelanden vid typfel
-Vi desugar under runtime, för att få bra möjligheter till interaktion.
-
-~ Desugaring do
-
-~ Desugaring list comprehension
-
-~ Desugaring arithmetic sequence
-
-~ Regler för evaluering (retunerar en WHNF eller closure)
-
-
 
 \subsection{HIJi}
 HIJi, Haskell in Javascript Interactive, är den del av projektet som användaren tydligast kommer märka av eftersom det är fasaden in i programmet.
