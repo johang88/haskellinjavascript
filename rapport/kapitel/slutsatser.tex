@@ -10,8 +10,9 @@ Syftet med projektet, att skapa en fungerande Haskelltolk i javascript, har vi l
 I parsern har vi identifierat två förbättringsmöjligheter. För det första, bättre felmeddelanden
 Hjälpsamma och förklarande felmeddelanden är en viktigt del av ett utvecklingsverktyg och det generars för tillfället inte av parsern. 
 Om parsern stöter på ett fel rapporterar den endast att ett fel har inträffat och avslutar parsningsprocessen. 
-Att förbättra dessa felmeddelanden med exempelivs rad- och kolumnnummer skulle göra parsern mer användbar.
+Att förbättra dessa felmeddelanden med exempelivs rad- och kolumnnummer och specifik information om vad för fel som har inträffat skulle göra parsern mer användbar.
 För att implentera detta behöver man kombinera steg 1 och 2 i parsningen för att rad- och kolumn-nummer ska bevaras korrekt då borttagning av nästlade kommentarer kan påverka dessa.
+JSParse behöver modifieras så att det rapporterar var ett fel uppstod och i vilken parser.
 
 För det andra, konverteringen av icke kontextfri Haskellkod till kontextfri kan förbättras 
 för att klara av att expandera måsvingar i \empth{[x | let x = 5]}. 

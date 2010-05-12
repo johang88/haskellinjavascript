@@ -4,8 +4,7 @@ todo
 \end{lstlisting}
 
 \subsection{Parser} 
-%TODO
-Parsern uppgift är att ta användarens indata och konvertera den till en datastruktur 
+Parserns uppgift är att ta användarens indata och konvertera den till en datastruktur 
 som är lättare att hantera internt. Denna datastruktur kallas AST (Abstract Syntax Tree). 
 Haskellstandarden definerat upp en grammatik, ett antal regler som definerar hur korrekt Haskellkod ser ut och hur den ska tolkas.
 
@@ -102,7 +101,7 @@ För att lösa felet måste man hålla reda på antalet paranteser, måsvingar, 
 med en avslutande måsvinge påträffas sätts måsvingen in precis innan symbolen.
 
 \subsubsection{Steg 3}
-Det tredje steget är en parser för hela den kontextfria varianten av Haskell som den är definerad i standarden. 
+Det tredje steget är en parser för den kontextfria varianten av Haskell som den är definerad i standarden. 
 Samtidigt som koden tolkas byggs en AST upp. Parsern består av en liten parser för varje grammatisk regel som är definerad i Haskellstandarden 
 dessa parsers kombineras ihop för att bilda den slutgiltliga parsern. Det resulterar i ett träd av parsers, en parser för hela programmet som har flera mindre parsers under sig.
 
