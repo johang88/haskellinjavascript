@@ -126,7 +126,7 @@ var rhs = choice(
 );
 \end{lstlisting}
 
-Parsern använder Haskell 2010's metod för att lösa företrädesreglerna för operator då denna metoden är enklare än den som är definerad i Haskell 98. 
+Parsern använder Haskell 2010's \citep{haskell2010} metod för att lösa företrädesreglerna för operator då denna metoden är enklare än den som är definerad i Haskell 98. 
 Metoden fungerar så att den löser företrädesreglerna först efter ett uttryck har parsats till en lista med operatorer 
 och uttryck, när en operator påträffas i listan slås dess företrädesnivå upp i en tabell och ett träd med 
 operatorer och uttryck skapas. Sista används trädet för att generera en AST för uttrycken.
