@@ -58,8 +58,8 @@ Function("f", Lambda("x",
 
 \subsubsection{Steg 1}
 Det första steget använder en parser som identifierar och tar bort kommentarer. 
-Haskell har två olika kommentarsstiler, enkelradiga börjar med '--' och slutar vid första radbytet och 
-nästlade som kan gå över flera rader börjar med '{-' och slutar med '-}'.
+Haskell har två olika kommentarsstiler, enkelradiga börjar med \emph{--} och slutar vid första radbytet och 
+nästlade som kan gå över flera rader börjar med \emph{\{-} och slutar med \emph{-\}}.
 
 \subsubsection{Steg 2}
 Det andra steget delar upp koden i dess ord och symboler samtidigt som den dekoreras med indenteringsnivåer enligt en algoritm 
