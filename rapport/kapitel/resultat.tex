@@ -1,8 +1,6 @@
 \section{Resultat}
 todo
 
-\end{lstlisting}
-
 \subsection{Parser} 
 Parserns uppgift är att ta användarens indata och konvertera den till en datastruktur 
 som är lättare att hantera internt. Denna datastruktur kallas AST (Abstract Syntax Tree). 
@@ -116,7 +114,7 @@ Dess respektive parsers:
 \begin{lstlisting}[language=javascript]
 var gdrhs = gdrhs_action(
     repeat1(gdrhs_fix_list_action(sequence(ws(gd), 
-                expectws('='), ws(exp)))));´
+                expectws('='), ws(exp)))));
 
 var rhs = choice(
     decl_rhs_action(sequence(expect(ws('=')), ws(exp), 
@@ -139,7 +137,7 @@ vi löste det med en stackbaserad cache där cachen för en parser som misslycka
 Parsers som vi har lagt till:
 \begin{enumerate}
     \item{\emph{repeatn}: en parser som upprepar en parser minst \emph{n} antal gånger}
-    \item{\emph{expectws}: en parser som tillåter blanksteg och inte retunerar någon ast, är en kombination av JSParse inbyggda parsers \emph{expect} och \empth{whitespace}}
+    \item{\emph{expectws}: en parser som tillåter blanksteg och inte retunerar någon ast, är en kombination av JSParse inbyggda parsers \emph{expect} och \emph{whitespace}}
 \end{enumerate}
 
 
