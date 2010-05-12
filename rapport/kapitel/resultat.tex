@@ -108,9 +108,9 @@ dessa parsers kombineras ihop för att bilda den slutgiltliga parsern. Det resul
 Exempel:
 Definitionen i Haskellstandarden:
 \begin{lstlisting}
+gdrhs -> gd = exp [gdrhs]
 rhs -> exp [where decls]
      | gdrhs [where decls]
-gdrhs -> gd = exp [gdrhs]
 \end{lstlisting}
 Dess respektive parsers:
 \begin{lstlisting}[language=javascript]
