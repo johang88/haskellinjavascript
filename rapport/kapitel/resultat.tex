@@ -155,10 +155,11 @@ Haskell måste använda sig av non-strict evaluation vilket innebär att en utr�
 En WHNF är ett partiellt evaluerat uttryck. Uttrycket har blivit evaluerat så långt att vi är säkra på att det retunerar något typ av värde, alltså något som inte är undefined. Ofta så innehåller en WHNF referenser till ännu icke evaluerade uttryck, om de inte gör det så sägs uttrycket vara i Normal Form.
 
 \begin{lstlisting}
-data WeakHead = Data Identifier [HeapPtr]
-              | LambdaAbstraction Env Pattern Expression
-              | DelayedApplication Env Int [Declaration] [HeapPtr]
-              | Primitive
+data WeakHead 
+    = Data Identifier [HeapPtr]
+    | LambdaAbstraction Env Pattern Expression
+    | DelayedApplication Env Int [Declaration] [HeapPtr]
+    | Primitive
 \end{lstlisting}
 
 En Data är resultatet av att applicera en algebraisk datakonstruktor på dess argument. Argumenten ges som en lista av HeapPtrs, det vill säga en lista av evaluerade eller icke evaluerade uttryck. Exemplevis så resulterar Just 1 i en Data med Identifiern Just och en HeapPtr till det icke evaluerade uttrycket 1.
@@ -182,14 +183,15 @@ AST:en representeras av javascript-object men men dess strukturella uppbyggnad g
 Den första datatypen av intresse är Declaration. En declaration representerar en namnbindning antigen i en moduls globala definitionsområde eller i en let eller where bindning.
 
 \begin{lstlisting}
-data Declaration = Variable pattern Expression
-                 | Data Identifier [Constructor]
-                 | Function Identifier [Pattern] (Either [(Guard, Expression)] Expression)
+data Declaration 
+    = Variable pattern Expression
+    | Data Identifier [Constructor]
+    | Function Identifier [Pattern] (Either [(Guard, Expression)] Expression)
 \end{lstlisting}
 
 Variable är en bindning av typen p = e där p är en Pattern och e en Expression. En Variable kan därför binda flera olika symboler på en gång. Till exempel [1:a:b:[]] = [1,2,3].
 
-Function är en representation av haskell sockrade funktionsdefinitioner. Det är möjligt att avsockra dessa till en Variable binding med hjälp utav Lambda och Case [TODO referens] neb vu gar vakt att ubflra eb soecuekk representation av funktionsdefinitioner. Till skillnad från traditionella kompilatorer så avsockras Function aldrig utan håller samma form även under interpreteringen. Tanken bakom detta är att det skall vara lättare att se sammanhanget mellan datan under körning och källkoden vilket gör det lättare att knyta samman den statiska källkoden med den dynamiska körningsdatan.
+Function är en representation av haskell sockrade funktionsdefinitioner. Det är möjligt att avsockra dessa till en Variable binding med hjälp av Lambda och Case [TODO referens] men vi har valt att införa en speciell representation av funktionsdefinitioner. Till skillnad från traditionella kompilatorer så avsockras Function aldrig utan håller samma form även under interpreteringen. Tanken bakom detta är att det skall vara lättare att se sammanhanget mellan datan under körning och källkoden vilket gör det lättare att knyta samman den statiska källkoden med den dynamiska körningsdatan.
 
 En Data deklaration definierar en algebraisk datatyp med konstruktorerna definierade som nedan
 data Constructor = Constructor Identifier Int
@@ -197,8 +199,7 @@ Värt att notera här är avsaknaden av typvariabler och -argument, detta kommer
 
 Under interprenteringen av en dekleration binds de namn (Identifiers) sin defubueras av deklaratuibeb till envioromenten. En bindning kan vara av två typer, antingen Identifier => HeapPtr eller Identifier => (Pattern, HeapPtr). Den andra bindingstypen är resultatet av en Variable deklaration där man måste utföra en pattern match för att avgöra vilken HeapPtr som hör till vilken Identifier. När man läser ut en identifier som är bunden enligt den andra typen av binding så kommer en pattern match att utföras och alla identifiers i patternet kommer att bindas om som den första type alternativt en pattern match fail inträffar och en exception genereras.
 
-
-
+\begin{lstlisting}
 Env {
     a => ([a, b, 2], [1,2,3])
     b => ([a, b, 2], [1,2,3])
@@ -208,20 +209,22 @@ Env {
     a => 1
     b => 2
 }
+\end{lstlisting}
 
 \subsection{Expression}
 En Expression är ett haskelluttryck.
 
 \begin{lstlisting}
-data Expression = Constant Value
-                | Lambda Pattern Expression
-                | Let [Declaration] Expression
-                | Case Expression [(Pattern, Expression)]
-                | VariableLookup Identifier
-                | Do [DoNotation]
-                | List [Expression]
-                | ArithmeticSequence Epxression (Maybe Expression) (Maybe Expression)
-                | Primitive JavascriptFunction
+data Expression 
+    = Constant Value
+    | Lambda Pattern Expression
+    | Let [Declaration] Expression
+    | Case Expression [(Pattern, Expression)]
+    | VariableLookup Identifier
+    | Do [DoNotation]
+    | List [Expression]
+    | ArithmeticSequence Epxression (Maybe Expression) (Maybe Expression)
+    | Primitive JavascriptFunction
 \end{lstlisting}
 
 När en Expression evalueras under en environment är resultatet antingen en Thunk (continuation, closure) eller en WHNF. 
