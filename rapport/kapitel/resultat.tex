@@ -136,8 +136,95 @@ Parsers som vi har lagt till:
     \item{\emph{expectws}: en parser som tillåter blanksteg och inte retunerar någon ast, är en kombination av JSParse inbyggda parsers \emph{expect} och \empth{whitespace}}
 \end{enumerate}
 
+
+
+\subsection{Interpretator}
+Interprentatorns uppgift är att tolka det abstrakta syntaxträden. Under interprenteringen används flera datastrukturer vars uppgift och struktur anges här.
+
+\subsubsection{Thunk}
+En Thunk är en avstannad beräkning, en continuation. En Thunk består av en Env och en Expression.
+
+\begin{lstlisting}
+data Thunk = Closure Env Expression
+\end{lstlisting}
+
+Haskell måste använda sig av non-strict evaluation vilket innebär att en uträkning inte får köras ifall den inte behövs. När en uträkning körs så innebär det att den resulterar i flertalet Thunks för de delar av beräkningen som ännu inte behövs. När värdet av en Thunk behövs så kommer den att tvingas till en WHNF eller en ny Thunk. Anledningen till detta är att vi på så sätt minskar användandet av rekursion vilket minskar risken att vi får ett runtime error.
+
+\subsection{Weak Head Normal Form}
+En WHNF är ett partiellt evaluerat uttryck. Uttrycket har blivit evaluerat så långt att vi är säkra på att det retunerar något typ av värde, alltså något som inte är undefined. Ofta så innehåller en WHNF referenser till ännu icke evaluerade uttryck, om de inte gör det så sägs uttrycket vara i Normal Form.
+
+\begin{lstlisting}
+data WeakHead = Data Identifier [HeapPtr]
+              | LambdaAbstraction Env Pattern Expression
+              | DelayedApplication Env Int [Declaration] [HeapPtr]
+              | Primitive
+\end{lstlisting}
+
+En Data är resultatet av att applicera en algebraisk datakonstruktor på dess argument. Argumenten ges som en lista av HeapPtrs, det vill säga en lista av evaluerade eller icke evaluerade uttryck. Exemplevis så resulterar Just 1 i en Data med Identifiern Just och en HeapPtr till det icke evaluerade uttrycket 1.
+
+En LambdaAbstraction är körningsrepresentationen av en lambdafunktion, en environment är bunden till lambdafunktionen.
+
+En DelayedApplication är ett specialfall av en LambdaAbstraction. Vi avsockrar inte Haskells funktionsdeklerationener vilket innebär att pattern matchning sker även vid funktionsapplication och inte bara i Case satser. Detta betyder att vi måste samla alla argument till en funktion innan vi kan avgöra vilken Expression som skall användas. En vidare beskrivning finns i kapitlet Declaration.
+
+En Primitiv är ett Javascript-värde, till exempel en integer eller en double.
+
+\subsubsection{HeapPtr}
+De flesta implementationer av Haskell använder sig av Lazy Evaluation, vilket innebär att en Thunk kommer att tvingas maximalt en gång. I vår implementation används HeapPtr som en wrapper runt en Thunk, när en HeapPtr dereferenceras kommer Thunken att tvingas till en WHNF och HeapPtr uppdateras att peka till denna. Eftersom att tvingandet av en Thunk kan resultera i en ny Thunk så tvingas thunken en loop tills vi får en WHNF.
+
+\subsubsection{Env}
+TODO
+
 \subsection{Abstrakt syntaxträd} 
-%TODO
+AST:en representeras av javascript-object men men dess strukturella uppbyggnad ges här av Haskell datadefinitioner.
+
+\subsection{Declaration}
+Den första datatypen av intresse är Declaration. En declaration representerar en namnbindning antigen i en moduls globala definitionsområde eller i en let eller where bindning.
+
+\begin{lstlisting}
+data Declaration = Variable pattern Expression
+                 | Data Identifier [Constructor]
+                 | Function Identifier [Pattern] (Either [(Guard, Expression)] Expression)
+\end{lstlisting}
+
+Variable är en bindning av typen p = e där p är en Pattern och e en Expression. En Variable kan därför binda flera olika symboler på en gång. Till exempel [1:a:b:[]] = [1,2,3].
+
+Function är en representation av haskell sockrade funktionsdefinitioner. Det är möjligt att avsockra dessa till en Variable binding med hjälp utav Lambda och Case [TODO referens] neb vu gar vakt att ubflra eb soecuekk representation av funktionsdefinitioner. Till skillnad från traditionella kompilatorer så avsockras Function aldrig utan håller samma form även under interpreteringen. Tanken bakom detta är att det skall vara lättare att se sammanhanget mellan datan under körning och källkoden vilket gör det lättare att knyta samman den statiska källkoden med den dynamiska körningsdatan.
+
+En Data deklaration definierar en algebraisk datatyp med konstruktorerna definierade som nedan
+data Constructor = Constructor Identifier Int
+Värt att notera här är avsaknaden av typvariabler och -argument, detta kommer att åtgärdas när typchekaren är integrerad.
+
+Under interprenteringen av en dekleration binds de namn (Identifiers) sin defubueras av deklaratuibeb till envioromenten. En bindning kan vara av två typer, antingen Identifier => HeapPtr eller Identifier => (Pattern, HeapPtr). Den andra bindingstypen är resultatet av en Variable deklaration där man måste utföra en pattern match för att avgöra vilken HeapPtr som hör till vilken Identifier. När man läser ut en identifier som är bunden enligt den andra typen av binding så kommer en pattern match att utföras och alla identifiers i patternet kommer att bindas om som den första type alternativt en pattern match fail inträffar och en exception genereras.
+
+
+
+Env {
+    a => ([a, b, 2], [1,2,3])
+    b => ([a, b, 2], [1,2,3])
+}
+Env.find(a)
+Env {
+    a => 1
+    b => 2
+}
+
+\subsection{Expression}
+En Expression är ett haskelluttryck.
+
+\begin{lstlisting}
+data Expression = Constant Value
+                | Lambda Pattern Expression
+                | Let [Declaration] Expression
+                | Case Expression [(Pattern, Expression)]
+                | VariableLookup Identifier
+                | Do [DoNotation]
+                | List [Expression]
+                | ArithmeticSequence Epxression (Maybe Expression) (Maybe Expression)
+                | Primitive JavascriptFunction
+\end{lstlisting}
+
+När en Expression evalueras under en environment är resultatet antingen en Thunk (continuation, closure) eller en WHNF. 
+
 
 \subsection{Typcheckare} 
 %TODO
