@@ -1,6 +1,7 @@
 \section{Resultat}
 todo
 
+\end{lstlisting}
 
 \subsection{Parser} 
 Parserns uppgift är att ta användarens indata och konvertera den till en datastruktur 
@@ -46,7 +47,7 @@ f x = case x of {
 \end{lstlisting}
 
 Efter det tredje steget har vi en AST.
-\begin{lstlisting}
+\begin{lstlisting}[language=javascript]
 Function("f", Lambda("x", 
     Case(ast.VariableLookup("x"), [
         [PatternConstructor("True"), PatterConstructor("False")],
@@ -112,7 +113,7 @@ rhs -> exp [where decls]
 gdrhs -> gd = exp [gdrhs]
 \end{lstlisting}
 Dess respektive parsers:
-\begin{lstlisting}
+\begin{lstlisting}[language=javascript]
 var gdrhs = gdrhs_action(
     repeat1(gdrhs_fix_list_action(sequence(ws(gd), 
                 expectws('='), ws(exp)))));´
