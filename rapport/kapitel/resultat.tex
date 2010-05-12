@@ -58,8 +58,8 @@ Function("f", Lambda("x",
 
 \subsubsection{Steg 1}
 Det första steget använder en parser som identifierar och tar bort kommentarer. 
-Haskell har två olika kommentarsstiler, enkelradiga börjar med '--' och slutar vid första radbytet och 
-nästlade som kan gå över flera rader börjar med '{-' och slutar med '-}'.
+Haskell har två olika kommentarsstiler, enkelradiga börjar med \emph{--} och slutar vid första radbytet och 
+nästlade som kan gå över flera rader börjar med \emph{\{-} och slutar med \emph{-\}}.
 
 \subsubsection{Steg 2}
 Det andra steget delar upp koden i dess ord och symboler samtidigt som den dekoreras med indenteringsnivåer enligt en algoritm 
@@ -108,9 +108,9 @@ dessa parsers kombineras ihop för att bilda den slutgiltliga parsern. Det resul
 Exempel:
 Definitionen i Haskellstandarden:
 \begin{lstlisting}
+gdrhs -> gd = exp [gdrhs]
 rhs -> exp [where decls]
      | gdrhs [where decls]
-gdrhs -> gd = exp [gdrhs]
 \end{lstlisting}
 Dess respektive parsers:
 \begin{lstlisting}[language=javascript]
@@ -125,6 +125,11 @@ var rhs = choice(
          ws(decls))))
 );
 \end{lstlisting}
+
+Parsern använder Haskell 2010's \citep{haskell2010} metod för att lösa företrädesreglerna för operator då denna metoden är enklare än den som är definerad i Haskell 98. 
+Metoden fungerar så att den löser företrädesreglerna först efter ett uttryck har parsats till en lista med operatorer 
+och uttryck, när en operator påträffas i listan slås dess företrädesnivå upp i en tabell och ett träd med 
+operatorer och uttryck skapas. Sista används trädet för att generera en AST för uttrycken.
 
 \subsubsection{JSParse}
 Vi använder en modifierad version av JSParse där vi har korrigerat två fel och lagt till fler parsers. Felen vi korrigerade var i butnot-parsern och i choice-parserns cachefunktion. 

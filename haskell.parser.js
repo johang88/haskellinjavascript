@@ -895,10 +895,6 @@
                                 epsilon_p
                             );
         
-        var idecl = undefined;
-        
-        var idecls = epsilon_p;
-        
         var idecl_fun_action = function(p) {
             return action(p, function(ast) {
                 return ast;
