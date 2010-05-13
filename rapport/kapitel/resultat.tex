@@ -210,7 +210,7 @@ Env {
 \subsection{Abstrakt syntaxträd} 
 AST:en representeras av javascript-object men dess strukturella uppbyggnad ges här av Haskell datadefinitioner.
 
-\subsection{Declaration}
+\subsubsection{Declaration}
 Den första datatypen av intresse är Declaration. En declaration representerar en namnbindning antigen i en moduls globala definitionsområde eller i en let eller where bindning.
 
 \begin{lstlisting}
@@ -231,7 +231,7 @@ Värt att notera här är avsaknaden av typvariabler och -argument, detta kommer
 
 Under interprenteringen av en dekleration binds de namn (Identifiers) som definieras av deklarationen till envioromenten. Vilken typ av binding som används beror på typen av deklaration, en Variable deklaration ger en Identifier => (Pattern, Expression) bindning.
 
-\subsection{Expression}
+\subsubsection{Expression}
 En Expression är ett haskelluttryck.
 
 \begin{lstlisting}
@@ -268,7 +268,7 @@ Do, List och ArithmeticSequence är inte evaluerade direkt utan de är avsockrad
 
 En Primitive är en wrapper runt en javascript funktion. Att evaluera en primitive är det samma som att evaluera funktionen med environmenten som argument.
 
-\subsection{Pattern}
+\subsubsection{Pattern}
 Vi har implementerat fem stycken olika pattern matches från Haskell.
 \begin{lstlisting}
 Pattern = Constructor Identifier [Pattern]
