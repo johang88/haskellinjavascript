@@ -179,7 +179,8 @@ De flesta implementationer av Haskell använder sig av Lazy Evaluation, vilket i
 \begin{lstlisting}
 this.dereference = function() {
     if (this.weakHead == undefined) {
-        // We'll drive the execution here instead of recursing in the force method
+        // We'll drive the execution here instead of recursing 
+        // in the force method
         var continuation = this.thunk;
         while (continuation instanceof interpreter.Thunk) {
             continuation = continuation.force();
@@ -216,7 +217,8 @@ Den första datatypen av intresse är Declaration. En declaration representerar 
 data Declaration 
     = Variable pattern Expression
     | Data Identifier [Constructor]
-    | Function Identifier [Pattern] (Either [(Guard, Expression)] Expression)
+    | Function Identifier [Pattern] 
+        (Either [(Guard, Expression)] Expression)
 \end{lstlisting}
 
 Variable är en bindning av typen p = e där p är en Pattern och e en Expression. En Variable kan därför binda flera olika symboler på en gång. Till exempel [1:a:b:[]] = [1,2,3].
@@ -241,14 +243,16 @@ data Expression
     | VariableLookup Identifier
     | Do [DoNotation]
     | List [Expression]
-    | ArithmeticSequence Epxression (Maybe Expression) (Maybe Expression)
+    | ArithmeticSequence Expression (Maybe Expression) 
+                                    (Maybe Expression)
     | Primitive JavascriptFunction
 \end{lstlisting}
 
 När en Expression evalueras under en environment är resultatet antingen en Thunk (continuation, closure) eller en WHNF. Evaluering av en Constant resulterar antigen i en Primitiv en en avsockring av konstanten. I interprentatorn så är konstanta nummer (1) egentligen en algegraisk datatype (I\# 1\#) och denna avsockring sker fört under körning. När en Lambda evalueras returneras en LambdaAbstraction med evaluerings environmenten bunden. En Let evalueras genom att binda dess Declarations till environmenten och returnera en Closure över den nya environmenten och Let Expressionen. En Case evalueras genom att den första Expressionen i tuple listan vars Pattern matchar evalueras under den environmenten som resulterar från pattern matchen.
 \begin{lstlisting}
 this.eval = function(env) {
-    var expr = new interpreter.HeapPtr(new interpreter.Closure(env, this.expr));
+    var expr = new interpreter.HeapPtr(
+                   new interpreter.Closure(env, this.expr));
     for (var i in this.cases) {
         var newEnv = env.derive();
         if (this.cases[i][0].match(newEnv, expr)) {
