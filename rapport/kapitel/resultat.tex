@@ -343,10 +343,23 @@ Integer som är typen för standardfunktionen length i Haskell beskrivs med
   (TCon "Integer" Star))
 \end{lstlisting}
 
-Substitutioner är funktioner som mappar typvariabler till andra typer och
-används av typcheckaren för att hålla typer uppdaterade efterhand som
-typcheckaren får med information. Ofta vill man finna en substitution som gör
-två typer ekvivalenta. Detta görs genom något som kallas unifiering.
+% Substitutioner är funktioner som mappar typvariabler till andra typer och
+% används av typcheckaren för att hålla typer uppdaterade efterhand som
+% typcheckaren får med information. Ofta vill man finna en substitution som gör
+% två typer ekvivalenta. Detta görs genom något som kallas unifiering.
+
+Substitutioner är mappningar typvariabel -> typ och används av typcheckaren
+för att hålla typer uppdaterade efterhand som den får ny
+information. Typcheckaren innehåller flera funktioner som opererar på
+substitutioner, bland annat komponering och sammanfogning av
+substitutioner. En annan viktig operation är unifiering som försöker hitta en
+substitution som gör två typer ekvivalenta. Om unifiering inte är möjligt
+betyder det att det finns typfel.
+
+\subsubsection{Typklasser}
+Typklasser är en form av ad-hoc polymorfism som används flitigt i
+Haskell. Faktum är att de är så fundamentala i Haskell att de får en central
+roll i typcheckningsprocessen. 
 
 \subsection{HIJi}
 
