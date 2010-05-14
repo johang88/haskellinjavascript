@@ -1,9 +1,13 @@
 \renewcommand{\abstractname}{Abstract}
     \begin{abstract}
 Haskell is not a widely used programming language, nor very known to the average programmer. By implementing a subset of the Haskell 98 specification in Javascript our intention is to make it  possible to run Haskell in a web browser, thus making it easier for beginners to try Haskell by eliminating the need of downloading Haskell compilers such as GHC. 
+\\
+\\
 In this paper we describe the process and result from the project of implementing Haskell in Javascript. 
 Our result consists of a parser, type checker, interpreter and a front end similar to GHCi.
 The parser process the text input, creating an internal structure called abstract syntax tree (AST). The type checker then analyse the AST to confirm that there are no type errors. If no errors have been detected, the AST is sent to the interpreter. The interpreter then interpret the AST in an well defined way.
+\\
+\\
 The results shows that it's possible to successfully implement Haskell in Javascript,  but a lot of more work need to be done for making a newbie-friendly environment for learning Haskell. 
 
 
