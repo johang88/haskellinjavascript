@@ -95,7 +95,7 @@ Men det blir:
 [ x | let { x = 2 ] }
 \end{lstlisting}
 Anledningen är att endast nästlingen av \emph{let} och \emph{in} sparas, men här finns inget \emph{in}.
-För att lösa felet måste man hålla reda på antalet paranteser, måsvingar, hakparanteser och komman efter ett let-uttryck och när en symbol som gör det ogiltligt 
+För att lösa felet måste parsern hålla reda på antalet paranteser, måsvingar, hakparanteser och komman efter ett let-uttryck och när en symbol som gör det ogiltligt 
 med en avslutande måsvinge påträffas sätts måsvingen in precis innan symbolen.
 
 \subsubsection{Steg 3}
@@ -193,7 +193,7 @@ this.dereference = function() {
 \end{lstlisting}
 
 \subsubsection{Env}
-Environmenten är en stack av javascript hashes, hasherna består av en bindning mellan en Identifier och antingen en HeapPtr eller ett (Pattern, HeapPtr) par.  Den andra bindingstypen är resultatet av en Variable deklaration där man måste utföra en pattern match för att avgöra vilken HeapPtr som hör till vilken Identifier. När man läser ut en identifier som är bunden enligt den andra typen av binding så kommer en pattern match att utföras och alla identifiers i patternet kommer att bindas om som den första type alternativt en pattern match fail inträffar och en exception genereras.
+Environmenten är en stack av javascript hashes, hasherna består av en bindning mellan en Identifier och antingen en HeapPtr eller ett (Pattern, HeapPtr) par.  Den andra bindingstypen är resultatet av en Variable declaration där man måste utföra en pattern match för att avgöra vilken HeapPtr som hör till vilken Identifier. När man läser ut en identifier som är bunden enligt den andra typen av binding så kommer en pattern match att utföras och alla identifiers i patternet kommer att bindas om som den första type alternativt en pattern match fail inträffar och en exception genereras.
 
 \begin{lstlisting}
 Env {
@@ -210,7 +210,7 @@ Env {
 \subsection{Abstrakt syntaxträd} 
 AST:en representeras av javascript-object men dess strukturella uppbyggnad ges här av Haskell datadefinitioner.
 
-\subsection{Declaration}
+\subsubsection{Declaration}
 Den första datatypen av intresse är Declaration. En declaration representerar en namnbindning antigen i en moduls globala definitionsområde eller i en let eller where bindning.
 
 \begin{lstlisting}
@@ -231,7 +231,7 @@ Värt att notera här är avsaknaden av typvariabler och -argument, detta kommer
 
 Under interprenteringen av en dekleration binds de namn (Identifiers) som definieras av deklarationen till envioromenten. Vilken typ av binding som används beror på typen av deklaration, en Variable deklaration ger en Identifier => (Pattern, Expression) bindning.
 
-\subsection{Expression}
+\subsubsection{Expression}
 En Expression är ett haskelluttryck.
 
 \begin{lstlisting}
@@ -268,7 +268,7 @@ Do, List och ArithmeticSequence är inte evaluerade direkt utan de är avsockrad
 
 En Primitive är en wrapper runt en javascript funktion. Att evaluera en primitive är det samma som att evaluera funktionen med environmenten som argument.
 
-\subsection{Pattern}
+\subsubsection{Pattern}
 Vi har implementerat fem stycken olika pattern matches från Haskell.
 \begin{lstlisting}
 Pattern = Constructor Identifier [Pattern]
@@ -390,9 +390,9 @@ Typinferens är den sammanfogande delen av typcheckningsprocessen.
 HIJi är ett program som ger användaren ett GHCi-liknande användargränssnitt till Haskelltolken direkt i webläsaren. 
 HIJi tar indata genom att funktioner skrivs in i HIJi som sedan tolkas av parsern och i sin tur bygger upp det abstrakta syntaxträdet. Därefter evalueras uttrycket utav interpretern och resultatet blir synligt i HIJi.
 
-HIJi har stöd för att ladda externa moduler. Det gör man genom att skriva :l \emph{namn-på-modul}. Man får då tillgång till alla de funktioner som är skrivna i den modulen. Modulerna måste vara placerade på servern som HIJi laddades ifrån. Modulerna kan ej laddas direkt från användarens hårddisk på grund utav att javascript av säkerhetsskäl ej har skriv och läsrättigheter av användarens filsystem. HIJi har även en förladdad modul, Prelude, som innehåller en delmängd av de funktioner som finns i GHCis motsvarighet. 
+HIJi har stöd för att ladda externa moduler. Det görs genom att skriva :l \emph{namn-på-modul}. Användaren får då tillgång till alla de funktioner som är skrivna i den modulen. Modulerna måste vara placerade på servern som HIJi laddades ifrån. Modulerna kan ej laddas direkt från användarens hårddisk på grund utav att javascript av säkerhetsskäl ej har skriv och läsrättigheter av användarens filsystem. HIJi har även en förladdad modul, Prelude, som innehåller en delmängd av de funktioner som finns i GHCis motsvarighet. 
 
-Den indata som användaren skriver till HIJi sparas i ett objekt för att hantera historiken. Man bläddrar i historiken med piltangenterna Upp och Ner. Hela historik-objektet sparas även i en kaka som ett JSON-objekt. Av detta skäl är det möjligt att få tillgång till historiken när man startar en ny session av webbläsaren.
+Den indata som användaren skriver till HIJi sparas i ett objekt för att hantera historiken. Man bläddrar i historiken med piltangenterna Upp och Ner. Hela historik-objektet sparas även i en kaka som ett JSON-objekt. Av detta skäl är det möjligt att få tillgång till historiken när en ny session av webbläsaren.
 
 \begin{figure}[H]
     \begin{center}
