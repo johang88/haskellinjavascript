@@ -308,7 +308,17 @@ Utöver polymorfiska typer stödjer Haskell typklasser som gör överlagring av
 funktioner möjligt. Typklasser är väldigt centralt i Haskell och ändrar
 typcheckarens arbetssätt markant jämfört med liknande språk.
 
-\subsubsection{Typvariabler och subtitutioner}
+\subsubsection{Kinds}
+Kinds kan liknas vid en motsvarighet till typer för typkonstruktorer. * (uttalas ``stjärna'', eng. ``star'') representerar enkla (nullary) typer som Integer och Integer -> Bool medan komplexa typer som tar argument representeras med applicering av kinds k1 -> k1, exempelvis Maybe Bool.
+
+\begin{lstlisting}
+data Kind = Star
+          | Kfun Kind Kind
+\end{lstlisting}
+
+\subsubsection{Typec}
+De datastrukturer som typcheckaren använder internt för att representera typer kan delas in i typvariabler som representerar 
+
 För att kunna arbeta på en hög abstraktionsnivå har typcheckaren sin egen
 interna representation av typer.
 
@@ -319,21 +329,9 @@ data Type = TVar Id Kind
           | TGen Int     
 \end{lstlisting}
 
-TVar representerar typvariabler, TAp representerar applicering av typer och
-TCon representerar typkonstruktorer för konkreta typer. TGen representerar
-generiska typer och kommer bara användas i samband med kvantifiering av
-typer internt i 
-
-För att veta om en typvariabel ska appliceras med andra typer eller om det
-är en enkel typ (nullary type) används kinds där * representerar en enkel
-typ och exempelvis * -> * och * -> ( * -> * ) representerar komplexare
-typer som beror är beroende av andra typer. Ett exempel på en enkel typ är
-Integer (*) medan typkonstruktorn för listor [] har kind * -> * .
-
-\begin{lstlisting}
-data Kind = Star
-          | Kfun Star Star
-\end{lstlisting}
+TVar representerar typvariabler. Dessa har namn som vanligtvis tilldelas internt i typcheckaren. TAp representerar applicering av typer och TCon representerar typkonstruktorer för konkreta typer. TGen representerar
+generiska typer och används enbart i samband med kvantifiering av
+typer internt i typcheckaren
 
 Att konstruera en typ med den här notationen är enkelt. Typen [a] ->
 Integer som är typen för standardfunktionen length i Haskell beskrivs med
@@ -341,29 +339,51 @@ Integer som är typen för standardfunktionen length i Haskell beskrivs med
 (TAp
   (TAp
     (TCon "(->)" (Kfun Star (Kfun Star Star)))
-    (TAp
+  (TAp
       (TCon "[]" (Kfun Star Star))
       (TVar "a" Star)))
   (TCon "Integer" Star))
 \end{lstlisting}
 
-% Substitutioner är funktioner som mappar typvariabler till andra typer och
-% används av typcheckaren för att hålla typer uppdaterade efterhand som
-% typcheckaren får med information. Ofta vill man finna en substitution som gör
-% två typer ekvivalenta. Detta görs genom något som kallas unifiering.
-
-Substitutioner är mappningar typvariabel -> typ och används av typcheckaren
+\subsubsection{Substitueringar}
+Substitueringar är mappningar \emph{typvariabel -> typ} och används av typcheckaren
 för att hålla typer uppdaterade efterhand som den får ny
 information. Typcheckaren innehåller flera funktioner som opererar på
 substitutioner, bland annat komponering och sammanfogning av
-substitutioner. En annan viktig operation är unifiering som försöker hitta en
-substitution som gör två typer ekvivalenta. Om unifiering inte är möjligt
+substitutioner. \emph{Unifiering} är processen att finna en substituering som gör två typer ekvivalenta. Om unifiering inte är möjligt
 betyder det att det finns typfel.
 
 \subsubsection{Typklasser}
 Typklasser är en form av ad-hoc polymorfism som används flitigt i
 Haskell. Faktum är att de är så fundamentala i Haskell att de får en central
-roll i typcheckningsprocessen. 
+roll i typcheckningsprocessen. Deras främsta funktion är att möjliggöra funktionsöverlagring beroende på typer på argument och förväntad returtyp.
+
+För att hålla reda på vilka typklasser en typ tillhör används predikat:
+\begin{lstlisting}
+data Pred = Pred Id Type
+\end{lstlisting}
+Ett predikat \emph{Pred className type} säger att typen \emph{type} tillhör typklassen \emph{className}.
+
+Ofta består typer av flera sammansatta enklare typer där olika typer kan tillhöra olika typklasser. För att modellera detta används kvalifierade typer:
+\begin{lstlisting}
+data Qual = Qual [Pred] Type
+\end{lstlisting}
+
+Den kvalifierade typen \emph{Monad m => m a} modelleras som:
+\begin{lstlisting}
+(Qual
+  [Pred "Monad" (TVar "m" (Kfun Star Star))]
+  (TAp
+    (TVar "m" (Kfun Star Star)
+    (TVar "a" Star)))
+\end{lstlisting}
+
+För att hålla reda på vilka typklasser och instanser som finns används datatypen \emph{Klass} (\emph{class} är ett reserverat ord i JavaScript) som representerar enskilda typklasser och deras instanser samt datatypen \emph{KlassEnvironment} som representerar den totala klassmiljön.
+
+\subsubsection{Typinferens}
+Typinferens är den sammanfogande delen av typcheckningsprocessen. 
+
+\subsubsection{Defaulting}
 
 \subsection{HIJi}
 
