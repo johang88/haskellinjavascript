@@ -113,7 +113,7 @@ rhs -> exp [where decls]
      | gdrhs [where decls]
 \end{lstlisting}
 Dess respektive parsers:
-\begin{lstlisting}[language=javascript]
+\begin{lstlisting}
 var gdrhs = gdrhs_action(
     repeat1(gdrhs_fix_list_action(sequence(ws(gd), 
                 expectws('='), ws(exp)))));
