@@ -1,17 +1,14 @@
 \section{Metod} 
 
-Nedan följer en beskrivning av de arbetsmetoder vi använt oss utav och de mjukvaror och kodbibliotek som vi använt oss utav i projektet. 
+Nedan följer en beskrivning av de arbetsmetoder vi använt oss av och de mjukvaror och kodbibliotek som vi använt oss av i projektet. 
 
 \subsection{Genomförande}
 
 % modulbaserat arbete..
-Det normala tillvägagångssättet när en tolk skrivs är att först
-skapar en parser för den aktuella syntaxen, sedan en typcheckare med 
-hjälp av de för språket definierade typereglerna och sist en interpretator
-som tolkar språket efter dess specifikation. 
+För att implementera en tolk för Haskell behövs en parser för den aktuella syntaxen, en typcheckare för språkets definerade typregler och tillsist en interpretator som tolkar språket efter dess specifikation.
 Det upptäcktes tidigt att de tre modulerna, parser, interpretator och typcheckare, inte behövde utvecklas sekvensiellt. De tre modulerna intergrerar enbart med varandra genom det abstrakta syntaxträdet vilket medför att det är lätt att utveckla de olika modulerna helt frånskilt från varandra. Figur \ref{fig:parser_steg} visar hur denna interaktion mellan de olika modulerna är tänkt att gå till. Figur \ref{fig:parser_steg} visar även att webbläsaren kommunicerar genom ett Javascript API och det abstrakta syntaxträdet och inte direkt med de olika komponenterna. 
 
-Det första delmålet var att göra en enkel implementation av lambda calculus då mer avancerade funktionella programspråksegenskaper kunde implementeras som detta \citep{jones87}.
+Det första delmålet var att göra en haskelliknande implementation av lambda calculus då mer avancerade funktionella programspråksegenskaper kan implementeras som detta \citep{jones87}.
 Parsern implementerades med hjälp av ett parser combinator bibliotek kallat JSParse \citep{jsparse}. Det gav oss möjlighet att att på ett enkelt sätt implementera både den kontextfria och icke kontextfria delen av Haskell. Parsern skapar ett syntaxträd som skickas vidare till typcheckaren. I typcheckaren dekoreras syntaxträdet med typinformation innan det slutligen skickas till interpretatorn.
 
 En interaktiv kommandotolk som kan köras i en webbläsare utvecklades. Den ska ge användaren möjlighet att skriva Haskell-funktioner och exekvera dem på ett liknande sätt som i GHCi. 
@@ -27,10 +24,10 @@ Vi kommer att integrera jQuery \citep{jquery} för att få ett unisont stöd fö
 \end{figure}
 
 
-Arbetssättet präglades utav en iterativ utvecklingsmetodik med korta utvecklingscyklar. Arbetet delades upp med huvudansvarstagande över var sin modul och utfördes parallellt med varandra. Arbetet skedde dock framförallt i samlad grupp på grund av att det var många designrelaterade problem vi var tvugna att ta ställning till under projektet, till exempel hur vårat abstrakta syntaxträd skulle se ut, och för att det skulle bli enklare när vi skulle börja sammanfoga våra olika moduler med varandra. 
+Arbetssättet präglades av en iterativ utvecklingsmetodik med korta utvecklingscyklar. Arbetet delades upp med huvudansvarstagande över var sin modul och utfördes parallellt med varandra. Arbetet skedde dock framförallt i samlad grupp på grund av att det var många designrelaterade problem vi var tvugna att ta ställning till under projektet, till exempel hur vårat abstrakta syntaxträd skulle se ut, och för att det skulle bli enklare när vi skulle börja sammanfoga våra olika moduler med varandra. 
 Det var också ett bra sätt att snabbt få hjälp av varandra eftersom vi ej visste exakt hur modulerna skulle se ut när vi påbörjade arbetet. Vi fann det därför praktiskt att använda en iterativ modell för att bit för bit utvigda våra moduler. 
 
-Eftersom vi arbetade parallellt med olika moduler var vi beroende av ett bra versionshanteringssystem. Bra i vårt fall innebar att det skulle vara enkelt att arbeta i olika grenar, en gren för varje modul, och att det skulle gå snabbt och enkelt att slå ihop dessa förgreningar när vi behövde länka samman två utvecklares arbeten. I början av projektet använda vi oss utav SVN (Subversion). Detta berodde framförallt på att det var det versionshanteringssystem som alla i gruppen hade erfarenhet från tidigare. Dock insåg vi att SVN inte var praktiskt att använda när man arbetar i flera olika grenar i projektet samtidigt. Därför gick valet till att använda Git som är designat från grunden för att på ett enkelt sätt skapa nya och slå samman förgreningar under utvecklingens gång. Vi kunde därmed skapa en förgrening för varje modul och under arbetets gång sammanlänka allas arbeten på ett effektivt sätt. 
+Eftersom vi arbetade parallellt med olika moduler var vi beroende av ett bra versionshanteringssystem. Bra i vårt fall innebar att det skulle vara enkelt att arbeta i olika grenar, en gren för varje modul, och att det skulle gå snabbt och enkelt att slå ihop dessa förgreningar när vi behövde länka samman två utvecklares arbeten. I början av projektet använda vi oss av SVN (Subversion). Detta berodde framförallt på att det var det versionshanteringssystem som alla i gruppen hade erfarenhet från tidigare. Dock insåg vi att SVN inte var praktiskt att använda när man arbetar i flera olika grenar i projektet samtidigt. Därför gick valet till att använda Git som är designat från grunden för att på ett enkelt sätt skapa nya och slå samman förgreningar under utvecklingens gång. Vi kunde därmed skapa en förgrening för varje modul och under arbetets gång sammanlänka allas arbeten på ett effektivt sätt. 
 
 På grund av vår parallella arbetsmetod ansåg vi det nödvändigt att arbeta fram en kodstandard så att de olika modulerna skulle stilmässigt likna varandra. Kodstandarden beskriver hur indentering, namngivning av variabler och funktioner ska se ut. Innan ny kod skickas till Git så måste denna kodstandard följas.  
 
@@ -39,23 +36,21 @@ På grund av vår parallella arbetsmetod ansåg vi det nödvändigt att arbeta f
 %Javascript är det programmeringsspråk som används uteslutande i detta projektet.
 
 \subsection{Kodbibliotek}
-I projektet har vi använt oss av ett antal kodbibliotek för att snabbare kunna utveckla haskelltolken. Nedan följer en kort beskrivning av dessa.
+I projektet använder vi oss av kodbibliotek för att snabbare kunna utveckla haskelltolken. Nedan följer en kort beskrivning av dessa.
 
 \subsubsection{JSParse}  
 Parsern implementeras med hjälp av ett parser combinator bibliotek kallat JSParse. 
-En parser combinator består av olika funktioner som parsar exempeliv strängar, listor och blanksteg.
-Dessa funktioner kombineras för att skapa mer komplexa parsers. Det ger oss möjlighet att enkelt implementera komplexa
-parsers för både dem kontextfria och den icke kontextfria varianterna av Haskell.
+En parser combinator består av olika funktioner som parsar exempelvis strängar, listor eller blanksteg.
+Dessa funktioner kombineras för att skapa mer komplexa parsers. Det ger oss möjlighet att implementera komplexa
+parsers för både de kontextfria och icke kontextfria varianterna av Haskell.
 
 \subsubsection{jQuery} 
-jQuery är ett öppet kodbibliotek till Javascript som är dubeellicenserat under MIT License och GPL version 2.  
-jQuery är designat för att underlätta för utvecklare att modifiera DOM-träd, HTML, och göra asynkrona javascript-anrop.
-
-jQuery används i projektet för att få enkelt cross browser stöd i den kommandotolk vi kommer utveckla. 
+%jQuery är ett öppet kodbibliotek till Javascript som är dubeellicenserat under MIT License och GPL version 2.  
+jQuery är designat för att underlätta för utvecklare att modifiera DOM-träd och göra asynkrona javascript-anrop. JQuery används i projektet för att få enkelt cross browser stöd i den kommandotolk vi kommer utveckla. 
 jQuery ger även möjlighet att skapa ett enkelt och stilrent interaktivt gränssnitt utan att behöva göra allt från grunden.
-Ett tillägg till jQuery kallat jQuery.Cookie används även för att förenkla användandet utav kakor.
+JQuery.Cookie, ett tillägg till jQuery, används för att förenkla användandet av kakor.
 
 \subsubsection{JSON}
-JSON är en delmängd av Javascript och används för att utbyta data mellan olika format och programmeringsspråk. 
+JSON \citep{json}  är en delmängd av Javascript och används för att utbyta data mellan olika format och programmeringsspråk. 
 JSON är idag inbyggt i de senaste versionerna av de moderna webbläsarna men för att få stöd i äldre versioner har vi valt att inkludera JSON som ett externt bibliotek.
 
