@@ -2,7 +2,10 @@
 Vi har skapat en javascriptapplikation som kan parsa, typchecka och interpretera stora delar av Haskell 98. Det som saknas är fullständigt stöd för typklasser där 
 stödet endast finns i typcheckaren men fortfarande behöver implementeras i interpretatorn.
 
-%todo ref haskell 2010
+Sett till planeringen har vi lyckats uppfylla alla milstolpar utom typklasser, dock inte enligt den ordning och tidsplan som ursprungligen planerades. 
+Vi insåg att det var enklast att utveckla parsern, typcheckaren och interpertatorn parallelt och bestämma indivudellt vad som skulle implementeras och i 
+vilken ordning för att senare, oftast en gång i veckan, samordna och implementera det som behövdes i flera delar.
+
 Vi har inte implementerat NPlusK-pattern i parsern och då de är borttagna i Haskell 2010 \citep{haskell2010} känner vi att det inte behövs.
 
 

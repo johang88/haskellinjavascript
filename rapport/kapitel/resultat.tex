@@ -95,7 +95,7 @@ Men det blir:
 [ x | let { x = 2 ] }
 \end{lstlisting}
 Anledningen är att endast nästlingen av \emph{let} och \emph{in} sparas, men här finns inget \emph{in}.
-För att lösa felet måste man hålla reda på antalet paranteser, måsvingar, hakparanteser och komman efter ett let-uttryck och när en symbol som gör det ogiltligt 
+För att lösa felet måste parsern hålla reda på antalet paranteser, måsvingar, hakparanteser och komman efter ett let-uttryck och när en symbol som gör det ogiltligt 
 med en avslutande måsvinge påträffas sätts måsvingen in precis innan symbolen.
 
 \subsubsection{Steg 3}
@@ -179,7 +179,8 @@ De flesta implementationer av Haskell använder sig av Lazy Evaluation, vilket i
 \begin{lstlisting}
 this.dereference = function() {
     if (this.weakHead == undefined) {
-        // We'll drive the execution here instead of recursing in the force method
+        // We'll drive the execution here instead of recursing 
+        // in the force method
         var continuation = this.thunk;
         while (continuation instanceof interpreter.Thunk) {
             continuation = continuation.force();
@@ -192,7 +193,7 @@ this.dereference = function() {
 \end{lstlisting}
 
 \subsubsection{Env}
-Environmenten är en stack av javascript hashes, hasherna består av en bindning mellan en Identifier och antingen en HeapPtr eller ett (Pattern, HeapPtr) par.  Den andra bindingstypen är resultatet av en Variable deklaration där man måste utföra en pattern match för att avgöra vilken HeapPtr som hör till vilken Identifier. När man läser ut en identifier som är bunden enligt den andra typen av binding så kommer en pattern match att utföras och alla identifiers i patternet kommer att bindas om som den första type alternativt en pattern match fail inträffar och en exception genereras.
+Environmenten är en stack av javascript hashes, hasherna består av en bindning mellan en Identifier och antingen en HeapPtr eller ett (Pattern, HeapPtr) par.  Den andra bindingstypen är resultatet av en Variable declaration där man måste utföra en pattern match för att avgöra vilken HeapPtr som hör till vilken Identifier. När man läser ut en identifier som är bunden enligt den andra typen av binding så kommer en pattern match att utföras och alla identifiers i patternet kommer att bindas om som den första type alternativt en pattern match fail inträffar och en exception genereras.
 
 \begin{lstlisting}
 Env {
@@ -209,14 +210,15 @@ Env {
 \subsection{Abstrakt syntaxträd} 
 AST:en representeras av javascript-object men dess strukturella uppbyggnad ges här av Haskell datadefinitioner.
 
-\subsection{Declaration}
+\subsubsection{Declaration}
 Den första datatypen av intresse är Declaration. En declaration representerar en namnbindning antigen i en moduls globala definitionsområde eller i en let eller where bindning.
 
 \begin{lstlisting}
 data Declaration 
     = Variable pattern Expression
     | Data Identifier [Constructor]
-    | Function Identifier [Pattern] (Either [(Guard, Expression)] Expression)
+    | Function Identifier [Pattern] 
+        (Either [(Guard, Expression)] Expression)
 \end{lstlisting}
 
 Variable är en bindning av typen p = e där p är en Pattern och e en Expression. En Variable kan därför binda flera olika symboler på en gång. Till exempel [1:a:b:[]] = [1,2,3].
@@ -229,7 +231,7 @@ Värt att notera här är avsaknaden av typvariabler och -argument, detta kommer
 
 Under interprenteringen av en dekleration binds de namn (Identifiers) som definieras av deklarationen till envioromenten. Vilken typ av binding som används beror på typen av deklaration, en Variable deklaration ger en Identifier => (Pattern, Expression) bindning.
 
-\subsection{Expression}
+\subsubsection{Expression}
 En Expression är ett haskelluttryck.
 
 \begin{lstlisting}
@@ -241,14 +243,16 @@ data Expression
     | VariableLookup Identifier
     | Do [DoNotation]
     | List [Expression]
-    | ArithmeticSequence Epxression (Maybe Expression) (Maybe Expression)
+    | ArithmeticSequence Expression (Maybe Expression) 
+                                    (Maybe Expression)
     | Primitive JavascriptFunction
 \end{lstlisting}
 
 När en Expression evalueras under en environment är resultatet antingen en Thunk (continuation, closure) eller en WHNF. Evaluering av en Constant resulterar antigen i en Primitiv en en avsockring av konstanten. I interprentatorn så är konstanta nummer (1) egentligen en algegraisk datatype (I\# 1\#) och denna avsockring sker fört under körning. När en Lambda evalueras returneras en LambdaAbstraction med evaluerings environmenten bunden. En Let evalueras genom att binda dess Declarations till environmenten och returnera en Closure över den nya environmenten och Let Expressionen. En Case evalueras genom att den första Expressionen i tuple listan vars Pattern matchar evalueras under den environmenten som resulterar från pattern matchen.
 \begin{lstlisting}
 this.eval = function(env) {
-    var expr = new interpreter.HeapPtr(new interpreter.Closure(env, this.expr));
+    var expr = new interpreter.HeapPtr(
+                   new interpreter.Closure(env, this.expr));
     for (var i in this.cases) {
         var newEnv = env.derive();
         if (this.cases[i][0].match(newEnv, expr)) {
@@ -264,7 +268,7 @@ Do, List och ArithmeticSequence är inte evaluerade direkt utan de är avsockrad
 
 En Primitive är en wrapper runt en javascript funktion. Att evaluera en primitive är det samma som att evaluera funktionen med environmenten som argument.
 
-\subsection{Pattern}
+\subsubsection{Pattern}
 Vi har implementerat fem stycken olika pattern matches från Haskell.
 \begin{lstlisting}
 Pattern = Constructor Identifier [Pattern]
@@ -304,7 +308,17 @@ Utöver polymorfiska typer stödjer Haskell typklasser som gör överlagring av
 funktioner möjligt. Typklasser är väldigt centralt i Haskell och ändrar
 typcheckarens arbetssätt markant jämfört med liknande språk.
 
-\subsubsection{Typvariabler och subtitutioner}
+\subsubsection{Kinds}
+Kinds kan liknas vid en motsvarighet till typer för typkonstruktorer. * (uttalas ``stjärna'', eng. ``star'') representerar enkla (nullary) typer som Integer och Integer -> Bool medan komplexa typer som tar argument representeras med applicering av kinds k1 -> k1, exempelvis Maybe Bool.
+
+\begin{lstlisting}
+data Kind = Star
+          | Kfun Kind Kind
+\end{lstlisting}
+
+\subsubsection{Typec}
+De datastrukturer som typcheckaren använder internt för att representera typer kan delas in i typvariabler som representerar 
+
 För att kunna arbeta på en hög abstraktionsnivå har typcheckaren sin egen
 interna representation av typer.
 
@@ -315,21 +329,9 @@ data Type = TVar Id Kind
           | TGen Int     
 \end{lstlisting}
 
-TVar representerar typvariabler, TAp representerar applicering av typer och
-TCon representerar typkonstruktorer för konkreta typer. TGen representerar
-generiska typer och kommer bara användas i samband med kvantifiering av
-typer internt i 
-
-För att veta om en typvariabel ska appliceras med andra typer eller om det
-är en enkel typ (nullary type) används kinds där * representerar en enkel
-typ och exempelvis * -> * och * -> ( * -> * ) representerar komplexare
-typer som beror är beroende av andra typer. Ett exempel på en enkel typ är
-Integer (*) medan typkonstruktorn för listor [] har kind * -> * .
-
-\begin{lstlisting}
-data Kind = Star
-          | Kfun Star Star
-\end{lstlisting}
+TVar representerar typvariabler. Dessa har namn som vanligtvis tilldelas internt i typcheckaren. TAp representerar applicering av typer och TCon representerar typkonstruktorer för konkreta typer. TGen representerar
+generiska typer och används enbart i samband med kvantifiering av
+typer internt i typcheckaren
 
 Att konstruera en typ med den här notationen är enkelt. Typen [a] ->
 Integer som är typen för standardfunktionen length i Haskell beskrivs med
@@ -337,25 +339,60 @@ Integer som är typen för standardfunktionen length i Haskell beskrivs med
 (TAp
   (TAp
     (TCon "(->)" (Kfun Star (Kfun Star Star)))
-    (TAp
+  (TAp
       (TCon "[]" (Kfun Star Star))
       (TVar "a" Star)))
   (TCon "Integer" Star))
 \end{lstlisting}
 
-Substitutioner är funktioner som mappar typvariabler till andra typer och
-används av typcheckaren för att hålla typer uppdaterade efterhand som
-typcheckaren får med information. Ofta vill man finna en substitution som gör
-två typer ekvivalenta. Detta görs genom något som kallas unifiering.
+\subsubsection{Substitueringar}
+Substitueringar är mappningar \emph{typvariabel -> typ} och används av typcheckaren
+för att hålla typer uppdaterade efterhand som den får ny
+information. Typcheckaren innehåller flera funktioner som opererar på
+substitutioner, bland annat komponering och sammanfogning av
+substitutioner. \emph{Unifiering} är processen att finna en substituering som gör två typer ekvivalenta. Om unifiering inte är möjligt
+betyder det att det finns typfel.
+
+\subsubsection{Typklasser}
+Typklasser är en form av ad-hoc polymorfism som används flitigt i
+Haskell. Faktum är att de är så fundamentala i Haskell att de får en central
+roll i typcheckningsprocessen. Deras främsta funktion är att möjliggöra funktionsöverlagring beroende på typer på argument och förväntad returtyp.
+
+För att hålla reda på vilka typklasser en typ tillhör används predikat:
+\begin{lstlisting}
+data Pred = Pred Id Type
+\end{lstlisting}
+Ett predikat \emph{Pred className type} säger att typen \emph{type} tillhör typklassen \emph{className}.
+
+Ofta består typer av flera sammansatta enklare typer där olika typer kan tillhöra olika typklasser. För att modellera detta används kvalifierade typer:
+\begin{lstlisting}
+data Qual = Qual [Pred] Type
+\end{lstlisting}
+
+Den kvalifierade typen \emph{Monad m => m a} modelleras som:
+\begin{lstlisting}
+(Qual
+  [Pred "Monad" (TVar "m" (Kfun Star Star))]
+  (TAp
+    (TVar "m" (Kfun Star Star)
+    (TVar "a" Star)))
+\end{lstlisting}
+
+För att hålla reda på vilka typklasser och instanser som finns används datatypen \emph{Klass} (\emph{class} är ett reserverat ord i JavaScript) som representerar enskilda typklasser och deras instanser samt datatypen \emph{KlassEnvironment} som representerar den totala klassmiljön.
+
+\subsubsection{Typinferens}
+Typinferens är den sammanfogande delen av typcheckningsprocessen. 
+
+\subsubsection{Defaulting}
 
 \subsection{HIJi}
 
 HIJi är ett program som ger användaren ett GHCi-liknande användargränssnitt till Haskelltolken direkt i webläsaren. 
 HIJi tar indata genom att funktioner skrivs in i HIJi som sedan tolkas av parsern och i sin tur bygger upp det abstrakta syntaxträdet. Därefter evalueras uttrycket utav interpretern och resultatet blir synligt i HIJi.
 
-HIJi har stöd för att ladda externa moduler. Det gör man genom att skriva :l \emph{namn-på-modul}. Man får då tillgång till alla de funktioner som är skrivna i den modulen. Modulerna måste vara placerade på servern som HIJi laddades ifrån. Modulerna kan ej laddas direkt från användarens hårddisk på grund utav att javascript av säkerhetsskäl ej har skriv och läsrättigheter av användarens filsystem. HIJi har även en förladdad modul, Prelude, som innehåller en delmängd av de funktioner som finns i GHCis motsvarighet. 
+HIJi har stöd för att ladda externa moduler. Det görs genom att skriva :l \emph{namn-på-modul}. Användaren får då tillgång till alla de funktioner som är skrivna i den modulen. Modulerna måste vara placerade på servern som HIJi laddades ifrån. Modulerna kan ej laddas direkt från användarens hårddisk på grund utav att javascript av säkerhetsskäl ej har skriv och läsrättigheter av användarens filsystem. HIJi har även en förladdad modul, Prelude, som innehåller en delmängd av de funktioner som finns i GHCis motsvarighet. 
 
-Den indata som användaren skriver till HIJi sparas i ett objekt för att hantera historiken. Man bläddrar i historiken med piltangenterna Upp och Ner. Hela historik-objektet sparas även i en kaka som ett JSON-objekt. Av detta skäl är det möjligt att få tillgång till historiken när man startar en ny session av webbläsaren.
+Den indata som användaren skriver till HIJi sparas i ett objekt för att hantera historiken. Man bläddrar i historiken med piltangenterna Upp och Ner. Hela historik-objektet sparas även i en kaka som ett JSON-objekt. Av detta skäl är det möjligt att få tillgång till historiken när en ny session av webbläsaren.
 
 \begin{figure}[H]
     \begin{center}
