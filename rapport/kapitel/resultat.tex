@@ -1,16 +1,18 @@
 \section{Resultat}
-todo
+% TODO
+
+Projektets resultat är ett kodbibliotek för en haskelltolk. Här presenterar vi de olika modulerna som tolken består av. Koden finns att tillgå på GitHub: \url{http://github.com/johang88/haskellinjavascript}.
 
 \subsection{Parser} 
 Parserns uppgift är att ta användarens indata och konvertera den till en datastruktur 
-som är lättare att hantera internt. Denna datastruktur kallas AST (Abstract Syntax Tree). 
-Haskellstandarden definerat upp en grammatik, ett antal regler som definerar hur korrekt Haskellkod ser ut och hur den ska tolkas.
+som är lättare att hantera internt. Denna datastruktur kallas Abstract Syntax Tree (AST). 
+haskellstandarden definerat upp en grammatik, ett antal regler, som definerar hur korrekt haskellkod ser ut och hur den ska tolkas.
 
 För att parsa indatan använder vi ett bibliotek för att bygga parsers kallat JSParse \citep{jsparse}.
 JSParse ger oss ett antal funktioner som vi använder för att definera grammatiken och konvetera den till vår interna struktur.
 
 Som figur \ref{fig:parser_steg} visar, så består parsern av tre mindre parsers, den första är en parser som hittar kommentarer och tar bort dessa. 
-Den andra identifierar Haskellkod som inte är kontextfri och gör om till kontextfri kod. Den tredje gör om den kontextfria koden till vår AST.
+Den andra identifierar haskellkod som inte är kontextfri och gör om till kontextfri kod. Den tredje gör om den kontextfria koden till vår AST.
 
 \begin{figure}[H]
     \begin{center}
@@ -45,23 +47,23 @@ f x = case x of {
 \end{lstlisting}
 
 Efter det tredje steget är en AST genererad.
-\begin{lstlisting}[language=javascript]
+\begin{lstlisting}
 Function("f", Lambda("x", 
-    Case(ast.VariableLookup("x"), [
+    Case(VariableLookup("x"), [
         [PatternConstructor("True"), PatterConstructor("False")],
         [PatternConstructor("False"), PatterConstructor("True")],
     ])
 ))
 \end{lstlisting}
 
-\subsubsection{Steg 1}
+\subsubsection{Steg 1 - Ta bort kommentarer}
 Det första steget använder en parser som identifierar och tar bort kommentarer. 
 Haskell har två olika kommentarsstiler, enkelradiga börjar med \emph{--} och slutar vid första radbytet och 
 nästlade som kan gå över flera rader börjar med \emph{\{-} och slutar med \emph{-\}}.
 
-\subsubsection{Steg 2}
-Det andra steget delar upp koden i dess ord och symboler samtidigt som den dekoreras med indenteringsnivåer enligt en algoritm 
-som är specifierad i Haskellstandarden. Därefter användads en annan algoritm från standarden för att sätta in måsvingar och semikolon på rätt platser. 
+\subsubsection{Steg 2 - Konvertera till kontextfri}
+Det andra steget delar upp koden i dess ord och symboler samtidigt som den dekoreras med indenteringsnivåer enligt en algoritm % TODO vilken algoritm, k'a'lla
+som är specifierad i haskellstandarden. Därefter användads en annan algoritm från standarden för att sätta in måsvingar och semikolon på rätt platser. % samma, vilken algoritm, TODO 
 När de två algoritmerna är klara sätts koden ihop igen och skickas vidare till nästa steg.
 
 En regel är att ett inre block inte får vara mindre indenterat än det omslutande blocket, exempelivs:
@@ -98,13 +100,13 @@ Anledningen är att endast nästlingen av \emph{let} och \emph{in} sparas, men h
 För att lösa felet måste parsern hålla reda på antalet paranteser, måsvingar, hakparanteser och komman efter ett let-uttryck och när en symbol som gör det ogiltligt 
 med en avslutande måsvinge påträffas sätts måsvingen in precis innan symbolen.
 
-\subsubsection{Steg 3}
+\subsubsection{Steg 3 - Skapa AST}
 Det tredje steget är en parser för den kontextfria varianten av Haskell som den är definerad i standarden. 
-Samtidigt som koden tolkas byggs en AST upp. Parsern består av en liten parser för varje grammatisk regel som är definerad i Haskellstandarden 
+Samtidigt som koden tolkas byggs en AST upp. Parsern består av en liten parser för varje grammatisk regel som är definerad i haskellstandarden 
 dessa parsers kombineras ihop för att bilda den slutgiltliga parsern. Det resulterar i ett träd av parsers, en parser för hela programmet som har flera mindre parsers under sig.
 
 Exempel:
-Definitionen i Haskellstandarden:
+Definitionen i haskellstandarden:
 \begin{lstlisting}
 gdrhs -> gd = exp [gdrhs]
 rhs -> exp [where decls]
@@ -124,7 +126,7 @@ var rhs = choice(
 );
 \end{lstlisting}
 
-Parsern använder Haskell 2010's \citep{haskell2010} metod för att lösa företrädesreglerna för operator då denna metoden är enklare än den som är definerad i Haskell 98. 
+Parsern använder den metod som är specifierad i Haskell 2010 \citep{haskell2010} för att lösa företrädesreglerna (precedence levels) för operatorer då denna metoden är enklare än den som är definerad i Haskell 98. 
 Metoden fungerar så att den löser företrädesreglerna först efter ett uttryck har parsats till en lista med operatorer 
 och uttryck, när en operator påträffas i listan slås dess företrädesnivå upp i en tabell och ett träd med 
 operatorer och uttryck skapas. Sista används trädet för att generera en AST för uttrycken.
@@ -143,7 +145,7 @@ Parsers som vi har lagt till:
 
 
 \subsection{Interpretator}
-Interprentatorns uppgift är att tolka det abstrakta syntaxträden. Under interprenteringen används flera datastrukturer vars uppgift och struktur anges här.
+Interpretatorns uppgift är att tolka det abstrakta syntaxträdet. Under interpreteringen används flera datastrukturer vars uppgift och struktur anges här.
 
 \subsubsection{Thunk}
 En Thunk är en avstannad beräkning, en continuation. En Thunk består av en Env och en Expression.
@@ -152,9 +154,9 @@ En Thunk är en avstannad beräkning, en continuation. En Thunk består av en En
 data Thunk = Closure Env Expression
 \end{lstlisting}
 
-Haskell måste använda sig av non-strict evaluation vilket innebär att en uträkning inte får köras ifall den inte behövs. När en uträkning körs så innebär det att den resulterar i flertalet Thunks för de delar av beräkningen som ännu inte behövs. När värdet av en Thunk behövs kommer den att tvingas till en WHNF eller en ny Thunk. Anledningen till detta är att vi på så sätt minskar användandet av rekursion vilket minskar risken att vi får ett runtime error.
+Haskell måste använda sig av non-strict evaluation vilket innebär att en uträkning inte får köras ifall den inte behövs. När en uträkning körs så innebär det att den resulterar i flertalet Thunks för de delar av beräkningen som ännu inte behövs. När värdet av en Thunk behövs kommer den att tvingas till en \emph{weak head normal form} (WHNF) eller en ny Thunk. Anledningen till detta är att vi på så sätt minskar användandet av rekursion vilket minskar risken att vi får ett runtime error.
 
-\subsection{Weak Head Normal Form}
+\subsubsection{Weak Head Normal Form}
 En WHNF är ett partiellt evaluerat uttryck. Uttrycket har blivit evaluerat så långt att vi är säkra på att det retunerar något typ av värde, alltså något som inte är undefined. Ofta innehåller en WHNF referenser till ännu icke evaluerade uttryck, om de inte gör det sägs uttrycket vara i Normal Form.
 
 \begin{lstlisting}
@@ -165,16 +167,16 @@ data WeakHead
     | Primitive
 \end{lstlisting}
 
-En Data är resultatet av att applicera en algebraisk datakonstruktor på dess argument. Argumenten ges som en lista av HeapPtrs, det vill säga en lista av evaluerade eller icke evaluerade uttryck. Exemplevis resulterar Just 1 i en Data med Identifiern Just och en HeapPtr till det icke evaluerade uttrycket 1.
+En Data är resultatet av att applicera en algebraisk datakonstruktor på dess argument. Argumenten ges som en lista av HeapPtr, det vill säga en lista av evaluerade eller icke evaluerade uttryck. Exemplevis resulterar Just 1 i en Data med Identifiern Just och en HeapPtr till det icke evaluerade uttrycket 1.
 
-En LambdaAbstraction är körningsrepresentationen av en lambdafunktion, en environment är bunden till lambdafunktionen.
+En LambdaAbstraction är körningsrepresentationen av en lambdafunktion, en Env är bunden till lambdafunktionen.
 
-En DelayedApplication är ett specialfall av en LambdaAbstraction. Vi avsockrar inte Haskells funktionsdeklerationener vilket innebär att pattern matchning sker även vid funktionsapplication och inte bara i Case satser. Detta betyder att vi måste samla alla argument till en funktion innan vi kan avgöra vilken Expression som skall användas. En vidare beskrivning finns i kapitlet Declaration.
+En DelayedApplication är ett specialfall av en LambdaAbstraction. Vi avsockrar inte Haskells funktionsdeklarationer vilket innebär att pattern matching sker även vid funktionsapplikation och inte bara i Case satser. Detta betyder att vi måste samla alla argument till en funktion innan vi kan avgöra vilket funktionsalternativ som skall användas. En vidare beskrivning finns i kapitlet Declaration.
 
 En Primitiv är ett Javascript-värde, till exempel en integer eller en double.
 
 \subsubsection{HeapPtr}
-De flesta implementationer av Haskell använder sig av Lazy Evaluation, vilket innebär att en Thunk kommer att tvingas maximalt en gång. I vår implementation används HeapPtr som en wrapper runt en Thunk, när en HeapPtr dereferenceras kommer Thunken att tvingas till en WHNF och HeapPtr uppdateras att peka till denna. Eftersom att tvingandet av en Thunk kan resultera i en ny Thunk så tvingas thunken en loop tills vi får en WHNF.
+De flesta implementationer av Haskell använder sig av Lazy Evaluation, vilket innebär att en Thunk kommer att tvingas maximalt en gång. I vår implementation används HeapPtr som en wrapper runt en Thunk, när en HeapPtr dereferenceras kommer Thunk att tvingas till en WHNF och HeapPtr uppdateras att peka till denna. Eftersom att tvingandet av en Thunk kan resultera i en ny Thunk så tvingas thunken i en loop till dess att resultatet är en WHNF.
 
 \begin{lstlisting}
 this.dereference = function() {
@@ -193,12 +195,12 @@ this.dereference = function() {
 \end{lstlisting}
 
 \subsubsection{Env}
-Environmenten är en stack av javascript hashes, hasherna består av en bindning mellan en Identifier och antingen en HeapPtr eller ett (Pattern, HeapPtr) par.  Den andra bindingstypen är resultatet av en Variable declaration där man måste utföra en pattern match för att avgöra vilken HeapPtr som hör till vilken Identifier. När man läser ut en identifier som är bunden enligt den andra typen av binding så kommer en pattern match att utföras och alla identifiers i patternet kommer att bindas om som den första type alternativt en pattern match fail inträffar och en exception genereras.
+Env är en stack av Javascript hashes, hasharna består av en bindning mellan en Identifier och antingen en HeapPtr eller ett (Pattern, HeapPtr) par.  Den andra bindingstypen är resultatet av en VariableDeclaration där man måste utföra en pattern match för att avgöra vilken HeapPtr som hör till vilken Identifier. När man läser ut en Identifier som är bunden enligt den andra typen av binding,  kommer en pattern match att utföras och alla identifiers i det pattern som matchas kommer att bindas om som den första typen alternativt en pattern match fail inträffar och ett exception genereras.
 
 \begin{lstlisting}
 Env {
-    a => ([a, b, 2], [1,2,3])
-    b => ([a, b, 2], [1,2,3])
+    a => ([a, b, 3], [1,2,3])
+    b => ([a, b, 3], [1,2,3])
 }
 Env.find(a)
 Env {
@@ -208,10 +210,10 @@ Env {
 \end{lstlisting}
 
 \subsection{Abstrakt syntaxträd} 
-AST:en representeras av javascript-object men dess strukturella uppbyggnad ges här av Haskell datadefinitioner.
+Vår AST representeras av javascript-objekt men dess strukturella uppbyggnad ges här av Haskells datadefinitioner.
 
 \subsubsection{Declaration}
-Den första datatypen av intresse är Declaration. En declaration representerar en namnbindning antigen i en moduls globala definitionsområde eller i en let eller where bindning.
+Den första datatypen av intresse är Declaration. En Declaration representerar en namnbindning antigen i en moduls globala definitionsområde eller i en let eller where bindning.
 
 \begin{lstlisting}
 data Declaration 
@@ -221,18 +223,20 @@ data Declaration
         (Either [(Guard, Expression)] Expression)
 \end{lstlisting}
 
-Variable är en bindning av typen p = e där p är en Pattern och e en Expression. En Variable kan därför binda flera olika symboler på en gång. Till exempel [1:a:b:[]] = [1,2,3].
+Variable är en bindning av typen p = e där p är en Pattern och e en Expression. En Variable kan därför binda flera olika symboler på en gång. Till exempel (1:a:b:[]) = [1,2,3] binder variabeln a och b.
 
-Function är en representation av haskell sockrade funktionsdefinitioner. Det är möjligt att avsockra dessa till en Variable binding med hjälp av Lambda och Case [TODO referens] men vi har valt att införa en speciell representation av funktionsdefinitioner. Till skillnad från traditionella kompilatorer så avsockras Function aldrig utan håller samma form även under interpreteringen. Tanken bakom detta är att det skall vara lättare att se sammanhanget mellan datan under körning och källkoden vilket gör det lättare att knyta samman den statiska källkoden med den dynamiska körningsdatan.
+Function är en representation av Haskells sockrade funktionsdefinitioner. Det är möjligt att avsockra dessa till en Variable binding med hjälp av Lambda och Case men vi har valt att införa en speciell representation av funktionsdefinitioner. Till skillnad från traditionella kompilatorer så avsockras Function aldrig utan håller samma form även under interpreteringen. Tanken bakom detta är att det skall vara lättare att se sammanhanget mellan datan under körning och källkoden vilket gör det lättare att knyta samman den statiska källkoden med den dynamiska körningsdatan.
 
-En Data deklaration definierar en algebraisk datatyp med konstruktorerna definierade som nedan
+En Data definierar en algebraisk datatyp med konstruktorerna definierade som nedan
+\begin{lstlisting}
 data Constructor = Constructor Identifier Int
-Värt att notera här är avsaknaden av typvariabler och -argument, detta kommer att åtgärdas när typchekaren är integrerad.
+\end{lstlisting}
+Värt att notera här är avsaknaden av typvariabler och typargument, detta kommer att åtgärdas när typchekaren är integrerad.
 
-Under interprenteringen av en dekleration binds de namn (Identifiers) som definieras av deklarationen till envioromenten. Vilken typ av binding som används beror på typen av deklaration, en Variable deklaration ger en Identifier => (Pattern, Expression) bindning.
+Under interpreteringen av en Declaration binds de namn (Identifiers) som definieras av Declaration till Env-objektet. Vilken typ av binding som används beror på typen av Declaration. En Variable ger en Identifier => (Pattern, Expression) bindning medan en Function eller Data ger en Identifier => Expression bindning.
 
 \subsubsection{Expression}
-En Expression är ett haskelluttryck.
+En Expression är representationen av ett haskelluttryck.
 
 \begin{lstlisting}
 data Expression 
@@ -248,7 +252,7 @@ data Expression
     | Primitive JavascriptFunction
 \end{lstlisting}
 
-När en Expression evalueras under en environment är resultatet antingen en Thunk (continuation, closure) eller en WHNF. Evaluering av en Constant resulterar antigen i en Primitiv en en avsockring av konstanten. I interprentatorn så är konstanta nummer (1) egentligen en algegraisk datatype (I\# 1\#) och denna avsockring sker fört under körning. När en Lambda evalueras returneras en LambdaAbstraction med evaluerings environmenten bunden. En Let evalueras genom att binda dess Declarations till environmenten och returnera en Closure över den nya environmenten och Let Expressionen. En Case evalueras genom att den första Expressionen i tuple listan vars Pattern matchar evalueras under den environmenten som resulterar från pattern matchen.
+När en Expression evalueras under en Env är resultatet antingen en Thunk (continuation, closure) eller en WHNF. Evaluering av en Constant resulterar antigen i en primitiv eller en avsockring av konstanten. I interpretatorn så är konstanta nummer, till exempel 1, egentligen en algebraisk datatyp (I\# 1\#) och denna avsockring sker först under körning. När en Lambda evalueras returneras en LambdaAbstraction med evalueringens Env bunden. En Let evalueras genom att binda dess Declarations till Env-objektet och returnera en Closure över det nya Env-objektet och Let-uttryckets Expression. En Case evalueras genom att den första Expression i tuppellistan vars Pattern matchar evalueras under den Env som resulterar från pattern matchen.
 \begin{lstlisting}
 this.eval = function(env) {
     var expr = new interpreter.HeapPtr(
@@ -262,28 +266,27 @@ this.eval = function(env) {
     throw new Error("No matching clause");
 };
 \end{lstlisting}
-Att evaluera en VariableLookup under en environment är det samma som att leta upp den Identifiern i environmenten.
+Att evaluera en VariableLookup under en Env är det samma som att leta upp en Identifier i Env-objektet.
 
 Do, List och ArithmeticSequence är inte evaluerade direkt utan de är avsockrade och sedan evalueras det avsockrade uttrycket. Avsockringsreglerna ges i Haskell 98 standarden \citep{haskell98chap3}.
 
-En Primitive är en wrapper runt en javascript funktion. Att evaluera en primitive är det samma som att evaluera funktionen med environmenten som argument.
+En Primitive är en wrapper runt en Javascript-funktion. Att evaluera en Primitive är det samma som att evaluera funktionen med Env som argument.
 
 \subsubsection{Pattern}
 Vi har implementerat fem stycken olika pattern matches från Haskell.
 \begin{lstlisting}
-Pattern = Constructor Identifier [Pattern]
+data Pattern = Constructor Identifier [Pattern]
     | VariableBinding Identifier
     | Combined Identifier Pattern
     | ConstantPattern Value
     | Wildcard
 \end{lstlisting}
-Under en pattern match händer två saker. Dels så kontrolleras att uttrycket som matchas verkligen stämmer överens med patternet, dels så binds de variabler som definieras i patternet till environmenten. 
+Under en pattern match händer två saker. Dels så kontrolleras att uttrycket som matchas verkligen stämmer överens med dess pattern, dels så binds de variabler som definieras i Pattern till Env. 
 
-En VariableBinding matchar alla uttryck och binder uttrycket till identifiern. En Constructor matchar de uttryck vars WHNF är en Data med samma identifier (samt samma typ, detta enforcas dock av typcheckaren) och alla sub-patterns matchar Data argumenten. Combined är en sammanslagning av en VariableBinding och en annan Pattern, i källkod så har de formen \emph{v@p}. Combined matchar de uttryck som matchar dess Pattern och binder ett matchat uttryck till Identifiern. En ConstantPattern matchar de uttryck som är exakt lika med värdet. Till sist så matchar en Wildcard alla uttryck.
-
+En VariableBinding matchar alla uttryck och binder uttrycket till Identifier. En Constructor matchar de uttryck vars WHNF är en Data med samma Identifier (samt samma typ, detta tvingas dock av typcheckaren) och alla sub-patterns matchar Data argumenten. Combined är en sammanslagning av en VariableBinding och en annan Pattern, i källkoden så har de formen \emph{v@p}. Combined matchar de uttryck som matchar dess Pattern och binder ett matchat uttryck till Identifier. En ConstantPattern matchar de uttryck som är exakt lika med värdet. Till sist så matchar en Wildcard alla uttryck.
 
 \subsection{Typcheckare} 
-Typcheckarens uppgift är att analysera AST:n, inferera typerna på dess olika
+Typcheckarens uppgift är att analysera det abstrakta syntaxträdet, inferera typerna på dess olika
 beståndsdelar och avgöra om sättet på vilket de används och interagerar med
 andra beståndsdelar är konsekvent. Om så inte är fallet sägs programmet ha
 typfel.
@@ -432,12 +435,12 @@ Ofta förekommer situationer där tvetydigheter gör att typcheckaren inte kan b
 
 \subsection{HIJi}
 
-HIJi är ett program som ger användaren ett GHCi-liknande användargränssnitt till Haskelltolken direkt i webläsaren. 
-HIJi tar indata genom att funktioner skrivs in i HIJi som sedan tolkas av parsern och i sin tur bygger upp det abstrakta syntaxträdet. Därefter evalueras uttrycket utav interpretern och resultatet blir synligt i HIJi.
+HIJi är ett program som ger användaren ett GHCi-liknande användargränssnitt till haskelltolken i webläsaren. 
+HIJi tar indata genom att funktioner skrivs in i HIJi som sedan tolkas av parsern och i sin tur bygger upp det abstrakta syntaxträdet. Därefter evalueras uttrycket av interpretern och resultatet blir synligt i HIJi.
 
-HIJi har stöd för att ladda externa moduler. Det görs genom att skriva :l \emph{namn-på-modul}. Användaren får då tillgång till alla de funktioner som är skrivna i den modulen. Modulerna måste vara placerade på servern som HIJi laddades ifrån. Modulerna kan ej laddas direkt från användarens hårddisk på grund utav att javascript av säkerhetsskäl ej har skriv och läsrättigheter av användarens filsystem. HIJi har även en förladdad modul, Prelude, som innehåller en delmängd av de funktioner som finns i GHCis motsvarighet. 
+HIJi har stöd för att ladda externa moduler. Det görs genom att skriva :l \emph{namn-på-modul}. Användaren får då tillgång till alla de funktioner som är skrivna i den modulen. Modulerna måste vara placerade på servern som HIJi laddades ifrån. Modulerna kan ej laddas direkt från användarens hårddisk på grund av att javascript av säkerhetsskäl ej har skriv och läsrättigheter av användarens filsystem. HIJi har även en förladdad modul, Prelude, som innehåller en delmängd av de funktioner som finns i GHCis motsvarighet. 
 
-Den indata som användaren skriver till HIJi sparas i ett objekt för att hantera historiken. Man bläddrar i historiken med piltangenterna Upp och Ner. Hela historik-objektet sparas även i en kaka som ett JSON-objekt. Av detta skäl är det möjligt att få tillgång till historiken när en ny session av webbläsaren.
+Den indata som användaren skriver till HIJi sparas i ett objekt för att hantera historiken. För att bläddra i historiken används piltangenterna Upp och Ner. Hela historik-objektet sparas även i en kaka som ett JSON-objekt. Av detta skäl är det möjligt att få tillgång till historiken när en ny session av webbläsaren startas.
 
 \begin{figure}[H]
     \begin{center}
@@ -447,7 +450,7 @@ Den indata som användaren skriver till HIJi sparas i ett objekt för att hanter
     \end{center}
 \end{figure}
 
-Figur \ref{fig:hiji} visar hur HIJi ser ut för användaren. De första raderna visar, precis som i GHCi, vilka moduler som för närvarande är laddade. I det här exemplet är den förladdade modulen Prelude laddad. Därefter följer en kommandotolk där användaren fritt kan skriva in egna funktioner. I figuren är en enkel lambda-funktion inskriven.
+Figur \ref{fig:hiji} visar hur HIJi ser ut. De första raderna visar, precis som i GHCi, vilka moduler som för närvarande är laddade. I det här exemplet är den förladdade modulen Prelude laddad. Därefter följer en kommandotolk där användaren fritt kan skriva in egna funktioner. I figuren är en lambda-funktion inskriven.
 
 HIJi är skapat för att likna GHCi i så stor utsträckning som möjligt.
-Genom att efterlikna GHCi kommer användare känna igen sig när de tar steget från HIJi till GHCi. Det blir för dem ett naturligt steg och kortar inlärningströskeln. Även för haskellprogrammerare som är vana användare utav GHCi blir det lättare att använda sig utav HIJi, de behöver inte fundera hur verktyget ska användas.
+Genom att efterlikna GHCi kommer användare känna igen sig när de tar steget från HIJi till GHCi. Det blir för dem ett naturligt steg och kortar inlärningströskeln. Även för haskellprogrammerare som är vana användare av GHCi blir det lättare att använda sig av HIJi, de behöver inte fundera hur verktyget ska användas.
