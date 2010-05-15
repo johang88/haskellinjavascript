@@ -316,7 +316,7 @@ data Kind = Star
           | Kfun Kind Kind
 \end{lstlisting}
 
-\subsubsection{Typec}
+\subsubsection{Typer}
 De datastrukturer som typcheckaren använder internt för att representera typer kan delas in i typvariabler som representerar 
 
 För att kunna arbeta på en hög abstraktionsnivå har typcheckaren sin egen
@@ -333,8 +333,8 @@ TVar representerar typvariabler. Dessa har namn som vanligtvis tilldelas internt
 generiska typer och används enbart i samband med kvantifiering av
 typer internt i typcheckaren
 
-Att konstruera en typ med den här notationen är enkelt. Typen [a] ->
-Integer som är typen för standardfunktionen length i Haskell beskrivs med
+Att konstruera en typ med den här notationen är enkelt. Typen \emph{[a] ->
+Integer} som är typen för standardfunktionen length i Haskell beskrivs med
 \begin{lstlisting}
 (TAp
   (TAp
@@ -372,18 +372,63 @@ data Qual = Qual [Pred] Type
 Den kvalifierade typen \emph{Monad m => m a} modelleras som:
 \begin{lstlisting}
 (Qual
-  [Pred "Monad" (TVar "m" (Kfun Star Star))]
+  [ Pred "Monad" (TVar "m" (Kfun Star Star)) ]
   (TAp
-    (TVar "m" (Kfun Star Star)
+    (TVar "m" (Kfun Star Star))
     (TVar "a" Star)))
+\end{lstlisting}
+
+För att modellera de hela typscheman som typcheckaren får in från användaren används datatypen \emph{Scheme}.
+\begin{lstlisting}
+data Scheme = Scheme [Kind] Qual
+\end{lstlisting}
+Eftersom typvariabler (\emph{TVar id kind}) endast skapas internt i typcheckaren så representeras här alla generiska typer med \emph{TGen n} där \emph{n} helt enkelt anger att det är den \emph{n}:te generiska typen i typschemat och dess kind finns lagrat på position \emph{n} i \emph{[Kind]}
+
+För att representera det tidigare exemplet på detta sätt byter vi ut alla identiska förekomster av \emph{TVar id kind} mot identiska \emph{TGen i}:
+\begin{lstlisting}
+(Scheme
+  [Kfun Star Star, Star]
+  (Qual
+    [Pred "Monad" (TGen 0)]
+    (TAp
+      (TGen 0)
+      (TGen 1))))
 \end{lstlisting}
 
 För att hålla reda på vilka typklasser och instanser som finns används datatypen \emph{Klass} (\emph{class} är ett reserverat ord i JavaScript) som representerar enskilda typklasser och deras instanser samt datatypen \emph{KlassEnvironment} som representerar den totala klassmiljön.
 
 \subsubsection{Typinferens}
-Typinferens är den sammanfogande delen av typcheckningsprocessen. 
+Typinferens är den sammanfogande delen av typcheckningsprocessen och går ut på att typcheckaren traverserar AST:n och samlar de kriterier som måste vara uppfyllda för att programmet ska vara korrekt.
+
+Eftersom en variabels exakta typ inte är helt fastställd förrän typcheckningsprocessen är färdig görs istället efterhand antaganden om dess typ. För att modellera ett sådant antagande används datatypen \emph{Assump}:
+\begin{lstlisting}
+data Assump = Assump Id Scheme
+\end{lstlisting}
+
+Typinferensen är beroende av att en antal komponenter finns tillgängliga. Dessa är registret över typklasser och instanser \emph{KlassEnv}, listan över antagna variabeltyper, en generator för unika typvariabler med funktionen \emph{newTVar} och substitueringas \emph{Subst}. Dessa samlas i objektet \emph{Environment} som skickas som argument till funktionerna i typinferensen. 
+För att bättre illustrera hur typinfereringsprocessen går till ger vi ett konkret exempel. Koden nedan visar hur typinferering av \emph{if}-uttryck går till. Eftersom vårt projekt avsockrar \emph{if}-uttryck till \emph{case} använder det inte exempelkoden men då den på ett bra sätt illustrerar konceptett väljer vi här ändå att använda den:
+
+\begin{lstlisting}
+ast.If.prototype.infer = function(env) {
+  var b = this.condExpr.infer(env);
+  env.unify(
+    b.type,
+    new typechecker.TCon(``Bool'', new typechecker.Star()));
+  var te = this.thenExpr.infer(env);
+  val ee = this.elseExpr.infer(env);
+  env.unify(te.type, ee.type);
+  return {
+    preds: te.preds.concat(ee.preds),
+    type: te.type
+  };
+};
+\end{lstlisting}
+Först infereras typen på vilkoret. Detta unifieras med typen \emph{Bool} på raden under. Sedan infereras typerna på \emph{then}- respektive \emph{else}-delarna och då dessa måste vara va samma typ unifieras deras typer. Till sist returneras de insamlade predikaten från både \emph{then}- och \emph{else}-delarna tillsammans med den unifierade typen.
+
+Av detta exempel kan ett antal slutsatser dras. 
 
 \subsubsection{Defaulting}
+Ofta förekommer situationer där tvetydigheter gör att typcheckaren inte kan bestämma en typ. För att förenkla för programmeraren finns därför förbestämda standardtyper att använda i dessa situationer för en del inbyggda typer. Detta användande av börbestämda standartyper kallas för defaulting.
 
 \subsection{HIJi}
 
