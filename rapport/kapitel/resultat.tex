@@ -8,11 +8,14 @@ Parserns uppgift är att ta användarens indata och konvertera den till en datas
 som är lättare att hantera internt. Denna datastruktur kallas Abstract Syntax Tree (AST). 
 haskellstandarden definerat upp en grammatik, ett antal regler, som definerar hur korrekt haskellkod ser ut och hur den ska tolkas.
 
+Haskell är ett svårt språk att parsa då det inte är kontextfritt på grund av att kodens mening beror på blanksteg, 
+Haskell tillåter även egendefinerade operatorer vilket också kan påverka kodens mening. 
+
 För att parsa indatan använder vi ett bibliotek för att bygga parsers kallat JSParse \citep{jsparse}.
 JSParse ger oss ett antal funktioner som vi använder för att definera grammatiken och konvetera den till vår interna struktur.
 
-Som figur \ref{fig:parser_steg} visar, så består parsern av tre mindre parsers, den första är en parser som hittar kommentarer och tar bort dessa. 
-Den andra identifierar haskellkod som inte är kontextfri och gör om till kontextfri kod. Den tredje gör om den kontextfria koden till vår AST.
+Som figur \ref{fig:parser_steg} visar, består parsern av tre mindre parsers, den första är en parser som hittar kommentarer och tar bort dessa. 
+Det andra tar hand om kodens layout och gör om den till kontextfri kod. Den tredje gör om den kontextfria koden till vår AST.
 
 \begin{figure}[H]
     \begin{center}
@@ -75,11 +78,13 @@ Här är \emph{True -> ...} ett inre block till \emph{case} och mer indenterat.
 
 Ett annat exempel är:
 \begin{lstlisting}
-let x = 5 in x
+let x = 5
+    y = 4
+in x + y
 \end{lstlisting}
 Den korrekta översättningen är:
 \begin{lstlisting}
-let { x = 5 } in x
+let { x = 5; y = 4 } in x + y
 \end{lstlisting}
 För att översätta detta korrekt kommer parsern ihåg den aktuella nästlingsnivån av "let"-uttryck och var deras repsektive "in"-uttryck befinner sig. 
 Den avslutande måsvingen sätts in där ett matchande "in"-uttryck påträffas.
@@ -126,7 +131,11 @@ var rhs = choice(
 );
 \end{lstlisting}
 
+Här används \emph{choice} för att tolka de två olika alternativen i \emph{rhs} och om vi tittar närmare på \emph{gdrhs} 
+så ser vi att det är en rekursiv funktionen vilket vi implementerar med \emph{repeat1} för att få en lista med minst en uppreprning.
+
 Parsern använder den metod som är specifierad i Haskell 2010 \citep{haskell2010} för att lösa företrädesreglerna (precedence levels) för operatorer då denna metoden är enklare än den som är definerad i Haskell 98. 
+Anledningen till att företrädesreglerna inte kan defineras direkt i parsern är att Haskell använder sig av användardefinerade företrädesregler.
 Metoden fungerar så att den löser företrädesreglerna först efter ett uttryck har parsats till en lista med operatorer 
 och uttryck, när en operator påträffas i listan slås dess företrädesnivå upp i en tabell och ett träd med 
 operatorer och uttryck skapas. Sista används trädet för att generera en AST för uttrycken.
