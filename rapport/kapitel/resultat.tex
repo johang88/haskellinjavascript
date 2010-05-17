@@ -6,7 +6,10 @@ Projektets resultat är ett kodbibliotek för en haskelltolk. Här presenterar v
 \subsection{Parser} 
 Parserns uppgift är att ta användarens indata och konvertera den till en datastruktur 
 som är lättare att hantera internt. Denna datastruktur kallas Abstract Syntax Tree (AST). 
-haskellstandarden definerat upp en grammatik, ett antal regler, som definerar hur korrekt haskellkod ser ut och hur den ska tolkas.
+Haskellstandarden har definerat upp en grammatik, ett antal regler, som definerar hur korrekt haskellkod ser ut och hur den ska tolkas.
+
+Haskell är ett svårt språk att parsa då det inte är kontextfritt på grund av att kodens mening beror på blanksteg, 
+Haskell tillåter även egendefinerade operatorer vilket också kan påverka kodens mening. 
 
 Haskell är ett svårt språk att parsa då det inte är kontextfritt på grund av att kodens mening beror på blanksteg, 
 Haskell tillåter även egendefinerade operatorer vilket också kan påverka kodens mening. 
