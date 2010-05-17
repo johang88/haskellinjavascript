@@ -43,11 +43,9 @@ foldr1 f xs = case xs of
     [x] -> x
     (x:xs) -> f x $ foldr1 f xs
 
-filter f xs = case xs of
-    [] -> []
-    (x:xs) -> case f x of
-        True -> x : filter f xs
-        False -> filter f xs
+filter _ [] = []
+filter f (x:xs ) | f x = x : filter f xs
+                 | otherwise = filter f xs
 
 iterate f x = f x : iterate f x
 
