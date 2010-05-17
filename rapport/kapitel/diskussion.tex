@@ -1,1 +1,34 @@
 \section{Diskussion}
+Vi har skapat en javascriptapplikation som kan parsa, typchecka och interpretera stora delar av Haskell 98. Det som saknas är fullständigt stöd för typklasser där stödet endast finns i typcheckaren men fortfarande behöver implementeras i interpretatorn. Detta handlar främst om förmågan att välja rätt instanser av typklasser vid applicering av överlagrade funktioner.
+
+Sett till planeringen har vi lyckats uppfylla alla milstolpar utom typklasser, dock inte enligt den ordning och tidsplan som ursprungligen planerades. 
+Vi insåg att det var enklast att utveckla parsern, typcheckaren och interpertatorn parallelt och bestämma individuellt vad som skulle implementeras och i 
+vilken ordning för att senare, oftast en gång i veckan, samordna och implementera det som behövdes i flera delar.
+
+Vi har inte implementerat NPlusK-pattern i parsern och då de är borttagna i Haskell 2010 \citep{haskell2010} känner vi att det inte behövs.
+
+
+% TODO typcheckaren kom aldrig in i den slutgiltliga versionen. Ö:
+
+
+
+\subsection{Framtida förbättringar}
+
+Syftet med projektet, att skapa en fungerande Haskelltolk i javascript, har vi lyckats implementera om man tar hänsyn till de avgränsningar som är uppsatta. Dock om man ser till motivationen bakom projektet, att vår Haskelltolk ska kunna användas som grund för att skapa en webbaserad interaktiv läroplattform, så finns det fortfarande mycket kvar att utveckla. Framförallt handlar det om att göra Haskelltolken och HIJi mer lättanvänd för nybörjare inom funktionell programmering.
+
+I parsern har vi identifierat två förbättringsmöjligheter. För det första, bättre felmeddelanden
+Hjälpsamma och förklarande felmeddelanden är en viktigt del av ett utvecklingsverktyg och det generars för tillfället inte av parsern. 
+Om parsern stöter på ett fel rapporterar den endast att ett fel har inträffat och avslutar parsningsprocessen. 
+Att förbättra dessa felmeddelanden med exempelivs rad- och kolumnnummer och specifik information om vad för fel som har inträffat skulle göra parsern mer användbar.
+För att implentera detta behöver man kombinera steg 1 och 2 i parsningen för att rad- och kolumn-nummer ska bevaras korrekt då borttagning av nästlade kommentarer kan påverka dessa.
+JSParse behöver modifieras så att det rapporterar var ett fel uppstod och i vilken parser.
+
+För det andra, konverteringen av icke kontextfri Haskellkod till kontextfri kan förbättras 
+för att klara av att expandera måsvingar i \emph{[x | let x = 5]}. 
+För att klara av detta behövs en parser som räknar antal måsvingar, paranteser, 
+komman och hakparanteser efter \emph{let} och avgöra när det är korrekt att sätta in avslutande måsvingar.
+
+Även i HIJi finns det förbättringar att göra.
+Det som framförallt behöver utvecklas är, för det första, erbjuda en interaktiv tutorial där användaren får instruktioner vad som ska skrivas in i HIJi. Om användaren skriver in rätt uttryck fortsätter tutorialen till nästa nivå.
+För det andra, visa typinformation från funktioner genom att hålla musen över funktionsnamnet.
+Och tillsist, kunna stega igenom ett program eller funktion för att kunna se vad som händer i varje evalutionssteg. 

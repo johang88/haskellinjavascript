@@ -97,7 +97,56 @@ commands[":help"] = "HELP";
                 {
                     try {
                         var newLine = makeEntered(modules, line);
-                        var output = makeOutput(evaluateHaskell(line, env));
+                        
+                        var showResult = function(result) {
+                            if (result.type == "Data") {
+                                var str = result.identifier;
+                                var op = " ";
+                                
+                                if (str == "I#") {
+                                    str = "";
+                                } else if (str == ":") {
+                                    str = "";
+                                    op = ",";
+                                }
+                                
+                                if (result.ptrs) {
+                                    var first = true;
+                                    for (var i = 0; i < result.ptrs.length; i++) {
+                                        if (str.length == 0 && first) {
+                                            str = showResult(result.ptrs[i].dereference());
+                                            if (str.str) 
+                                                str = str.str;
+                                            first = false;
+                                        } else {
+                                            var res = showResult(result.ptrs[i].dereference());
+                                            if (res.str)
+                                                res = res.str;
+                                            str = str + op + res;
+                                        }
+                                    }
+                                }
+                                
+                                return { str: str, isList: op == "," };
+                            } if (result.force) {
+                                return result.force();
+                            } else if (result.ptrs) {
+                                return result.ptrs[0].dereference();
+                            } else {
+                                return result; 
+                            }
+                        }
+                        
+                        var result = showResult(evaluateHaskell(line, env));
+                        if (result.isList) {
+                            result = result.str;
+                            result = result.substring(0, result.length - 3);
+                            result = "[" + result + "]";
+                        } else if (result.str) {
+                            result = result.str;
+                        }
+                        
+                        var output = makeOutput(result);
                         $('.input', this).after(output).replaceWith(newLine);
                         $("ol",this).append(makeInput(modules));
                     }
