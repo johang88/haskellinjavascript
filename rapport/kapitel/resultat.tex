@@ -154,8 +154,28 @@ Parsers som vi har lagt till:
 
 
 
-\subsection{Interpretator}
+\subsection{Interpretatorns struktur}
 Interpretatorns uppgift är att tolka det abstrakta syntaxträdet. Under interpreteringen används flera datastrukturer vars uppgift och struktur anges här.
+
+\subsubsection{HeapPtr}
+De flesta implementationer av Haskell använder sig av Lazy Evaluation vilket innebär att en Thunk, ett uttryck, kommer att tvingas maximalt en gång. I vår implementation används HeapPtr som en wrapper runt en Thunk, när en HeapPtr dereferenceras kommer Thunk att tvingas till en Weak Head Normal Form (WHNF) och HeapPtr uppdateras att peka till denna. Eftersom att tvingandet av en Thunk kan resultera i en ny Thunk så tvingas thunken i en loop till dess att resultatet är en WHNF.
+
+\begin{lstlisting}
+this.dereference = function() {
+    if (this.weakHead == undefined) {
+        // We'll drive the execution here instead of recursing 
+        // in the force method
+        var continuation = this.thunk;
+        while (continuation instanceof interpreter.Thunk) {
+            continuation = continuation.force();
+        }
+        this.weakHead = continuation;
+        this.thunk = null;
+     }
+     return this.weakHead;
+};
+\end{lstlisting}
+En HeapPtr är ett vanligt Javascript-objekt som innehåller funktionen dereference. Dereference körs när anroparen vill använda den WHNF som HeapPtr pekar mot. Om HeapPtr inte har blivit dereferenserad innan så kommer dess Thunk att tvingas tills det att resultatet är en WHNF och HeapPtr objectet uppdateras till att peka mot denna.
 
 \subsubsection{Thunk}
 En Thunk är en avstannad beräkning, en continuation. En Thunk består av en Env och en Expression.
@@ -185,25 +205,6 @@ En DelayedApplication är ett specialfall av en LambdaAbstraction. Vi avsockrar 
 
 En Primitiv är ett Javascript-värde, till exempel en integer eller en double.
 
-\subsubsection{HeapPtr}
-De flesta implementationer av Haskell använder sig av Lazy Evaluation, vilket innebär att en Thunk kommer att tvingas maximalt en gång. I vår implementation används HeapPtr som en wrapper runt en Thunk, när en HeapPtr dereferenceras kommer Thunk att tvingas till en WHNF och HeapPtr uppdateras att peka till denna. Eftersom att tvingandet av en Thunk kan resultera i en ny Thunk så tvingas thunken i en loop till dess att resultatet är en WHNF.
-
-\begin{lstlisting}
-this.dereference = function() {
-    if (this.weakHead == undefined) {
-        // We'll drive the execution here instead of recursing 
-        // in the force method
-        var continuation = this.thunk;
-        while (continuation instanceof interpreter.Thunk) {
-            continuation = continuation.force();
-        }
-        this.weakHead = continuation;
-        this.thunk = null;
-     }
-     return this.weakHead;
-};
-\end{lstlisting}
-
 \subsubsection{Env}
 Env är en stack av Javascript hashes, hasharna består av en bindning mellan en Identifier och antingen en HeapPtr eller ett (Pattern, HeapPtr) par.  Den andra bindingstypen är resultatet av en VariableDeclaration där man måste utföra en pattern match för att avgöra vilken HeapPtr som hör till vilken Identifier. När man läser ut en Identifier som är bunden enligt den andra typen av binding,  kommer en pattern match att utföras och alla identifiers i det pattern som matchas kommer att bindas om som den första typen alternativt en pattern match fail inträffar och ett exception genereras.
 
@@ -219,7 +220,7 @@ Env {
 }
 \end{lstlisting}
 
-\subsection{Abstrakt syntaxträd} 
+\subsection{Abstrakt syntaxträd och evaluering} 
 Vår AST representeras av javascript-objekt men dess strukturella uppbyggnad ges här av Haskells datadefinitioner.
 
 \subsubsection{Declaration}
@@ -276,6 +277,8 @@ this.eval = function(env) {
     throw new Error("No matching clause");
 };
 \end{lstlisting}
+Detta är eval metoden för en Case expression. Här syns hur en ny Env används vid varje alternativ i Case satsen och hur granskaren delas mellan de olika alternativen.
+
 Att evaluera en VariableLookup under en Env är det samma som att leta upp en Identifier i Env-objektet.
 
 Do, List och ArithmeticSequence är inte evaluerade direkt utan de är avsockrade och sedan evalueras det avsockrade uttrycket. Avsockringsreglerna ges i Haskell 98 standarden \citep{haskell98chap3}.
@@ -464,3 +467,26 @@ Figur \ref{fig:hiji} visar hur HIJi ser ut. De första raderna visar, precis som
 
 HIJi är skapat för att likna GHCi i så stor utsträckning som möjligt.
 Genom att efterlikna GHCi kommer användare känna igen sig när de tar steget från HIJi till GHCi. Det blir för dem ett naturligt steg och kortar inlärningströskeln. Även för haskellprogrammerare som är vana användare av GHCi blir det lättare att använda sig av HIJi, de behöver inte fundera hur verktyget ska användas.
+
+\subsection{Language feutoeeras}
+
+I våra avgränsningar angav vi vilka delar av haskellspecifikationen vi valde att fokusera på. 
+I vår modul Prelude har vi definerat upp en rad funktioner som visar på exempel på att vi lyckats implemetera det vi fokuserat på.
+
+Vi har stöd för namngivna funktioner och lambda-funktioner. Ett exempel på en namngiven funktion är id.
+\begin{lstlisting}
+id x = x
+\end{lstlisting}
+
+Algebraiska datatyper stöds också. I Prelude har vi definerat upp datatypen Bool och ett par exempel på när vi använder den. I funktionen \emph{(||) x y} har vi också ett exempel på pattern matching. Resultatet av x \emph{case x of} kommer matcha antingen mot \emph{True} eller \emph{False}.
+\begin{lstlisting}
+data Bool = True | False
+
+(||) x y = case x of
+    True -> True
+    False -> y
+\end{lstlisting}
+
+
+Guards %TODO filter från johan
+
