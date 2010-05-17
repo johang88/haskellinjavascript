@@ -5,7 +5,7 @@ Projektets resultat är ett kodbibliotek för en haskelltolk. Här presenterar v
 
 \subsection{Parser} 
 Parserns uppgift är att ta användarens indata och konvertera den till en datastruktur 
-som är lättare att hantera internt. Denna datastruktur kallas Abstract Syntax Tree (AST). 
+som är lättare att hantera internt. Denna datastruktur kallas \emph{Abstract Syntax Tree} (AST). 
 Haskellstandarden har definerat upp en grammatik, ett antal regler, som definerar hur korrekt haskellkod ser ut och hur den ska tolkas.
 
 Haskell är ett svårt språk att parsa då det inte är kontextfritt på grund av att kodens mening beror på blanksteg, 
@@ -61,7 +61,7 @@ Function("f", Lambda("x",
 
 \subsubsection{Steg 1 - Ta bort kommentarer}
 Det första steget använder en parser som identifierar och tar bort kommentarer. 
-Haskell har två olika kommentarsstiler, enkelradiga börjar med \emph{--} och slutar vid första radbytet och 
+Haskell har två olika kommentarsstilar, enkelradiga som börjar med \emph{--} och slutar vid första radbytet, och 
 nästlade som kan gå över flera rader börjar med \emph{\{-} och slutar med \emph{-\}}.
 
 \subsubsection{Steg 2 - Konvertera till kontextfri}
@@ -86,8 +86,8 @@ Den korrekta översättningen är:
 \begin{lstlisting}
 let { x = 5; y = 4 } in x + y
 \end{lstlisting}
-För att översätta detta korrekt kommer parsern ihåg den aktuella nästlingsnivån av "let"-uttryck och var deras repsektive "in"-uttryck befinner sig. 
-Den avslutande måsvingen sätts in där ett matchande "in"-uttryck påträffas.
+För att översätta detta korrekt kommer parsern ihåg den aktuella nästlingsnivån av \emph{let}-uttryck och var deras repsektive \emph{in}-uttryck befinner sig. 
+Den avslutande måsvingen sätts in där ett matchande \emph{in}-uttryck påträffas.
 
 Ett exempel som inte översätts korrekt:
 \begin{lstlisting}
@@ -102,13 +102,13 @@ Men det blir:
 [ x | let { x = 2 ] }
 \end{lstlisting}
 Anledningen är att endast nästlingen av \emph{let} och \emph{in} sparas, men här finns inget \emph{in}.
-För att lösa felet måste parsern hålla reda på antalet paranteser, måsvingar, hakparanteser och komman efter ett let-uttryck och när en symbol som gör det ogiltligt 
+För att lösa felet måste parsern hålla reda på antalet paranteser, måsvingar, hakparanteser och komman efter ett \emph{let}-uttryck och när en symbol som gör det ogiltligt 
 med en avslutande måsvinge påträffas sätts måsvingen in precis innan symbolen.
 
 \subsubsection{Steg 3 - Skapa AST}
 Det tredje steget är en parser för den kontextfria varianten av Haskell som den är definerad i standarden. 
-Samtidigt som koden tolkas byggs en AST upp. Parsern består av en liten parser för varje grammatisk regel som är definerad i haskellstandarden 
-dessa parsers kombineras ihop för att bilda den slutgiltliga parsern. Det resulterar i ett träd av parsers, en parser för hela programmet som har flera mindre parsers under sig.
+Samtidigt som koden tolkas byggs en AST upp. Parsern består av en liten parser för varje grammatisk regel som är definerad i haskellstandarden. 
+Dessa parsers kombineras ihop för att bilda den slutgiltliga parsern. Det resulterar i ett träd av parsers, en parser för hela programmet som har flera mindre parsers under sig.
 
 Exempel:
 Definitionen i haskellstandarden:
@@ -135,15 +135,15 @@ Här används \emph{choice} för att tolka de två olika alternativen i \emph{rh
 ser vi att det är en rekursiv funktionen vilket vi implementerar med \emph{repeat1} för att få en lista med minst en uppreprning, 
 \emph{gdrhs\_action}, \emph{gdrhs\_fix\_list\_action} och \emph{decl\_rhs\_action} används för att generera AST.
 
-Parsern använder den metod som är specifierad i Haskell 2010 \citep{haskell2010} för att lösa företrädesreglerna (precedence levels) för operatorer då denna metoden är enklare än den som är definerad i Haskell 98. 
+Parsern använder den metod som är specifierad i Haskell 2010 \citep{haskell2010} för att lösa företrädesreglerna (precedence levels) för operatorer då den här metoden är enklare än den som är definerad i Haskell 98. 
 Anledningen till att företrädesreglerna inte kan defineras direkt i parsern är att Haskell använder sig av användardefinerade företrädesregler.
 Metoden fungerar så att den löser företrädesreglerna först efter ett uttryck har parsats till en lista med operatorer 
 och uttryck, när en operator påträffas i listan slås dess företrädesnivå upp i en tabell och ett träd med 
-operatorer och uttryck skapas. Sista används trädet för att generera en AST för uttrycken.
+operatorer och uttryck skapas. Till sist används trädet för att generera en AST för uttrycken.
 
 \subsubsection{JSParse}
-Vi använder en modifierad version av JSParse där vi har korrigerat två fel och lagt till fler parsers. Felen vi korrigerade var i butnot-parsern och i choice-parserns cachefunktion. 
-Choice-parsern cachade resultat från parsers som misslyckades och det cachade resultatet användes i senare parsers, 
+Vi använder en modifierad version av JSParse där vi har korrigerat två fel och lagt till fler parsers. Felen vi korrigerade var i \emph{butnot}-parsern och i \emph{choice}-parserns cachefunktion. 
+\emph{Choice}-parsern cachade resultat från parsers som misslyckades och det cachade resultatet användes i senare parsers, 
 vi löste det med en stackbaserad cache där cachen för en parser som misslyckas raderas.
 
 Parsers som vi har lagt till:
@@ -158,7 +158,7 @@ Parsers som vi har lagt till:
 Interpretatorns uppgift är att tolka det abstrakta syntaxträdet. Under interpreteringen används flera datastrukturer vars uppgift och struktur anges här.
 
 \subsubsection{HeapPtr}
-De flesta implementationer av Haskell använder sig av Lazy Evaluation vilket innebär att en Thunk, ett uttryck, kommer att tvingas maximalt en gång. I vår implementation används HeapPtr som en wrapper runt en Thunk, när en HeapPtr dereferenceras kommer Thunk att tvingas till en Weak Head Normal Form (WHNF) och HeapPtr uppdateras att peka till denna. Eftersom att tvingandet av en Thunk kan resultera i en ny Thunk så tvingas thunken i en loop till dess att resultatet är en WHNF.
+De flesta implementationer av Haskell använder sig av lat evaluering, vilket innebär att en \emph{Thunk}, ett uttryck, kommer att tvingas maximalt en gång. I vår implementation används \emph{HeapPtr} som en wrapper runt en \emph{Thunk}, när en \emph{HeapPtr} dereferenceras kommer \emph{Thunk} att tvingas till en \emph{Weak Head Normal Form} (WHNF) och \emph{HeapPtr} uppdateras att peka till denna. Eftersom att tvingandet av en \emph{Thunk} kan resultera i en ny \emph{Thunk} så tvingas thunken i en loop till dess att resultatet är en WHNF.
 
 \begin{lstlisting}
 this.dereference = function() {
@@ -175,19 +175,19 @@ this.dereference = function() {
      return this.weakHead;
 };
 \end{lstlisting}
-En HeapPtr är ett vanligt Javascript-objekt som innehåller funktionen dereference. Dereference körs när anroparen vill använda den WHNF som HeapPtr pekar mot. Om HeapPtr inte har blivit dereferenserad innan så kommer dess Thunk att tvingas tills det att resultatet är en WHNF och HeapPtr objectet uppdateras till att peka mot denna.
+En \emph{HeapPtr} är ett vanligt Javascript-objekt som innehåller funktionen \emph{dereference}. \emph{Dereference} körs när anroparen vill använda den WHNF som \emph{HeapPtr} pekar mot. Om \emph{HeapPtr} inte har blivit dereferenserad innan så kommer dess \emph{Thunk} att tvingas tills det att resultatet är en WHNF och \emph{HeapPtr}-objektet uppdateras till att peka mot denna.
 
 \subsubsection{Thunk}
-En Thunk är en avstannad beräkning, en continuation. En Thunk består av en Env och en Expression.
+En \emph{Thunk} är en avstannad beräkning, en \emph{continuation}. En \emph{Thunk} består av en \emph{Env} och en \emph{Expression}.
 
 \begin{lstlisting}
 data Thunk = Closure Env Expression
 \end{lstlisting}
 
-Haskell måste använda sig av non-strict evaluation vilket innebär att en uträkning inte får köras ifall den inte behövs. När en uträkning körs så innebär det att den resulterar i flertalet Thunks för de delar av beräkningen som ännu inte behövs. När värdet av en Thunk behövs kommer den att tvingas till en \emph{weak head normal form} (WHNF) eller en ny Thunk. Anledningen till detta är att vi på så sätt minskar användandet av rekursion vilket minskar risken att vi får ett runtime error.
+Haskell måste använda sig av \emph{non-strict evaluation}, vilket innebär att en uträkning inte får köras ifall den inte behövs. När en uträkning körs så innebär det att den resulterar i flertalet \emph{Thunks} för de delar av beräkningen som ännu inte behövs. När värdet av en \emph{Thunk} behövs kommer den att tvingas till en \emph{weak head normal form} (WHNF) eller en ny \emph{Thunk}. Anledningen till detta är att vi på så sätt minskar användandet av rekursion vilket minskar risken att vi får ett \emph{runtime error}.
 
 \subsubsection{Weak Head Normal Form}
-En WHNF är ett partiellt evaluerat uttryck. Uttrycket har blivit evaluerat så långt att vi är säkra på att det retunerar något typ av värde, alltså något som inte är undefined. Ofta innehåller en WHNF referenser till ännu icke evaluerade uttryck, om de inte gör det sägs uttrycket vara i Normal Form.
+En WHNF är ett partiellt evaluerat uttryck. Uttrycket har blivit evaluerat så långt att vi är säkra på att det retunerar något typ av värde, alltså något som inte är \emph{undefined}. Ofta innehåller en WHNF referenser till ännu icke evaluerade uttryck, om de inte gör det sägs uttrycket vara i \emph{Normal Form}.
 
 \begin{lstlisting}
 data WeakHead 
@@ -197,16 +197,16 @@ data WeakHead
     | Primitive
 \end{lstlisting}
 
-En Data är resultatet av att applicera en algebraisk datakonstruktor på dess argument. Argumenten ges som en lista av HeapPtr, det vill säga en lista av evaluerade eller icke evaluerade uttryck. Exemplevis resulterar Just 1 i en Data med Identifiern Just och en HeapPtr till det icke evaluerade uttrycket 1.
+En \emph{Data} är resultatet av att applicera en algebraisk datakonstruktor på dess argument. Argumenten ges som en lista av \emph{HeapPtr}, det vill säga en lista av evaluerade eller icke evaluerade uttryck. Exemplevis resulterar \emph{Just 1} i en \emph{Data} med Identifiern \emph{Just} och en \emph{HeapPtr} till det icke evaluerade uttrycket 1.
 
-En LambdaAbstraction är körningsrepresentationen av en lambdafunktion, en Env är bunden till lambdafunktionen.
+En \emph{LambdaAbstraction} är körningsrepresentationen av en lambda-funktion, en \emph{Env} är bunden till lambda-funktionen.
 
-En DelayedApplication är ett specialfall av en LambdaAbstraction. Vi avsockrar inte Haskells funktionsdeklarationer vilket innebär att pattern matching sker även vid funktionsapplikation och inte bara i Case satser. Detta betyder att vi måste samla alla argument till en funktion innan vi kan avgöra vilket funktionsalternativ som skall användas. En vidare beskrivning finns i kapitlet Declaration.
+En \emph{DelayedApplication} är ett specialfall av en \emph{LambdaAbstraction}. Vi avsockrar inte Haskells funktionsdeklarationer, vilket innebär att \emph{pattern matching} sker även vid funktionsapplikation och inte bara i \emph{Case-satser}. Detta betyder att vi måste samla alla argument till en funktion innan vi kan avgöra vilket funktionsalternativ som skall användas. En vidare beskrivning finns i kapitlet Declaration.
 
-En Primitiv är ett Javascript-värde, till exempel en integer eller en double.
+En \emph{Primitive} är ett Javascript-värde, till exempel en \emph{integer} eller en \emph{double}.
 
 \subsubsection{Env}
-Env är en stack av Javascript hashes, hasharna består av en bindning mellan en Identifier och antingen en HeapPtr eller ett (Pattern, HeapPtr) par.  Den andra bindingstypen är resultatet av en VariableDeclaration där man måste utföra en pattern match för att avgöra vilken HeapPtr som hör till vilken Identifier. När man läser ut en Identifier som är bunden enligt den andra typen av binding,  kommer en pattern match att utföras och alla identifiers i det pattern som matchas kommer att bindas om som den första typen alternativt en pattern match fail inträffar och ett exception genereras.
+Env är en stack av \emph{Javascript hashes}. Hasharna består av en bindning mellan en \emph{Identifier} och antingen en \emph{HeapPtr} eller ett (\emph{Pattern}, \emph{HeapPtr}) par.  Den andra bindingstypen är resultatet av en \emph{VariableDeclaration} där man måste utföra en \emph{pattern match} för att avgöra vilken \emph{HeapPtr} som hör till vilken \emph{Identifier}. När man läser ut en \emph{Identifier} som är bunden enligt den andra typen av binding, kommer en \emph{pattern match} att utföras och alla \emph{identifiers} i det \emph{pattern} som matchas kommer att bindas om som den första typen alternativt en \emph{pattern match fail} inträffar och ett \emph{exception} genereras.
 
 \begin{lstlisting}
 Env {
@@ -224,7 +224,7 @@ Env {
 Vår AST representeras av javascript-objekt men dess strukturella uppbyggnad ges här av Haskells datadefinitioner.
 
 \subsubsection{Declaration}
-Den första datatypen av intresse är Declaration. En Declaration representerar en namnbindning antigen i en moduls globala definitionsområde eller i en let eller where bindning.
+Den första datatypen av intresse är \emph{Declaration}. En \emph{Declaration} representerar en namnbindning antigen i en moduls globala definitionsområde eller i en \emph{let}- eller \emph{where}-bindning.
 
 \begin{lstlisting}
 data Declaration 
@@ -234,20 +234,20 @@ data Declaration
         (Either [(Guard, Expression)] Expression)
 \end{lstlisting}
 
-Variable är en bindning av typen p = e där p är en Pattern och e en Expression. En Variable kan därför binda flera olika symboler på en gång. Till exempel (1:a:b:[]) = [1,2,3] binder variabeln a och b.
+\emph{Variable} är en bindning av typen \emph{p = e} där p är en \emph{Pattern} och e en \emph{Expression}. En \emph{Variable} kan därför binda flera olika symboler på en gång. Till exempel \emph{(1:a:b:[]) = [1,2,3]} binder variabeln a och b.
 
-Function är en representation av Haskells sockrade funktionsdefinitioner. Det är möjligt att avsockra dessa till en Variable binding med hjälp av Lambda och Case men vi har valt att införa en speciell representation av funktionsdefinitioner. Till skillnad från traditionella kompilatorer så avsockras Function aldrig utan håller samma form även under interpreteringen. Tanken bakom detta är att det skall vara lättare att se sammanhanget mellan datan under körning och källkoden vilket gör det lättare att knyta samman den statiska källkoden med den dynamiska körningsdatan.
+\emph{Function} är en representation av Haskells sockrade funktionsdefinitioner. Det är möjligt att avsockra dessa till en \emph{VariableBinding} med hjälp av \emph{Lambda} och \emph{Case} men vi har valt att införa en speciell representation av funktionsdefinitioner. Till skillnad från traditionella kompilatorer så avsockras \emph{Function} aldrig utan håller samma form även under interpreteringen. Tanken bakom detta är att det skall vara lättare att se sammanhanget mellan datan under körning och källkoden vilket gör det lättare att knyta samman den statiska källkoden med den dynamiska körningsdatan.
 
-En Data definierar en algebraisk datatyp med konstruktorerna definierade som nedan
+En \emph{Data} definierar en algebraisk datatyp med konstruktorerna definierade som nedan
 \begin{lstlisting}
 data Constructor = Constructor Identifier Int
 \end{lstlisting}
 Värt att notera här är avsaknaden av typvariabler och typargument, detta kommer att åtgärdas när typchekaren är integrerad.
 
-Under interpreteringen av en Declaration binds de namn (Identifiers) som definieras av Declaration till Env-objektet. Vilken typ av binding som används beror på typen av Declaration. En Variable ger en Identifier => (Pattern, Expression) bindning medan en Function eller Data ger en Identifier => Expression bindning.
+Under interpreteringen av en \emph{Declaration} binds de namn (Identifiers) som definieras av \emph{Declaration} till \emph{Env}-objektet. Vilken typ av binding som används beror på typen av \emph{Declaration}. En Variable ger en \emph{Identifier => (Pattern, Expression)}-bindning medan en \emph{Function} eller \emph{Data} ger en \emph{Identifier => Expression}-bindning.
 
 \subsubsection{Expression}
-En Expression är representationen av ett haskelluttryck.
+En \emph{Expression} är representationen av ett haskelluttryck.
 
 \begin{lstlisting}
 data Expression 
@@ -263,7 +263,7 @@ data Expression
     | Primitive JavascriptFunction
 \end{lstlisting}
 
-När en Expression evalueras under en Env är resultatet antingen en Thunk (continuation, closure) eller en WHNF. Evaluering av en Constant resulterar antigen i en primitiv eller en avsockring av konstanten. I interpretatorn så är konstanta nummer, till exempel 1, egentligen en algebraisk datatyp (I\# 1\#) och denna avsockring sker först under körning. När en Lambda evalueras returneras en LambdaAbstraction med evalueringens Env bunden. En Let evalueras genom att binda dess Declarations till Env-objektet och returnera en Closure över det nya Env-objektet och Let-uttryckets Expression. En Case evalueras genom att den första Expression i tuppellistan vars Pattern matchar evalueras under den Env som resulterar från pattern matchen.
+När en \emph{Expression} evalueras under en \emph{Env} är resultatet antingen en \emph{Thunk} (continuation, closure) eller en WHNF. Evaluering av en \emph{Constant} resulterar antigen i en primitiv eller en avsockring av konstanten. I interpretatorn så är konstanta nummer, till exempel 1, egentligen en algebraisk datatyp (I\# 1\#) och denna avsockring sker först under körning. När en \emph{Lambda} evalueras returneras en \emph{LambdaAbstraction} med evalueringens \emph{Env} bunden. En \emph{Let} evalueras genom att binda dess \emph{Declarations} till \emph{Env}-objektet och returnera en \emph{Closure} över det nya \emph{Env}-objektet och \emph{Let}-uttryckets \emph{Expression}. En \emph{Case} evalueras genom att den första \emph{Expression} i tuppellistan vars \emph{Pattern} matchar evalueras under den \emph{Env} som resulterar från \emph{pattern matchen}.
 \begin{lstlisting}
 this.eval = function(env) {
     var expr = new interpreter.HeapPtr(
@@ -277,16 +277,16 @@ this.eval = function(env) {
     throw new Error("No matching clause");
 };
 \end{lstlisting}
-Detta är eval metoden för en Case expression. Här syns hur en ny Env används vid varje alternativ i Case satsen och hur granskaren delas mellan de olika alternativen.
+Detta är \emph{eval}-metoden för ett \emph{Case}-uttryck. Här syns hur en ny \emph{Env} används vid varje alternativ i \emph{Case}-satsen och hur granskaren delas mellan de olika alternativen.
 
-Att evaluera en VariableLookup under en Env är det samma som att leta upp en Identifier i Env-objektet.
+Att evaluera en \emph{VariableLookup} under en \emph{Env} är det samma som att leta upp en \emph{Identifier} i \emph{Env}-objektet.
 
-Do, List och ArithmeticSequence är inte evaluerade direkt utan de är avsockrade och sedan evalueras det avsockrade uttrycket. Avsockringsreglerna ges i Haskell 98 standarden \citep{haskell98chap3}.
+\emph{Do}, \emph{List} och \emph{ArithmeticSequence} är inte evaluerade direkt utan de är avsockrade och sedan evalueras det avsockrade uttrycket. Avsockringsreglerna ges i Haskell 98 standarden \citep{haskell98chap3}.
 
-En Primitive är en wrapper runt en Javascript-funktion. Att evaluera en Primitive är det samma som att evaluera funktionen med Env som argument.
+En \emph{Primitive} är en wrapper runt en Javascript-funktion. Att evaluera en \emph{Primitive} är det samma som att evaluera funktionen med \emph{Env} som argument.
 
 \subsubsection{Pattern}
-Vi har implementerat fem stycken olika pattern matches från Haskell.
+Vi har implementerat fem stycken olika \emph{pattern matches} från Haskell.
 \begin{lstlisting}
 data Pattern = Constructor Identifier [Pattern]
     | VariableBinding Identifier
@@ -294,9 +294,9 @@ data Pattern = Constructor Identifier [Pattern]
     | ConstantPattern Value
     | Wildcard
 \end{lstlisting}
-Under en pattern match händer två saker. Dels så kontrolleras att uttrycket som matchas verkligen stämmer överens med dess pattern, dels så binds de variabler som definieras i Pattern till Env. 
+Under en \emph{pattern match} händer två saker. Dels så kontrolleras att uttrycket som matchas verkligen stämmer överens med dess pattern, dels så binds de variabler som definieras i \emph{Pattern} till \emph{Env}. 
 
-En VariableBinding matchar alla uttryck och binder uttrycket till Identifier. En Constructor matchar de uttryck vars WHNF är en Data med samma Identifier (samt samma typ, detta tvingas dock av typcheckaren) och alla sub-patterns matchar Data argumenten. Combined är en sammanslagning av en VariableBinding och en annan Pattern, i källkoden så har de formen \emph{v@p}. Combined matchar de uttryck som matchar dess Pattern och binder ett matchat uttryck till Identifier. En ConstantPattern matchar de uttryck som är exakt lika med värdet. Till sist så matchar en Wildcard alla uttryck.
+En \emph{VariableBinding} matchar alla uttryck och binder uttrycket till \emph{Identifier}. En \emph{Constructor} matchar de uttryck vars WHNF är en \emph{Data} med samma \emph{Identifier} (samt samma typ, detta tvingas dock av typcheckaren) och alla sub-patterns matchar \emph{Data}-argumenten. \emph{Combined} är en sammanslagning av en \emph{VariableBinding} och en annan \emph{Pattern}, i källkoden så har de formen \emph{v@p}. \emph{Combined} matchar de uttryck som matchar dess \emph{Pattern} och binder ett matchat uttryck till \emph{Identifier}. En \emph{ConstantPattern} matchar de uttryck som är exakt lika med värdet. Till sist så matchar en \emph{Wildcard} alla uttryck.
 
 \subsection{Typcheckare} 
 Typcheckarens uppgift är att analysera det abstrakta syntaxträdet, inferera typerna på dess olika
@@ -304,7 +304,7 @@ beståndsdelar och avgöra om sättet på vilket de används och interagerar med
 andra beståndsdelar är konsekvent. Om så inte är fallet sägs programmet ha
 typfel.
 
-Vår implementation av typcheckaren är starkt influerad av den implementation i Haskell som beskrivs i \citep{jones99} men är omdesignad för att göra sig bättre i JavaScript. Det följande avsnittet förutsätter viss förkunskap om typinferens och polymorfiska typer. För en bra introduktion till detta referera till \citep{dragonbookchap6} och för en djupare genomgång \citep{pierce02}.
+Vår implementation av typcheckaren är starkt influerad av den implementation i Haskell som beskrivs i \citep{jones99} men är omdesignad för att göra sig bättre i Javascript. Det följande avsnittet förutsätter viss förkunskap om typinferens och polymorfiska typer. För en bra introduktion till detta referera till \citep{dragonbookchap6} och för en djupare genomgång \citep{pierce02}.
 
 \subsubsection{Haskells typsystem}
 Jämfört med mer konventionella språk (C, C++, Java etc) skiljer sig Haskell
@@ -329,7 +329,7 @@ roll i typcheckningsprocessen. Deras främsta funktion är att möjliggöra funk
 \subsubsection{Representation av kinds, typer, typscheman och typklasser}
 För att representera typsystemets olika beståndsdelar använder typcheckaren ett antal olika datastrukturer. Här ger vi en snabb genomgång av dessa för att sedan kunna fokusera på själva typcheckningsprocessen i de sedan följande avsnitten. 
 
-Kinds kan liknas vid en motsvarighet till typer för typkonstruktorer. \emph{*} (uttalas ``stjärna'', eng. ``star'') representerar enkla (nullary) typer som Integer och \emph{Integer -> Bool} medan komplexa typer som tar argument representeras med applicering av kinds \emph{k1 -> k2}. Exempelvis har \emph{Maybe} kind \emph{*->*} medan \emph{Maybe Bool} har kind \emph{*}.
+Kinds kan liknas vid en motsvarighet till typer för typkonstruktorer. \emph{*} (uttalas ``stjärna'', eng. ``star'') representerar enkla (nullary) typer som \emph{Integer} och \emph{Integer -> Bool} medan komplexa typer som tar argument representeras med applicering av kinds \emph{k1 -> k2}. Exempelvis har \emph{Maybe} kind \emph{*->*} medan \emph{Maybe Bool} har kind \emph{*}.
 
 \begin{lstlisting}
 data Kind = Star
@@ -344,7 +344,7 @@ data Type = TVar Id Kind
           | TGen Int     
 \end{lstlisting}
 
-TVar representerar typvariabler. Dessa har namn som vanligtvis tilldelas internt i typcheckaren. TAp representerar applicering av typer och TCon representerar typkonstruktorer för konkreta typer. TGen representerar
+\emph{TVar} representerar typvariabler. Dessa har namn som vanligtvis tilldelas internt i typcheckaren. \emph{TAp} representerar applicering av typer och \emph{TCon} representerar typkonstruktorer för konkreta typer. \emph{TGen} representerar
 generiska typer och används enbart i samband med kvantifiering av
 typer internt i typcheckaren
 
@@ -444,10 +444,10 @@ Ofta förekommer situationer där tvetydigheter gör att typcheckaren inte kan b
 
 \subsection{HIJi}
 
-HIJi är ett program som ger användaren ett GHCi-liknande användargränssnitt till haskelltolken i webläsaren. 
+HIJi är ett program som ger användaren ett GHCi-liknande användargränssnitt till haskelltolken i en webläsare. 
 HIJi tar indata genom att funktioner skrivs in i HIJi som sedan tolkas av parsern och i sin tur bygger upp det abstrakta syntaxträdet. Därefter evalueras uttrycket av interpretern och resultatet blir synligt i HIJi.
 
-HIJi har stöd för att ladda externa moduler. Det görs genom att skriva :l \emph{namn-på-modul}. Användaren får då tillgång till alla de funktioner som är skrivna i den modulen. Modulerna måste vara placerade på servern som HIJi laddades ifrån. Modulerna kan ej laddas direkt från användarens hårddisk på grund av att javascript av säkerhetsskäl ej har skriv och läsrättigheter av användarens filsystem. HIJi har även en förladdad modul, Prelude, som innehåller en delmängd av de funktioner som finns i GHCis motsvarighet. 
+HIJi har stöd för att ladda externa moduler. Det görs genom att skriva :l \emph{namn-på-modul}. Användaren får då tillgång till alla de funktioner som är skrivna i den modulen. Modulerna måste vara placerade på servern som HIJi laddades ifrån. Modulerna kan ej laddas direkt från användarens hårddisk på grund av att Javascript av säkerhetsskäl ej har skriv- och läsrättigheter av användarens filsystem. HIJi har även en förladdad modul, Prelude, som innehåller en delmängd av de funktioner som GHCi har i sin motsvarighet. 
 
 Den indata som användaren skriver till HIJi sparas i ett objekt för att hantera historiken. För att bläddra i historiken används piltangenterna Upp och Ner. Hela historik-objektet sparas även i en kaka som ett JSON-objekt. Av detta skäl är det möjligt att få tillgång till historiken när en ny session av webbläsaren startas.
 
