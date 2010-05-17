@@ -671,7 +671,7 @@
         
         var gdrhs_fix_list_action = function(p) {
             return action(p, function(ast) {
-                return ast[0];
+                return ast;
             });  
         };
         
@@ -691,7 +691,7 @@
         };
         
         var rhs = choice(   decl_rhs_action(sequence(expect(ws('=')), ws(exp), optional(sequence(expect(ws("where")), ws(decls))))),
-                            sequence(ws(gdrhs), optional(sequence(expect(ws("where")), ws(decls))))
+                            rhs_gurad_action(sequence(ws(gdrhs), optional(sequence(expect(ws("where")), ws(decls)))))
                         );
         
         // todo: Should be quite a lot of choices here, but those are for 

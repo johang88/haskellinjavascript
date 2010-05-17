@@ -6,7 +6,6 @@ Många programmerare kommer inte i kontakt med funktionell programmering  och me
 
 En fördel med att ha tolken på webben är att det enda som behövs för att använda den är en javascriptkompatibel webbläsare, något som följer med i princip i alla moderna operativsystem. Detta betyder att de användare som befinner sig inom vår målgrupp redan har den programvaran som behövs på sina hemdatorer för att använda sig av vårt program.  
 
-
 % TODO  detta e out of context`
 Haskell är ett starkt statiskt typcheckat och funktionellt programmeringsspråk med lat evaluering. % TODO: Citera, skriv om ifall det är direktöversatt
 % jag bytte från strikt semantik till lat evaluering:p
@@ -46,8 +45,7 @@ Projektet består av planera, designa och implementera haskelltolken. Vi arbetad
 %Vi kommer att integrera jQuery \citep{jquery} för att få ett unisont stöd för samtliga webbläsare. jQuery kommer även underlätta arbetet med att skapa ett enkelt och stilrent interaktivt gränssnitt.
 
 \subsubsection{Avgränsningar} 
-Att tolka Haskell i Javascript är inget trivialt projekt och därför kommer inte hela Haskell att implementeras. Vi kommer implementera en delmängd av den version av Haskell som kallas Haskell 98.
-De delar som prioriteras är
+Att tolka Haskell i Javascript är inget trivialt projekt och därför valde vi att avgränsa implementationen till de mest centrala och viktiga delarna i haskellspecifikationen. De delar vi valde att fokusera på är:
         \begin{enumerate}
             \item{Lambda-funktioner, namngivna funktioner}
             \item{Typer, generella typer, algebraiska datatyper}
@@ -55,6 +53,6 @@ De delar som prioriteras är
             \item{Pattern matching}
             \item{Guards}
         \end{enumerate}
-Med dessa delar implementerade kan de flesta enklare haskellprogram köras och bör vara tillräckligt för det stora flertalet nybörjare. Vi kommer ej lägga någon tid på att skapa en användarvänlig webbsida utan fokus kommer ligga på att skapa haskelltolken. Dock kommer en kommandotolk som körs på en webbsida utvecklas för att kunna kommunicera med haskelltolken. 
-Vi kommer inte lägga någon nämnvärd tid på att optimera haskelltolken utan målet är att göra en fungerande implementation. 
+Med dessa delar implementerade kan de flesta enklare haskellprogram köras och bör vara tillräckligt för det stora flertalet nybörjare. Vi beslutade att ej lägga någon större tid på att skapa en användarvänlig webbsida, utan fokus låg på att skapa haskelltolken. Dock valde vi att utveckla en kommandotolk som skulle köras på en webbsida för att kunna kommunicera med haskelltolken. 
+SLutligen beslutades det att inte optimera haskelltolken utan målet är att göra en fungerande implementation. 
 
