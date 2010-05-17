@@ -97,7 +97,15 @@ commands[":help"] = "HELP";
                 {
                     try {
                         var newLine = makeEntered(modules, line);
-                        var output = makeOutput(evaluateHaskell(line, env));
+                        
+                        var result = evaluateHaskell(line, env);
+                        if (result.force) {
+                            result = result.force();
+                        } else if (result.ptrs) {
+                            result = result.ptrs[0].thunk.force();
+                        }
+                        
+                        var output = makeOutput(result);
                         $('.input', this).after(output).replaceWith(newLine);
                         $("ol",this).append(makeInput(modules));
                     }
