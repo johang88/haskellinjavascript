@@ -6,9 +6,9 @@ Projektets resultat är ett kodbibliotek för en haskelltolk. Här presenterar v
 \subsection{Parser} 
 Parserns uppgift är att ta användarens indata och konvertera den till en datastruktur 
 som är lättare att hantera internt. Denna datastruktur kallas Abstract Syntax Tree (AST). 
-haskellstandarden definerat upp en grammatik, ett antal regler, som definerar hur korrekt haskellkod ser ut och hur den ska tolkas.
+Haskellstandarden har definerat upp en grammatik, ett antal regler, som definerar hur korrekt haskellkod ser ut och hur den ska tolkas.
 
-För att parsa indatan använder vi ett bibliotek för att bygga parsers kallat JSParse \citep{jsparse}.
+För att parsa indatan använder vi ett bibliotek för att bygga parsers, kallat JSParse \citep{jsparse}.
 JSParse ger oss ett antal funktioner som vi använder för att definera grammatiken och konvetera den till vår interna struktur.
 
 Som figur \ref{fig:parser_steg} visar, så består parsern av tre mindre parsers, den första är en parser som hittar kommentarer och tar bort dessa. 
