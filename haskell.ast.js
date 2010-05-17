@@ -280,7 +280,7 @@
     };
     ast.DoBind.prototype = new ast.DoNotation();
     ast.DoBind.prototype.partDesugar = function(rest) {
-	// x <- expr ; do ==>  expr >>= (a -> case a of x -> do; _ -> fail)
+	// x <- expr ; do ==>  expr >>= (a -> case a of x -> do; _ -> fail undefined)
 	return new ast.Application(
 				   new ast.Application(
 						       new ast.VariableLookup(">>="), 
@@ -474,6 +474,7 @@
               | VariableBinding Identifier
 	      | Combined Identifier Pattern
 	      | ConstantPattern Value
+	      | Wildcard
     */
 
     ast.Pattern = function(){};
