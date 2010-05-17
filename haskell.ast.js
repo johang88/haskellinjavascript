@@ -108,7 +108,7 @@
 	this.expr = expr;
 	this.eval = function(env) {
 	    var newEnv = interpreter.loadDeclarations(this.declr, env.derive());
-	    return this.expr.eval(newEnv);
+	    return new interpreter.Closure(newEnv, this.expr);
 	};
         this.stringify = function() {
             return "let {" + this.declr.map(function (d) {
@@ -127,7 +127,7 @@
 	    for (var i in this.cases) {
 		var newEnv = env.derive();
 		if (this.cases[i][0].match(newEnv, expr)) {
-		    return this.cases[i][1].eval(newEnv);
+		    return new interpreter.Closure(newEnv, this.cases[i][1]);
 		};
 	    };
 	    throw new Error("No matching clause");
