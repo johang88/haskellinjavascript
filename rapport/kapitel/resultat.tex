@@ -11,6 +11,9 @@ Haskellstandarden har definerat upp en grammatik, ett antal regler, som definera
 Haskell är ett svårt språk att parsa då det inte är kontextfritt på grund av att kodens mening beror på blanksteg, 
 Haskell tillåter även egendefinerade operatorer vilket också kan påverka kodens mening. 
 
+Haskell är ett svårt språk att parsa då det inte är kontextfritt på grund av att kodens mening beror på blanksteg, 
+Haskell tillåter även egendefinerade operatorer vilket också kan påverka kodens mening. 
+
 För att parsa indatan använder vi ett bibliotek för att bygga parsers kallat JSParse \citep{jsparse}.
 JSParse ger oss ett antal funktioner som vi använder för att definera grammatiken och konvetera den till vår interna struktur.
 
@@ -132,7 +135,8 @@ var rhs = choice(
 \end{lstlisting}
 
 Här används \emph{choice} för att tolka de två olika alternativen i \emph{rhs} och om vi tittar närmare på \emph{gdrhs} 
-så ser vi att det är en rekursiv funktionen vilket vi implementerar med \emph{repeat1} för att få en lista med minst en uppreprning.
+ser vi att det är en rekursiv funktionen vilket vi implementerar med \emph{repeat1} för att få en lista med minst en uppreprning, 
+\emph{gdrhs\_action}, \emph{gdrhs\_fix\_list\_action} och \emph{decl\_rhs\_action} används för att generera AST.
 
 Parsern använder den metod som är specifierad i Haskell 2010 \citep{haskell2010} för att lösa företrädesreglerna (precedence levels) för operatorer då denna metoden är enklare än den som är definerad i Haskell 98. 
 Anledningen till att företrädesreglerna inte kan defineras direkt i parsern är att Haskell använder sig av användardefinerade företrädesregler.
