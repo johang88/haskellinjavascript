@@ -9,10 +9,10 @@ som är lättare att hantera internt. Denna datastruktur kallas \emph{Abstract S
 Haskellstandarden har definerat upp en grammatik, ett antal regler, som definerar hur korrekt haskellkod ser ut och hur den ska tolkas.
 
 Haskell är ett svårt språk att parsa då det inte är kontextfritt på grund av att kodens mening beror på blanksteg, 
-Haskell tillåter även egendefinerade operatorer vilket också kan påverka kodens mening. 
+Haskell tillåter även egendefinierade operatorer vilket också kan påverka kodens mening. 
 
 För att parsa indatan använder vi ett bibliotek för att bygga parsers kallat JSParse \citep{jsparse}.
-JSParse ger oss ett antal funktioner som vi använder för att definera grammatiken och konvetera den till vår interna struktur.
+JSParse ger oss ett antal funktioner som vi använder för att definiera grammatiken och konvertera den till vår interna struktur.
 
 Som figur \ref{fig:parser_steg} visar, består parsern av tre mindre parsers, den första är en parser som hittar kommentarer och tar bort dessa. 
 Det andra tar hand om kodens layout och gör om den till kontextfri kod. Den tredje gör om den kontextfria koden till vår AST.
@@ -66,7 +66,7 @@ nästlade som kan gå över flera rader börjar med \emph{\{-} och slutar med \e
 
 \subsubsection{Steg 2 - Konvertera till kontextfri}
 Det andra steget delar upp koden i dess ord och symboler samtidigt som den dekoreras med indenteringsnivåer enligt en algoritm % TODO vilken algoritm, k'a'lla
-som är specifierad i haskellstandarden. Därefter användads en annan algoritm från standarden för att sätta in måsvingar och semikolon på rätt platser. % samma, vilken algoritm, TODO 
+som är specificerad i haskellstandarden. Därefter användads en annan algoritm från standarden för att sätta in måsvingar och semikolon på rätt platser. % samma, vilken algoritm, TODO 
 När de två algoritmerna är klara sätts koden ihop igen och skickas vidare till nästa steg.
 
 En regel är att ett inre block inte får vara mindre indenterat än det omslutande blocket, exempelivs:
@@ -149,7 +149,7 @@ vi löste det med en stackbaserad cache där cachen för en parser som misslycka
 Parsers som vi har lagt till:
 \begin{enumerate}
     \item{\emph{repeatn}: en parser som upprepar en parser minst \emph{n} antal gånger}
-    \item{\emph{expectws}: en parser som tillåter blanksteg och inte retunerar någon ast, är en kombination av JSParse inbyggda parsers \emph{expect} och \emph{whitespace}}
+    \item{\emph{expectws}: en parser som tillåter blanksteg och inte returnerar någon ast, är en kombination av JSParse inbyggda parsers \emph{expect} och \emph{whitespace}}
 \end{enumerate}
 
 
@@ -366,12 +366,12 @@ data Pred = Pred Id Type
 \end{lstlisting}
 Ett predikat \emph{Pred className type} säger att typen \emph{type} tillhör typklassen \emph{className}.
 
-Ofta består typer av flera sammansatta enklare typer där olika typer kan tillhöra olika typklasser. För att modellera detta används kvalifierade typer:
+Ofta består typer av flera sammansatta enklare typer där olika typer kan tillhöra olika typklasser. För att modellera detta används kvalificerade typer:
 \begin{lstlisting}
 data Qual = Qual [Pred] Type
 \end{lstlisting}
 
-Den kvalifierade typen \emph{Monad m => m a} modelleras som:
+Den kvalificerade typen \emph{Monad m => m a} modelleras som:
 \begin{lstlisting}
 (Qual
   [ Pred "Monad" (TVar "m" (Kfun Star Star)) ]
@@ -404,8 +404,7 @@ För att hålla reda på vilka typklasser och instanser som finns används datat
 Substitueringar är mappningar \emph{typvariabel -> typ} och används av typcheckaren
 för att hålla typer uppdaterade efterhand som den får ny
 information. Typcheckaren innehåller flera funktioner som opererar på
-substitutioner, bland annat komponering och sammanfogning av
-substitutioner.
+substitutioner, bland annat sammansättning av substitutioner.  %% TODO var ursprungligen "komponering och sammanfognin" ska det vara två olika begrepp?
 
 \emph{Unifiering} är processen att finna en substituering som gör två typer ekvivalenta. Detta är viktigt exempelvis i uttryck {\bf if} \emph{e1} {\bf then} \emph{e2} {\bf else} \emph{e3}. Här måste typen för \emph{e1} gå att unifiera med typen \emph{Bool} och \emph{e2} och \emph{e3} måste gå att unifiera till en och samma typ. Om någon av dessa unifieringar inte är möjliga betyder det att typfel finns.
 
@@ -417,7 +416,7 @@ Eftersom en variabels exakta typ inte är helt fastställd förrän typcheckning
 data Assump = Assump Id Scheme
 \end{lstlisting}
 
-Typinferensen är beroende av att en antal komponenter finns tillgängliga. Dessa är registret över typklasser och instanser \emph{KlassEnv}, listan över antagna variabeltyper, en generator för unika typvariabler med funktionen \emph{newTVar} och substitueringas \emph{Subst}. Dessa samlas i objektet \emph{Environment} som skickas som argument till funktionerna i typinferensen. 
+Typinferensen är beroende av att en antal komponenter finns tillgängliga. Dessa är registret över typklasser och instanser \emph{KlassEnv}, listan över antagna variabeltyper, en generator för unika typvariabler med funktionen \emph{newTVar} och substitueringarnas \emph{Subst}. Dessa samlas i objektet \emph{Environment} som skickas som argument till funktionerna i typinferensen. 
 För att bättre illustrera hur typinfereringsprocessen går till ger vi ett konkret exempel. Koden nedan visar hur typinferering av \emph{if}-uttryck går till. Eftersom vårt projekt avsockrar \emph{if}-uttryck till \emph{case} använder det inte exempelkoden men då den på ett bra sätt illustrerar konceptett väljer vi här ändå att använda den:
 
 \begin{lstlisting}
@@ -435,7 +434,7 @@ ast.If.prototype.infer = function(env) {
   };
 };
 \end{lstlisting}
-Först infereras typen på vilkoret. Detta unifieras med typen \emph{Bool} på raden under. Sedan infereras typerna på \emph{then}- respektive \emph{else}-delarna och då dessa måste vara va samma typ unifieras deras typer. Om typerna inte går att unifiera innebär det att dess returtyper är distinkta och att det därför finns typfel. Till sist returneras de insamlade predikaten från både \emph{then}- och \emph{else}-delarna tillsammans med den unifierade typen.
+Först infereras typen på villkoret. Detta unifieras med typen \emph{Bool} på raden under. Sedan infereras typerna på \emph{then}- respektive \emph{else}-delarna och då dessa måste vara va samma typ unifieras deras typer. Om typerna inte går att unifiera innebär det att dess returtyper är distinkta och att det därför finns typfel. Till sist returneras de insamlade predikaten från både \emph{then}- och \emph{else}-delarna tillsammans med den unifierade typen.
 
 Av detta exempel kan ett antal slutsatser dras. Typinfereringen sker rekursivt från sammansatta uttryck ner till de alla enklaste literalerna. Att misslyckande av unifiering betyder typfel innebär att inferera-unifiera-cykeln har en roll liknande den infer-check har vid typcheckning i exempelvis C.
 
@@ -467,7 +466,7 @@ Genom att efterlikna GHCi kommer användare känna igen sig när de tar steget f
 \subsection{Prelude}
 I våra avgränsningar angav vi vilka delar av haskellspecifikationen vi skulle fokusera på. De delar som vi har fullt stöd för är lambda-funktioner, namngivna funktioner, algebraiska datatyper, pattern matching och guards. 
 I HIJis förladdade  modul, Prelude, har vi definerat upp ett antal funktioner som visar på att vi har implementerat dessa egenskaper från specifikationen.
-Alla funktioner som är definerade i Prelude är namngivna funktioner. Ett exempel på en namngiven funktion är \emph{id}. 
+Alla funktioner som är definierade i Prelude är namngivna funktioner. Ett exempel på en namngiven funktion är \emph{id}. 
 Algebraiska datatyper stöds och i  Prelude har vi definerat upp datatypen Bool och ett par funktioner, däribland (||), som använder sig utav den här datatypen. Funktionen (||) använder sig av pattern matching. Resultatet av \emph{case x of} kommer matcha antingen mot \emph{True} eller \emph{False}.
 Funktionen \emph{filter} från Prelude är ett exempel på att guards fungerar. Filter är också ett exempel på att pattern matching och rekursiva funktioner är implementerade. 
 
