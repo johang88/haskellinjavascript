@@ -291,6 +291,8 @@ beståndsdelar och avgöra om sättet på vilket de används och interagerar med
 andra beståndsdelar är konsekvent. Om så inte är fallet sägs programmet ha
 typfel.
 
+Vår implementation av typcheckaren är starkt influerad av den implementation i Haskell som beskrivs i \citep{jones99} men är omdesignad för att göra sig bättre i JavaScript. Det följande avsnittet förutsätter viss förkunskap om typinferens och polymorfiska typer. För en bra introduktion till detta referera till \citep{dragonbookchap6} och för en djupare genomgång \citep{pierce02}.
+
 \subsubsection{Haskells typsystem}
 Jämfört med mer konventionella språk (C, C++, Java etc) skiljer sig Haskell
 och övriga statiskt typade funktionella språk på flera sätt. I de senare
@@ -307,23 +309,20 @@ exempelvis en funktion inte är beroende av funktionalitet associerad med en
 specifik typ hos något av sina argument kan data av alla typer användas som
 argumentet.
 
-Utöver polymorfiska typer stödjer Haskell typklasser som gör överlagring av
-funktioner möjligt. Typklasser är väldigt centralt i Haskell och ändrar
-typcheckarens arbetssätt markant jämfört med liknande språk.
+Typklasser är en form av ad-hoc polymorfism som används flitigt i
+Haskell. Faktum är att de är så fundamentala i Haskell att de får en central
+roll i typcheckningsprocessen. Deras främsta funktion är att möjliggöra funktionsöverlagring beroende på typer på argument och förväntad returtyp.
 
-\subsubsection{Kinds}
-Kinds kan liknas vid en motsvarighet till typer för typkonstruktorer. * (uttalas ``stjärna'', eng. ``star'') representerar enkla (nullary) typer som Integer och Integer -> Bool medan komplexa typer som tar argument representeras med applicering av kinds k1 -> k1, exempelvis Maybe Bool.
+\subsubsection{Representation av kinds, typer, typscheman och typklasser}
+För att representera typsystemets olika beståndsdelar använder typcheckaren ett antal olika datastrukturer. Här ger vi en snabb genomgång av dessa för att sedan kunna fokusera på själva typcheckningsprocessen i de sedan följande avsnitten. 
+
+Kinds kan liknas vid en motsvarighet till typer för typkonstruktorer. \emph{*} (uttalas ``stjärna'', eng. ``star'') representerar enkla (nullary) typer som Integer och \emph{Integer -> Bool} medan komplexa typer som tar argument representeras med applicering av kinds \emph{k1 -> k2}. Exempelvis har \emph{Maybe} kind \emph{*->*} medan \emph{Maybe Bool} har kind \emph{*}.
 
 \begin{lstlisting}
 data Kind = Star
           | Kfun Kind Kind
 \end{lstlisting}
 
-\subsubsection{Typer}
-De datastrukturer som typcheckaren använder internt för att representera typer kan delas in i typvariabler som representerar 
-
-För att kunna arbeta på en hög abstraktionsnivå har typcheckaren sin egen
-interna representation av typer.
 
 \begin{lstlisting}
 data Type = TVar Id Kind
@@ -344,22 +343,9 @@ Integer} som är typen för standardfunktionen length i Haskell beskrivs med
     (TCon "(->)" (Kfun Star (Kfun Star Star)))
   (TAp
       (TCon "[]" (Kfun Star Star))
-      (TVar "a" Star)))
+  (TVar "a" Star)))
   (TCon "Integer" Star))
 \end{lstlisting}
-
-\subsubsection{Substitueringar}
-Substitueringar är mappningar \emph{typvariabel -> typ} och används av typcheckaren
-för att hålla typer uppdaterade efterhand som den får ny
-information. Typcheckaren innehåller flera funktioner som opererar på
-substitutioner, bland annat komponering och sammanfogning av
-substitutioner. \emph{Unifiering} är processen att finna en substituering som gör två typer ekvivalenta. Om unifiering inte är möjligt
-betyder det att det finns typfel.
-
-\subsubsection{Typklasser}
-Typklasser är en form av ad-hoc polymorfism som används flitigt i
-Haskell. Faktum är att de är så fundamentala i Haskell att de får en central
-roll i typcheckningsprocessen. Deras främsta funktion är att möjliggöra funktionsöverlagring beroende på typer på argument och förväntad returtyp.
 
 För att hålla reda på vilka typklasser en typ tillhör används predikat:
 \begin{lstlisting}
@@ -381,7 +367,7 @@ Den kvalifierade typen \emph{Monad m => m a} modelleras som:
     (TVar "a" Star)))
 \end{lstlisting}
 
-För att modellera de hela typscheman som typcheckaren får in från användaren används datatypen \emph{Scheme}.
+För att representera de hela typscheman som typcheckaren får in från användaren används datatypen \emph{Scheme}.
 \begin{lstlisting}
 data Scheme = Scheme [Kind] Qual
 \end{lstlisting}
@@ -400,6 +386,16 @@ För att representera det tidigare exemplet på detta sätt byter vi ut alla ide
 
 För att hålla reda på vilka typklasser och instanser som finns används datatypen \emph{Klass} (\emph{class} är ett reserverat ord i JavaScript) som representerar enskilda typklasser och deras instanser samt datatypen \emph{KlassEnvironment} som representerar den totala klassmiljön.
 
+
+\subsubsection{Substitueringar}
+Substitueringar är mappningar \emph{typvariabel -> typ} och används av typcheckaren
+för att hålla typer uppdaterade efterhand som den får ny
+information. Typcheckaren innehåller flera funktioner som opererar på
+substitutioner, bland annat komponering och sammanfogning av
+substitutioner.
+
+\emph{Unifiering} är processen att finna en substituering som gör två typer ekvivalenta. Detta är viktigt exempelvis i uttryck {\bf if} \emph{e1} {\bf then} \emph{e2} {\bf else} \emph{e3}. Här måste typen för \emph{e1} gå att unifiera med typen \emph{Bool} och \emph{e2} och \emph{e3} måste gå att unifiera till en och samma typ. Om någon av dessa unifieringar inte är möjliga betyder det att typfel finns.
+
 \subsubsection{Typinferens}
 Typinferens är den sammanfogande delen av typcheckningsprocessen och går ut på att typcheckaren traverserar abstrakta syntaxträdet och samlar de kriterier som måste vara uppfyllda för att programmet ska vara korrekt.
 
@@ -416,7 +412,7 @@ ast.If.prototype.infer = function(env) {
   var b = this.condExpr.infer(env);
   env.unify(
     b.type,
-    new typechecker.TCon(``Bool'', new typechecker.Star()));
+    new typechecker.TCon("Bool", new typechecker.Star()));
   var te = this.thenExpr.infer(env);
   val ee = this.elseExpr.infer(env);
   env.unify(te.type, ee.type);
@@ -426,7 +422,7 @@ ast.If.prototype.infer = function(env) {
   };
 };
 \end{lstlisting}
-Först infereras typen på vilkoret. Detta unifieras med typen \emph{Bool} på raden under. Sedan infereras typerna på \emph{then}- respektive \emph{else}-delarna och då dessa måste vara va samma typ unifieras deras typer. Till sist returneras de insamlade predikaten från både \emph{then}- och \emph{else}-delarna tillsammans med den unifierade typen.
+Först infereras typen på vilkoret. Detta unifieras med typen \emph{Bool} på raden under. Sedan infereras typerna på \emph{then}- respektive \emph{else}-delarna och då dessa måste vara va samma typ unifieras deras typer. Om typerna inte går att unifiera innebär det att dess returtyper är distinkta och att det därför finns typfel. Till sist returneras de insamlade predikaten från både \emph{then}- och \emph{else}-delarna tillsammans med den unifierade typen.
 
 Av detta exempel kan ett antal slutsatser dras. Typinfereringen sker rekursivt från sammansatta uttryck ner till de alla enklaste literalerna. Att misslyckande av unifiering betyder typfel innebär att inferera-unifiera-cykeln har en roll liknande den infer-check har vid typcheckning i exempelvis C.
 
