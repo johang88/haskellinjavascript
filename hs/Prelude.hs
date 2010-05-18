@@ -47,8 +47,11 @@ foldr1 f xs = case xs of
 filter _ [] = []
 filter f (x:xs ) | f x = x : filter f xs
                  | otherwise = filter f xs
+                 
+iterate f x = f x : iterate f (f x)
 
-iterate f x = f x : iterate f x
+zipWith f (a:as) (b:bs) = f a b : zipWith f as bs
+zipWith _ _ _ = []
 
 head xs = case xs of
     (x:_) -> x
@@ -74,6 +77,14 @@ data Int = I# Int#
 (==) (I# i1) (I# i2) = i1 ==# i2
 
 (>) (I# i1) (I# i2) = i1 ># i2
+
+(<) (I# i1) (I# i2) = i1 <# i2
+
+(<=) (I# i1) (I# i2) = i1 <=# i2
+
+(>=) (I# i1) (I# i2) = i1 >=# i2
+
+(%) (I# i1) (I# i2) = I# (remInt# i1 i2)
 
 stepDebug = stepDebug#
 
