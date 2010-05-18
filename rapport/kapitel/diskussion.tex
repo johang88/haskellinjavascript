@@ -7,6 +7,32 @@ vilken ordning för att senare, oftast en gång i veckan, samordna och implement
 
 Vi har inte implementerat NPlusK-pattern i parsern och då de är borttagna i Haskell 2010 \citep{haskell2010} känner vi att det inte behövs.
 
+\subsection{Val av språk för implementering}
+Tidigt i planeringen tvingades vi välja vilket språk vår implementation skulle
+bestå av. Det första alternativet var att först skriva en kompilator för att
+kompilera Haskell till JavaScript. Därefter skulle så kallad boot-strapping
+tillämpas där kompilatorn används för att kompilera sig själv till
+JavaScript. Eftersom det redan finns parsers och typcheckare för Haskell
+skrivna i Haskell skulle projektet mestadels handla om att finna en lämplig
+målrepresentation för Haskell i Javascript-kod och sedan implementering av en
+kodgenerator för denna. Haskells statiska typcheckning och referentiella
+transparens skulle också förenkla verifiering av projektets komponenter.
+
+Dock finns även en del nackdelar med en sådan implementation. Utan särskilda
+optimeringar i kompilatorn skulle en målrepresentation nödvändigtvis innehålla
+strukturer liknande dem man finner i en interpreterare för ett lat evaluerat
+språk. Det är ett rimligt antagande att sådana optimeringar tack vare graden
+på sin komplexitet vore alltför stora för att genomföra i en kurs som
+denna. Därför anser vi att denna typ av implementation lämpar sig bäst inom
+ramarna för ett existerande kompilatorprojekt såsom GHC där nödvändiga optimeringar redan finns innbyggda.
+
+Det andra alternativet var att skriva allt i Javascript och detta är den
+implementationsstrategi som vi till slut bestämde oss för. Den största
+fördelen med en sådan implementation är att integrering med annan
+Javascript-kod blir enkel. Det första alternativet skulle däremot kräva ett
+särskilt integrationslager för att få samma möjligheter.
+
+Det andra alternativet hade också fördelen att en stor del av vår projekts potentiella användare redan har viss erfarenhet av Javascript och liknande språk och att användande av vårt bibliotek därför blir enklare för dessa än vad motsvarande haskellimplementation skulle bli. Eftersom detta alternativ krävde att vi själva implementerar parser, typcheckare och interpreterare ansåg vi också att det gav oss större möjligheter till lärande. 
 
 \subsection{Framtida förbättringar}
 
