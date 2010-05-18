@@ -1,7 +1,8 @@
 \section{Resultat}
 % TODO
 
-Projektets resultat är ett kodbibliotek för en haskelltolk. Här presenterar vi de olika modulerna som tolken består av. Koden finns att tillgå på GitHub: \url{http://github.com/johang88/haskellinjavascript}.
+Projektets resultat är ett kodbibliotek för en haskelltolk. Den nuvarande statusen av projektet är att parser och interpretator är fullt integrerade med varandra. Typcheckaren är inte integrerad, dock är den färdigutvecklad. För att integrera typcheckaren måste det abstrakta syntaxträdet utvigdas för att ta hänsyn till typinformation. 
+Koden finns att tillgå på GitHub: \url{http://github.com/johang88/haskellinjavascript}. Nedan följer en mer noggrann genomgång av projektets olika delar. 
 
 \subsection{Parser} 
 Parserns uppgift är att ta användarens indata och konvertera den till en datastruktur 
@@ -9,7 +10,7 @@ som är lättare att hantera internt. Denna datastruktur kallas \emph{Abstract S
 Haskellstandarden har definerat upp en grammatik, ett antal regler, som definerar hur korrekt haskellkod ser ut och hur den ska tolkas.
 
 Haskell är ett svårt språk att parsa då det inte är kontextfritt på grund av att kodens mening beror på blanksteg, 
-Haskell tillåter även egendefinierade operatorer vilket också kan påverka kodens mening. 
+Haskell tillåter även användardefinierade operatorer vilket också kan påverka kodens mening. 
 
 För att parsa indatan använder vi ett bibliotek för att bygga parsers kallat JSParse.
 JSParse ger oss ett antal funktioner som vi använder för att definiera grammatiken och konvertera den till vår interna struktur.
@@ -64,12 +65,12 @@ Det första steget använder en parser som identifierar och tar bort kommentarer
 Haskell har två olika kommentarsstilar, enkelradiga som börjar med \emph{--} och slutar vid första radbytet, och 
 nästlade som kan gå över flera rader börjar med \emph{\{-} och slutar med \emph{-\}}.
 
-\subsubsection{Steg 2 - Konvertera till kontextfri}
-Det andra steget delar upp koden i dess ord och symboler samtidigt som den dekoreras med indenteringsnivåer enligt en algoritm % TODO vilken algoritm, k'a'lla
-som är specificerad i haskellstandarden. Därefter användads en annan algoritm från standarden för att sätta in måsvingar och semikolon på rätt platser. % samma, vilken algoritm, TODO 
+\subsubsection{Steg 2 - Applicera layoutregler}
+Det andra steget applicerar Haskells layoutregler enligt två algoritmer som är definerade i haskellstandarden \citep{haskell98chap9}. Den första delar upp koden i dess ord och symboler samtidigt som den dekoreras med indenteringsnivåer. 
+Därefter användads den andra för att sätta in måsvingar och semikolon på rätt platser.
 När de två algoritmerna är klara sätts koden ihop igen och skickas vidare till nästa steg.
 
-Ett exempel på en regel är att ett inre block inte får vara mer indenderat än ett omslutande block.
+Ett exempel på en layoutregel är att ett inre block inte får vara mer indenderat än ett omslutande block.
 \begin{lstlisting}
 case x of
     True -> ...
@@ -110,29 +111,19 @@ Det tredje steget är en parser för den kontextfria varianten av Haskell som de
 Samtidigt som koden tolkas byggs en AST upp. Parsern består av en liten parser för varje grammatisk regel som är definerad i haskellstandarden. 
 Dessa parsers kombineras ihop för att bilda den slutgiltliga parsern. Det resulterar i ett träd av parsers, en parser för hela programmet som har flera mindre parsers under sig.
 
-Exempel på grammatik definierad i Haskellstandarden.
+Exempel på grammatik definierad i Haskellstandarden:
 \begin{lstlisting}
 gdrhs -> gd = exp [gdrhs]
-rhs -> exp [where decls]
-     | gdrhs [where decls]
 \end{lstlisting}
-Desss motsvarande parsers.
+Dess motsvarande parser:
 \begin{lstlisting}
 var gdrhs = gdrhs_action(
     repeat1(gdrhs_fix_list_action(sequence(ws(gd), 
                 expectws('='), ws(exp)))));
-
-var rhs = choice(
-    decl_rhs_action(sequence(expect(ws('=')), ws(exp), 
-         optional(sequence(expect(ws("where")), ws(decls))))),
-     sequence(ws(gdrhs), optional(sequence(expect(ws("where")), 
-         ws(decls))))
-);
 \end{lstlisting}
 
-Här används \emph{choice} för att tolka de två olika alternativen i \emph{rhs} och om vi tittar närmare på \emph{gdrhs} 
-ser vi att det är en rekursiv funktionen vilket vi implementerar med \emph{repeat1} för att få en lista med minst en uppreprning, 
-\emph{gdrhs\_action}, \emph{gdrhs\_fix\_list\_action} och \emph{decl\_rhs\_action} används för att generera AST.
+Tittar vi närmare på \emph{gdrhs} ser vi att det är en rekursiv deklaration. Vilket vi implementerar med \emph{repeat1} för att få en lista med minst en upprepning. 
+\emph{gdrhs\_action} och \emph{gdrhs\_fix\_list\_action} används för att generera det abstrakta syntaxträdet.
 
 Parsern använder den metod som är specifierad i Haskell 2010 \citep{haskell2010} för att lösa företrädesreglerna (precedence levels) för operatorer då den här metoden är enklare än den som är definerad i Haskell 98. 
 Anledningen till att företrädesreglerna inte kan defineras direkt i parsern är att Haskell använder sig av användardefinerade företrädesregler.
@@ -238,7 +229,7 @@ För att representera de hela typscheman som typcheckaren får in från använda
 \begin{lstlisting}
 data Scheme = Scheme [Kind] Qual
 \end{lstlisting}
-Eftersom typvariabler (\emph{TVar id kind}) endast skapas internt i typcheckaren så representeras här alla generiska typer med \emph{TGen n} där \emph{n} helt enkelt anger att det är den \emph{n}:te generiska typen i typschemat och dess kind finns lagrat på position \emph{n} i \emph{[Kind]}
+Eftersom typvariabler (\emph{TVar id kind}) endast skapas internt i typcheckaren representeras här alla generiska typer med \emph{TGen n} där \emph{n} helt enkelt anger att det är den \emph{n}:te generiska typen i typschemat och dess kind finns lagrat på position \emph{n} i \emph{[Kind]}
 
 För att representera det tidigare exemplet på detta sätt byter vi ut alla identiska förekomster av \emph{TVar id kind} mot identiska \emph{TGen i}:
 \begin{lstlisting}
@@ -251,15 +242,15 @@ För att representera det tidigare exemplet på detta sätt byter vi ut alla ide
       (TGen 1))))
 \end{lstlisting}
 
-För att hålla reda på vilka typklasser och instanser som finns används datatypen \emph{Klass} (\emph{class} är ett reserverat ord i JavaScript) som representerar enskilda typklasser och deras instanser samt datatypen \emph{KlassEnvironment} som representerar den totala klassmiljön.
+För att hålla reda på vilka typklasser och instanser som finns används datatypen \emph{Klass} (\emph{class} är ett reserverat ord i Javascript) som representerar enskilda typklasser och deras instanser samt datatypen \emph{KlassEnvironment} som representerar den totala klassmiljön.
 
-\subsubsection{Substitueringar}
-Substitueringar är mappningar \emph{typvariabel -> typ} och används av typcheckaren
+\subsubsection{Substitutioner}
+Substitutionerna är mappningar \emph{typvariabel -> typ} och används av typcheckaren
 för att hålla typer uppdaterade efterhand som den får ny
 information. Typcheckaren innehåller flera funktioner som opererar på
 substitutioner, bland annat sammansättning av substitutioner.  %% TODO var ursprungligen "komponering och sammanfognin" ska det vara två olika begrepp?
 
-\emph{Unifiering} är processen att finna en substituering som gör två typer ekvivalenta. Detta är viktigt exempelvis i uttryck {\bf if} \emph{e1} {\bf then} \emph{e2} {\bf else} \emph{e3}. Här måste typen för \emph{e1} gå att unifiera med typen \emph{Bool} och \emph{e2} och \emph{e3} måste gå att unifiera till en och samma typ. Om någon av dessa unifieringar inte är möjliga betyder det att typfel finns.
+\emph{Unifiering} är processen att finna en substitution som gör två typer ekvivalenta. Detta är viktigt exempelvis i uttryck {\bf if} \emph{e1} {\bf then} \emph{e2} {\bf else} \emph{e3}. Här måste typen för \emph{e1} gå att unifiera med typen \emph{Bool} och typen för \emph{e2} och \emph{e3} måste gå att unifiera. Om någon av dessa unifieringar inte är möjliga betyder det att typfel finns.
 
 \subsubsection{Typinferens}
 Typinferens är den sammanfogande delen av typcheckningsprocessen och går ut på att typcheckaren traverserar abstrakta syntaxträdet och samlar de kriterier som måste vara uppfyllda för att programmet ska vara korrekt.
@@ -269,8 +260,8 @@ Eftersom en variabels exakta typ inte är helt fastställd förrän typcheckning
 data Assump = Assump Id Scheme
 \end{lstlisting}
 
-Typinferensen är beroende av att en antal komponenter finns tillgängliga. Dessa är registret över typklasser och instanser \emph{KlassEnv}, listan över antagna variabeltyper, en generator för unika typvariabler med funktionen \emph{newTVar} och substitueringarnas \emph{Subst}. Dessa samlas i objektet \emph{Environment} som skickas som argument till funktionerna i typinferensen. 
-För att bättre illustrera hur typinfereringsprocessen går till ger vi ett konkret exempel. Koden nedan visar hur typinferering av \emph{if}-uttryck går till. Eftersom vårt projekt avsockrar \emph{if}-uttryck till \emph{case} använder det inte exempelkoden men då den på ett bra sätt illustrerar konceptett väljer vi här ändå att använda den:
+Typinferensen är beroende av att en antal komponenter finns tillgängliga. Dessa är registret över typklasser och instanser \emph{KlassEnv}, listan över antagna variabeltyper, en generator för unika typvariabler med funktionen \emph{newTVar} och substitutionernas \emph{Subst}. Dessa samlas i objektet \emph{Environment} som skickas som argument till funktionerna i typinferensen. 
+För att bättre illustrera hur typinfereringsprocessen går till ger vi ett konkret exempel. Koden nedan visar hur typinferering av \emph{if}-uttryck går till. Eftersom vårt projekt avsockrar \emph{if}-uttryck till \emph{case} använder det inte exempelkoden men då den på ett bra sätt illustrerar konceptet väljer vi här ändå att använda den:
 
 \begin{lstlisting}
 ast.If.prototype.infer = function(env) {
@@ -287,38 +278,18 @@ ast.If.prototype.infer = function(env) {
   };
 };
 \end{lstlisting}
-Först infereras typen på villkoret. Detta unifieras med typen \emph{Bool} på raden under. Sedan infereras typerna på \emph{then}- respektive \emph{else}-delarna och då dessa måste vara va samma typ unifieras deras typer. Om typerna inte går att unifiera innebär det att dess returtyper är distinkta och att det därför finns typfel. Till sist returneras de insamlade predikaten från både \emph{then}- och \emph{else}-delarna tillsammans med den unifierade typen.
+Först infereras typen på villkoret. Detta unifieras med typen \emph{Bool} på raden under. Sedan infereras typerna på \emph{then}- respektive \emph{else}-delarna och unifieras då dessa måste vara av samma typ. Om typerna inte går att unifiera innebär det att dess returtyper är distinkta och att det därför finns typfel. Till sist returneras de insamlade predikaten från både \emph{then}- och \emph{else}-delarna tillsammans med den unifierade typen.
 
 Av detta exempel kan ett antal slutsatser dras. Typinfereringen sker rekursivt från sammansatta uttryck ner till de alla enklaste literalerna. Att misslyckande av unifiering betyder typfel innebär att inferera-unifiera-cykeln har en roll liknande den infer-check har vid typcheckning i exempelvis C.
 
 \subsubsection{Defaulting}
 Ofta förekommer situationer där tvetydigheter gör att typcheckaren inte kan bestämma en typ. För att förenkla för programmeraren finns därför förbestämda standardtyper att använda i dessa situationer för en del inbyggda typer. Detta användande av förbestämda standartyper kallas för defaulting.
 
-\subsubsection{Typcheckarens status vid rapportens skrivande}
-I sitt nuvarande tillstånd saknar typcheckaren delar av den funktionalitet som ingick i projektets mål. Detta handlar om integration med interpretatorn och förmågan att ladda rätt instans av typklassser vid applicering av överlagrade funktioner. Vi räknar dock med att ha denna funktionalitet i tid för slutredovisningen. 
+\subsubsection{Typcheckarens nuvarande status}
+I sitt nuvarande tillstånd saknar typcheckaren delar av den funktionalitet som ingick i projektets mål. Detta handlar om integration med interpretatorn och förmågan att ladda rätt instans av typklassser vid applicering av överlagrade funktioner. 
 
 \subsection{Interpretatorns struktur}
 Interpretatorns uppgift är att tolka det abstrakta syntaxträdet. Under interpreteringen används flera datastrukturer vars uppgift och struktur anges här.
-
-\subsubsection{HeapPtr}
-De flesta implementationer av Haskell använder sig av lat evaluering, vilket innebär att en \emph{Thunk}, ett uttryck, kommer att tvingas maximalt en gång. I vår implementation används \emph{HeapPtr} som en wrapper runt en \emph{Thunk}, när en \emph{HeapPtr} dereferenceras kommer \emph{Thunk} att tvingas till en \emph{Weak Head Normal Form} (WHNF) och \emph{HeapPtr} uppdateras att peka till denna. Eftersom att tvingandet av en \emph{Thunk} kan resultera i en ny \emph{Thunk} så tvingas thunken i en loop till dess att resultatet är en WHNF.
-
-\begin{lstlisting}
-this.dereference = function() {
-    if (this.weakHead == undefined) {
-        // We'll drive the execution here instead of recursing 
-        // in the force method
-        var continuation = this.thunk;
-        while (continuation instanceof interpreter.Thunk) {
-            continuation = continuation.force();
-        }
-        this.weakHead = continuation;
-        this.thunk = null;
-     }
-     return this.weakHead;
-};
-\end{lstlisting}
-En \emph{HeapPtr} är ett vanligt Javascript-objekt som innehåller funktionen \emph{dereference}. \emph{Dereference} körs när anroparen vill använda den WHNF som \emph{HeapPtr} pekar mot. Om \emph{HeapPtr} inte har blivit dereferenserad innan så kommer dess \emph{Thunk} att tvingas tills det att resultatet är en WHNF och \emph{HeapPtr}-objektet uppdateras till att peka mot denna.
 
 \subsubsection{Thunk}
 En \emph{Thunk} är en avstannad beräkning, en \emph{continuation}. En \emph{Thunk} består av en \emph{Env} och en \emph{Expression}.
@@ -327,7 +298,7 @@ En \emph{Thunk} är en avstannad beräkning, en \emph{continuation}. En \emph{Th
 data Thunk = Closure Env Expression
 \end{lstlisting}
 
-Haskell måste använda sig av \emph{non-strict evaluation}, vilket innebär att en uträkning inte får köras ifall den inte behövs. När en uträkning körs så innebär det att den resulterar i flertalet \emph{Thunks} för de delar av beräkningen som ännu inte behövs. När värdet av en \emph{Thunk} behövs kommer den att tvingas till en WHNF eller en ny \emph{Thunk}. Anledningen till detta är att vi på så sätt minskar användandet av rekursion vilket minskar risken att vi får ett \emph{runtime error}.
+Haskell måste använda sig av \emph{non-strict evaluation}, vilket innebär att en uträkning inte får köras ifall den inte behövs. När en uträkning körs så innebär det att den resulterar i flertalet \emph{Thunks} för de delar av beräkningen som ännu inte behövs. När värdet av en \emph{Thunk} behövs kommer den att tvingas till en \emph{Weak Head Normal Form} (WHNF) eller en ny \emph{Thunk}. Anledningen till detta är att vi på så sätt minskar användandet av rekursion vilket minskar risken att vi får ett runtime error.
 
 \subsubsection{Weak Head Normal Form}
 En WHNF är ett partiellt evaluerat uttryck. Uttrycket har blivit evaluerat så långt att vi är säkra på att det retunerar något typ av värde, alltså något som inte är \emph{undefined}. Ofta innehåller en WHNF referenser till ännu icke evaluerade uttryck, om de inte gör det sägs uttrycket vara i \emph{Normal Form}.
@@ -347,6 +318,26 @@ En \emph{LambdaAbstraction} är körningsrepresentationen av en lambda-funktion,
 En \emph{DelayedApplication} är ett specialfall av en \emph{LambdaAbstraction}. Vi avsockrar inte Haskells funktionsdeklarationer, vilket innebär att \emph{pattern matching} sker även vid funktionsapplikation och inte bara i \emph{Case-satser}. Detta betyder att vi måste samla alla argument till en funktion innan vi kan avgöra vilket funktionsalternativ som skall användas. En vidare beskrivning finns i kapitlet Declaration.
 
 En \emph{Primitive} är ett Javascript-värde, till exempel en \emph{integer} eller en \emph{double}.
+
+\subsubsection{HeapPtr}
+De flesta implementationer av Haskell använder sig av lat evaluering, vilket innebär att en \emph{Thunk}, ett uttryck, kommer att tvingas maximalt en gång. I vår implementation används \emph{HeapPtr} som en wrapper runt en \emph{Thunk}, när en \emph{HeapPtr} dereferenceras kommer \emph{Thunk} att tvingas till en WHNF och \emph{HeapPtr} uppdateras att peka till denna. Eftersom att tvingandet av en \emph{Thunk} kan resultera i en ny \emph{Thunk} så tvingas thunken i en loop till dess att resultatet är en WHNF.
+
+\begin{lstlisting}
+this.dereference = function() {
+    if (this.weakHead == undefined) {
+        // We'll drive the execution here instead of recursing 
+        // in the force method
+        var continuation = this.thunk;
+        while (continuation instanceof interpreter.Thunk) {
+            continuation = continuation.force();
+        }
+        this.weakHead = continuation;
+        this.thunk = null;
+     }
+     return this.weakHead;
+};
+\end{lstlisting}
+En \emph{HeapPtr} är ett vanligt Javascript-objekt som innehåller funktionen \emph{dereference}. \emph{Dereference} körs när anroparen vill använda den WHNF som \emph{HeapPtr} pekar mot. Om \emph{HeapPtr} inte har blivit dereferenserad innan så kommer dess \emph{Thunk} att tvingas tills det att resultatet är en WHNF och \emph{HeapPtr}-objektet uppdateras till att peka mot denna.
 
 \subsubsection{Env}
 Env är en stack av \emph{Javascript hashes}. Hasharna består av en bindning mellan en \emph{Identifier} och antingen en \emph{HeapPtr} eller ett (\emph{Pattern}, \emph{HeapPtr}) par.  Den andra bindingstypen är resultatet av en \emph{VariableDeclaration} där man måste utföra en \emph{pattern match} för att avgöra vilken \emph{HeapPtr} som hör till vilken \emph{Identifier}. När man läser ut en \emph{Identifier} som är bunden enligt den andra typen av binding, kommer en \emph{pattern match} att utföras och alla \emph{identifiers} i det \emph{pattern} som matchas kommer att bindas om som den första typen alternativt en \emph{pattern match fail} inträffar och ett \emph{exception} genereras.
@@ -371,7 +362,7 @@ Den första datatypen av intresse är \emph{Declaration}. En \emph{Declaration} 
 
 \begin{lstlisting}
 data Declaration 
-    = Variable pattern Expression
+    = Variable Pattern Expression
     | Data Identifier [Constructor]
     | Function Identifier [Pattern] 
         (Either [(Guard, Expression)] Expression)
@@ -385,9 +376,9 @@ En \emph{Data} definierar en algebraisk datatyp med konstruktorerna definierade 
 \begin{lstlisting}
 data Constructor = Constructor Identifier Int
 \end{lstlisting}
-Värt att notera här är avsaknaden av typvariabler och typargument, detta kommer att åtgärdas när typchekaren är integrerad.
+Värt att notera här är avsaknaden av typvariabler och typargument, detta kommer att åtgärdas när typcheckaren är integrerad.
 
-Under interpreteringen av en \emph{Declaration} binds de namn (Identifiers) som definieras av \emph{Declaration} till \emph{Env}-objektet. Vilken typ av binding som används beror på typen av \emph{Declaration}. En Variable ger en \emph{Identifier => (Pattern, Expression)}-bindning medan en \emph{Function} eller \emph{Data} ger en \emph{Identifier => Expression}-bindning.
+Under interpreteringen av en \emph{Declaration} binds de namn (Identifiers) som definieras av \emph{Declaration} till \emph{Env}-objektet. Vilken typ av binding som används beror på typen av \emph{Declaration}. En \emph{Variable} ger en \emph{Identifier => (Pattern, Expression)}-bindning medan en \emph{Function} eller \emph{Data} ger en \emph{Identifier => Expression}-bindning.
 
 \subsubsection{Expression}
 En \emph{Expression} är representationen av ett haskelluttryck.
@@ -401,6 +392,7 @@ data Expression
     | VariableLookup Identifier
     | Do [DoNotation]
     | List [Expression]
+    | ListComprehension Expression [ListNotation]
     | ArithmeticSequence Expression (Maybe Expression) 
                                     (Maybe Expression)
     | Primitive JavascriptFunction
@@ -446,10 +438,11 @@ En \emph{VariableBinding} matchar alla uttryck och binder uttrycket till \emph{I
 HIJi är ett program som ger användaren ett GHCi-liknande användargränssnitt till haskelltolken i en webläsare. 
 HIJi tar indata genom att funktioner skrivs in i HIJi som sedan tolkas av parsern och i sin tur bygger upp det abstrakta syntaxträdet. Därefter evalueras uttrycket av interpretern och resultatet blir synligt i HIJi.
 
-HIJi har stöd för att ladda externa moduler. Det görs genom att skriva :l \emph{namn-på-modul}. Användaren får då tillgång till alla de funktioner som är skrivna i den modulen. Modulerna måste vara placerade på servern som HIJi laddades ifrån. Modulerna kan ej laddas direkt från användarens hårddisk på grund av att Javascript av säkerhetsskäl ej har skriv- och läsrättigheter av användarens filsystem. HIJi har även en förladdad modul, Prelude, som innehåller en delmängd av de funktioner som GHCi har i sin motsvarighet. 
+HIJi har stöd för att ladda externa moduler. Det görs genom att skriva :l \emph{namn-på-modul}. Användaren får då tillgång till alla de funktioner som är skrivna i den modulen. Modulerna måste vara placerade på servern som HIJi laddades ifrån. Modulerna kan ej laddas direkt från användarens hårddisk på grund av att Javascript av säkerhetsskäl ej har läs- och skrivrättigheter av användarens filsystem. HIJi har även en förladdad modul, Prelude, som innehåller en delmängd av de funktioner som GHCi har i sin motsvarighet. 
 
 Den indata som användaren skriver till HIJi sparas i ett objekt för att hantera historiken. För att bläddra i historiken används piltangenterna Upp och Ner. Hela historik-objektet sparas även i en kaka som ett JSON-objekt. Av detta skäl är det möjligt att få tillgång till historiken när en ny session av webbläsaren startas.
 
+% 
 \begin{figure}[H]
     \begin{center}
         \includegraphics[width=1\textwidth]{hiji_screen3.png}
