@@ -11,7 +11,7 @@ Haskellstandarden har definerat upp en grammatik, ett antal regler, som definera
 Haskell är ett svårt språk att parsa då det inte är kontextfritt på grund av att kodens mening beror på blanksteg, 
 Haskell tillåter även egendefinierade operatorer vilket också kan påverka kodens mening. 
 
-För att parsa indatan använder vi ett bibliotek för att bygga parsers kallat JSParse \citep{jsparse}.
+För att parsa indatan använder vi ett bibliotek för att bygga parsers kallat JSParse.
 JSParse ger oss ett antal funktioner som vi använder för att definiera grammatiken och konvertera den till vår interna struktur.
 
 Som figur \ref{fig:parser_steg} visar, består parsern av tre mindre parsers, den första är en parser som hittar kommentarer och tar bort dessa. 
@@ -69,7 +69,7 @@ Det andra steget delar upp koden i dess ord och symboler samtidigt som den dekor
 som är specificerad i haskellstandarden. Därefter användads en annan algoritm från standarden för att sätta in måsvingar och semikolon på rätt platser. % samma, vilken algoritm, TODO 
 När de två algoritmerna är klara sätts koden ihop igen och skickas vidare till nästa steg.
 
-En regel är att ett inre block inte får vara mindre indenterat än det omslutande blocket, exempelivs:
+Ett exempel på en regel är att ett inre block inte får vara mer indenderat än ett omslutande block.
 \begin{lstlisting}
 case x of
     True -> ...
@@ -89,7 +89,7 @@ let { x = 5; y = 4 } in x + y
 För att översätta detta korrekt kommer parsern ihåg den aktuella nästlingsnivån av \emph{let}-uttryck och var deras repsektive \emph{in}-uttryck befinner sig. 
 Den avslutande måsvingen sätts in där ett matchande \emph{in}-uttryck påträffas.
 
-Ett exempel som inte översätts korrekt:
+Det finns även uttryck som inte översätts korrekt, exempelvis:
 \begin{lstlisting}
 [x | let x = 2]
 \end{lstlisting}
@@ -97,7 +97,7 @@ Den korrekta översättningen är:
 \begin{lstlisting}
 [x | let { x = 2 }]
 \end{lstlisting}
-Men det blir:
+Men i parsern blir det:
 \begin{lstlisting}
 [ x | let { x = 2 ] }
 \end{lstlisting}
@@ -110,14 +110,13 @@ Det tredje steget är en parser för den kontextfria varianten av Haskell som de
 Samtidigt som koden tolkas byggs en AST upp. Parsern består av en liten parser för varje grammatisk regel som är definerad i haskellstandarden. 
 Dessa parsers kombineras ihop för att bilda den slutgiltliga parsern. Det resulterar i ett träd av parsers, en parser för hela programmet som har flera mindre parsers under sig.
 
-Exempel:
-Definitionen i haskellstandarden:
+Exempel på grammatik definierad i Haskellstandarden.
 \begin{lstlisting}
 gdrhs -> gd = exp [gdrhs]
 rhs -> exp [where decls]
      | gdrhs [where decls]
 \end{lstlisting}
-Dess respektive parsers:
+Desss motsvarande parsers.
 \begin{lstlisting}
 var gdrhs = gdrhs_action(
     repeat1(gdrhs_fix_list_action(sequence(ws(gd), 
@@ -144,7 +143,8 @@ operatorer och uttryck skapas. Till sist används trädet för att generera en A
 \subsubsection{JSParse}
 Vi använder en modifierad version av JSParse där vi har korrigerat två fel och lagt till fler parsers. Felen vi korrigerade var i \emph{butnot}-parsern och i \emph{choice}-parserns cachefunktion. 
 \emph{Choice}-parsern cachade resultat från parsers som misslyckades och det cachade resultatet användes i senare parsers, 
-vi löste det med en stackbaserad cache där cachen för en parser som misslyckas raderas.
+vi löste det med en stackbaserad cache där cachen för en parser som misslyckas raderas. 
+JSParse har andra problem som vi inte löst, exempelvis att det inte rapporterar rad- och kolumn-nummer eller parsningsfel korrekt, detta gör att vi inte får bra felmeddelanden.
 
 Parsers som vi har lagt till:
 \begin{enumerate}
