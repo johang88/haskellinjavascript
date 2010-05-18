@@ -115,7 +115,7 @@ commands[":help"] = "HELP";
                                     for (var i = 0; i < result.ptrs.length; i++) {
                                         if (str.length == 0 && first) {
                                             str = showResult(result.ptrs[i].dereference());
-                                            if (str.str) 
+                                            if (typeof str.str != "undefined") 
                                                 str = str.str;
                                             first = false;
                                         } else {
