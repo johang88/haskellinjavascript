@@ -406,7 +406,10 @@
         
         var aexp_arithmetic_action = function(p) {
             return action(p, function(ast) {
-               return ast; 
+                if (ast[1]) {
+                    ast[1] = ast[1][0];
+                }
+                return new haskell.ast.ArithmeticSequence(ast[0], ast[1], ast[2]); 
             });
         }
         
@@ -431,7 +434,7 @@
                             list_action(sequence(expect(ws('[')), optional(wlist(exp, ',')), expect(ws(']')))),  // list constructor
                             left_section_action(sequence(expect(ws('(')), ws(infixexp), ws(qop), expect(ws(')')))), // left section
                             right_section_action(sequence(expect(ws('(')), ws(qop), ws(infixexp), expect(ws(')')))), // right section, todo: look into resolution of infixexp in this case, see Haskell Report Chapter 3
-                            aexp_arithmetic_action(sequence(expectws('['), exp, repeat0(exp), expectws('..'), optional(ws(exp)), expectws(']'))), // arithmetic sequence
+                            aexp_arithmetic_action(sequence(expectws('['), ws(exp), optional(sequence(expectws(','), ws(exp))), expectws('..'), optional(ws(exp)), expectws(']'))), // arithmetic sequence
                             aexp_list_comp_action(sequence(expectws('['), ws(exp), expectws('|'), list(qual, ws(',')), expectws(']'))) // list comprehension
                             // Todo:
                             //  Labeled construction

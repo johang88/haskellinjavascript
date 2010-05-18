@@ -202,7 +202,7 @@
 	var funname = 'enumFrom';
 	if (this.e2) funname = funname + 'Then';
 	if (this.e3) funname = funname + 'To';
-	var application = new ast.Application(ast.VariableLookup(funname), this.e1);
+	var application = new ast.Application(new ast.VariableLookup(funname), this.e1);
 	if (this.e2) application = new ast.Application(application, this.e2);
 	if (this.e3) application = new ast.Application(application, this.e3);
 	return application;
