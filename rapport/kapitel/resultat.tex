@@ -286,7 +286,7 @@ Av detta exempel kan ett antal slutsatser dras. Typinfereringen sker rekursivt f
 Ofta förekommer situationer där tvetydigheter gör att typcheckaren inte kan bestämma en typ. För att förenkla för programmeraren finns därför förbestämda standardtyper att använda i dessa situationer för en del inbyggda typer. Detta användande av förbestämda standartyper kallas för defaulting.
 
 \subsubsection{Typcheckarens nuvarande status}
-I sitt nuvarande tillstånd saknar typcheckaren delar av den funktionalitet som ingick i projektets mål. Detta handlar om integration med interpretatorn och förmågan att ladda rätt instans av typklassser vid applicering av överlagrade funktioner. 
+I sitt nuvarande tillstånd klarar typcheckaren av att typchecka och typinferera haskellprogram. Detta inkluderar program som använder polymorfiska typer och typklasser. Vi har även stöd för \emph{defaulting}. Dock behöver typcheckaren integreras med interpretatorn för att kunna ladda rätt instans av typklassser vid applicering av överlagrade funktioner under körning.
 
 \subsection{Interpretatorns struktur}
 Interpretatorns uppgift är att tolka det abstrakta syntaxträdet. Under interpreteringen används flera datastrukturer vars uppgift och struktur anges här.
