@@ -1,13 +1,13 @@
 \section{Resultat}
 % TODO
 
-Projektets resultat är ett kodbibliotek för en haskelltolk. Den nuvarande statusen av projektet är att parser och interpretator är fullt integrerade med varandra. Typcheckaren är inte integrerad, dock är den färdigutvecklad. För att integrera typcheckaren måste det abstrakta syntaxträdet utvigdas för att ta hänsyn till typinformation. 
+Projektets resultat är ett kodbibliotek för en haskelltolk. Den nuvarande statusen av projektet är att parser och interpretator är fullt integrerade med varandra. Typcheckaren är inte integrerad, dock är den färdigutvecklad. För att integrera typcheckaren måste det abstrakta syntaxträdet utvidgas för att ta hänsyn till typinformation. 
 Koden finns att tillgå på GitHub: \url{http://github.com/johang88/haskellinjavascript}. Nedan följer en mer noggrann genomgång av projektets olika delar. 
 
 \subsection{Parser} 
 Parserns uppgift är att ta användarens indata och konvertera den till en datastruktur 
 som är lättare att hantera internt. Denna datastruktur kallas \emph{Abstract Syntax Tree} (AST). 
-Haskellstandarden har definerat upp en grammatik, ett antal regler, som definerar hur korrekt haskellkod ser ut och hur den ska tolkas.
+Haskellstandarden har definierat upp en grammatik, ett antal regler, som definierar hur korrekt haskellkod ser ut och hur den ska tolkas.
 
 Haskell är ett svårt språk att parsa då det inte är kontextfritt på grund av att kodens mening beror på blanksteg, 
 Haskell tillåter även användardefinierade operatorer vilket också kan påverka kodens mening. 
@@ -66,11 +66,11 @@ Haskell har två olika kommentarsstilar, enkelradiga som börjar med \emph{--} o
 nästlade som kan gå över flera rader börjar med \emph{\{-} och slutar med \emph{-\}}.
 
 \subsubsection{Steg 2 - Applicera layoutregler}
-Det andra steget applicerar Haskells layoutregler enligt två algoritmer som är definerade i haskellstandarden \citep{haskell98chap9}. Den första delar upp koden i dess ord och symboler samtidigt som den dekoreras med indenteringsnivåer. 
-Därefter användads den andra för att sätta in måsvingar och semikolon på rätt platser.
+Det andra steget applicerar Haskells layoutregler enligt två algoritmer som är definierade i haskellstandarden \citep{haskell98chap9}. Den första delar upp koden i dess ord och symboler samtidigt som den dekoreras med indenteringsnivåer. 
+Därefter användas den andra för att sätta in måsvingar och semikolon på rätt platser.
 När de två algoritmerna är klara sätts koden ihop igen och skickas vidare till nästa steg.
 
-Ett exempel på en layoutregel är att ett inre block inte får vara mer indenderat än ett omslutande block.
+Ett exempel på en layoutregel är att ett inre block inte får vara mer indenterat än ett omslutande block.
 \begin{lstlisting}
 case x of
     True -> ...
@@ -87,7 +87,7 @@ Den korrekta översättningen är:
 \begin{lstlisting}
 let { x = 5; y = 4 } in x + y
 \end{lstlisting}
-För att översätta detta korrekt kommer parsern ihåg den aktuella nästlingsnivån av \emph{let}-uttryck och var deras repsektive \emph{in}-uttryck befinner sig. 
+För att översätta detta korrekt kommer parsern ihåg den aktuella nästlingsnivån av \emph{let}-uttryck och var deras respektive \emph{in}-uttryck befinner sig. 
 Den avslutande måsvingen sätts in där ett matchande \emph{in}-uttryck påträffas.
 
 Det finns även uttryck som inte översätts korrekt, exempelvis:
@@ -103,13 +103,13 @@ Men i parsern blir det:
 [ x | let { x = 2 ] }
 \end{lstlisting}
 Anledningen är att endast nästlingen av \emph{let} och \emph{in} sparas, men här finns inget \emph{in}.
-För att lösa felet måste parsern hålla reda på antalet paranteser, måsvingar, hakparanteser och komman efter ett \emph{let}-uttryck och när en symbol som gör det ogiltligt 
+För att lösa felet måste parsern hålla reda på antalet parenteser, måsvingar, hakparenteser och komman efter ett \emph{let}-uttryck och när en symbol som gör det ogiltigt 
 med en avslutande måsvinge påträffas sätts måsvingen in precis innan symbolen.
 
 \subsubsection{Steg 3 - Skapa AST}
-Det tredje steget är en parser för den kontextfria varianten av Haskell som den är definerad i standarden. 
-Samtidigt som koden tolkas byggs en AST upp. Parsern består av en liten parser för varje grammatisk regel som är definerad i haskellstandarden. 
-Dessa parsers kombineras ihop för att bilda den slutgiltliga parsern. Det resulterar i ett träd av parsers, en parser för hela programmet som har flera mindre parsers under sig.
+Det tredje steget är en parser för den kontextfria varianten av Haskell som den är definierad i standarden. 
+Samtidigt som koden tolkas byggs en AST upp. Parsern består av en liten parser för varje grammatisk regel som är definierad i haskellstandarden. 
+Dessa parsers kombineras ihop för att bilda den slutgiltiga parsern. Det resulterar i ett träd av parsers, en parser för hela programmet som har flera mindre parsers under sig.
 
 Exempel på grammatik definierad i Haskellstandarden:
 \begin{lstlisting}
@@ -125,8 +125,8 @@ var gdrhs = gdrhs_action(
 Tittar vi närmare på \emph{gdrhs} ser vi att det är en rekursiv deklaration. Vilket vi implementerar med \emph{repeat1} för att få en lista med minst en upprepning. 
 \emph{gdrhs\_action} och \emph{gdrhs\_fix\_list\_action} används för att generera det abstrakta syntaxträdet.
 
-Parsern använder den metod som är specifierad i Haskell 2010 \citep{haskell2010} för att lösa företrädesreglerna (precedence levels) för operatorer då den här metoden är enklare än den som är definerad i Haskell 98. 
-Anledningen till att företrädesreglerna inte kan defineras direkt i parsern är att Haskell använder sig av användardefinerade företrädesregler.
+Parsern använder den metod som är specificerad i Haskell 2010 \citep{haskell2010} för att lösa företrädesreglerna (precedence levels) för operatorer då den här metoden är enklare än den som är definierad i Haskell 98. 
+Anledningen till att företrädesreglerna inte kan definieras direkt i parsern är att Haskell använder sig av användardefinierade företrädesregler.
 Metoden fungerar så att den löser företrädesreglerna först efter ett uttryck har parsats till en lista med operatorer 
 och uttryck, när en operator påträffas i listan slås dess företrädesnivå upp i en tabell och ett träd med 
 operatorer och uttryck skapas. Till sist används trädet för att generera en AST för uttrycken.
@@ -140,7 +140,7 @@ JSParse har andra problem som vi inte löst, exempelvis att det inte rapporterar
 Parsers som vi har lagt till:
 \begin{enumerate}
     \item{\emph{repeatn}: en parser som upprepar en parser minst \emph{n} antal gånger}
-    \item{\emph{expectws}: en parser som tillåter blanksteg och inte returnerar någon ast, är en kombination av JSParse inbyggda parsers \emph{expect} och \emph{whitespace}}
+    \item{\emph{expectws}: en parser som tillåter blanksteg och inte returnerar någon AST, är en kombination av JSParse inbyggda parsers \emph{expect} och \emph{whitespace}}
 \end{enumerate}
 
 \subsection{Typcheckare} 
@@ -286,7 +286,7 @@ Av detta exempel kan ett antal slutsatser dras. Typinfereringen sker rekursivt f
 Ofta förekommer situationer där tvetydigheter gör att typcheckaren inte kan bestämma en typ. För att förenkla för programmeraren finns därför förbestämda standardtyper att använda i dessa situationer för en del inbyggda typer. Detta användande av förbestämda standartyper kallas för defaulting.
 
 \subsubsection{Typcheckarens nuvarande status}
-I sitt nuvarande tillstånd saknar typcheckaren delar av den funktionalitet som ingick i projektets mål. Detta handlar om integration med interpretatorn och förmågan att ladda rätt instans av typklassser vid applicering av överlagrade funktioner. 
+I sitt nuvarande tillstånd klarar typcheckaren av att typchecka och typinferera haskellprogram. Detta inkluderar program som använder polymorfiska typer och typklasser. Vi har även stöd för \emph{defaulting}. Dock behöver typcheckaren integreras med interpretatorn för att kunna ladda rätt instans av typklassser vid applicering av överlagrade funktioner under körning.
 
 \subsection{Interpretatorns struktur}
 Interpretatorns uppgift är att tolka det abstrakta syntaxträdet. Under interpreteringen används flera datastrukturer vars uppgift och struktur anges här.
@@ -301,7 +301,7 @@ data Thunk = Closure Env Expression
 Haskell måste använda sig av \emph{non-strict evaluation}, vilket innebär att en uträkning inte får köras ifall den inte behövs. När en uträkning körs så innebär det att den resulterar i flertalet \emph{Thunks} för de delar av beräkningen som ännu inte behövs. När värdet av en \emph{Thunk} behövs kommer den att tvingas till en \emph{Weak Head Normal Form} (WHNF) eller en ny \emph{Thunk}. Anledningen till detta är att vi på så sätt minskar användandet av rekursion vilket minskar risken att vi får ett runtime error.
 
 \subsubsection{Weak Head Normal Form}
-En WHNF är ett partiellt evaluerat uttryck. Uttrycket har blivit evaluerat så långt att vi är säkra på att det retunerar något typ av värde, alltså något som inte är \emph{undefined}. Ofta innehåller en WHNF referenser till ännu icke evaluerade uttryck, om de inte gör det sägs uttrycket vara i \emph{Normal Form}.
+En WHNF är ett partiellt evaluerat uttryck. Uttrycket har blivit evaluerat så långt att vi är säkra på att det returnerar något typ av värde, alltså något som inte är \emph{undefined}. Ofta innehåller en WHNF referenser till ännu icke evaluerade uttryck, om de inte gör det sägs uttrycket vara i \emph{Normal Form}.
 
 \begin{lstlisting}
 data WeakHead 
@@ -311,7 +311,7 @@ data WeakHead
     | Primitive
 \end{lstlisting}
 
-En \emph{Data} är resultatet av att applicera en algebraisk datakonstruktor på dess argument. Argumenten ges som en lista av \emph{HeapPtr}, det vill säga en lista av evaluerade eller icke evaluerade uttryck. Exemplevis resulterar \emph{Just 1} i en \emph{Data} med Identifiern \emph{Just} och en \emph{HeapPtr} till det icke evaluerade uttrycket 1.
+En \emph{Data} är resultatet av att applicera en algebraisk datakonstruktor på dess argument. Argumenten ges som en lista av \emph{HeapPtr}, det vill säga en lista av evaluerade eller icke evaluerade uttryck. Exempelvis resulterar \emph{Just 1} i en \emph{Data} med Identifiern \emph{Just} och en \emph{HeapPtr} till det icke evaluerade uttrycket 1.
 
 En \emph{LambdaAbstraction} är körningsrepresentationen av en lambda-funktion, en \emph{Env} är bunden till lambda-funktionen.
 
@@ -320,7 +320,7 @@ En \emph{DelayedApplication} är ett specialfall av en \emph{LambdaAbstraction}.
 En \emph{Primitive} är ett Javascript-värde, till exempel en \emph{integer} eller en \emph{double}.
 
 \subsubsection{HeapPtr}
-De flesta implementationer av Haskell använder sig av lat evaluering, vilket innebär att en \emph{Thunk}, ett uttryck, kommer att tvingas maximalt en gång. I vår implementation används \emph{HeapPtr} som en wrapper runt en \emph{Thunk}, när en \emph{HeapPtr} dereferenceras kommer \emph{Thunk} att tvingas till en WHNF och \emph{HeapPtr} uppdateras att peka till denna. Eftersom att tvingandet av en \emph{Thunk} kan resultera i en ny \emph{Thunk} så tvingas thunken i en loop till dess att resultatet är en WHNF.
+De flesta implementationer av Haskell använder sig av lat evaluering, vilket innebär att en \emph{Thunk}, ett uttryck, kommer att tvingas maximalt en gång. I vår implementation används \emph{HeapPtr} som en wrapper runt en \emph{Thunk}, när en \emph{HeapPtr} dereferensera kommer \emph{Thunk} att tvingas till en WHNF och \emph{HeapPtr} uppdateras att peka till denna. Eftersom att tvingandet av en \emph{Thunk} kan resultera i en ny \emph{Thunk} så tvingas thunken i en loop till dess att resultatet är en WHNF.
 
 \begin{lstlisting}
 this.dereference = function() {
@@ -340,7 +340,7 @@ this.dereference = function() {
 En \emph{HeapPtr} är ett vanligt Javascript-objekt som innehåller funktionen \emph{dereference}. \emph{Dereference} körs när anroparen vill använda den WHNF som \emph{HeapPtr} pekar mot. Om \emph{HeapPtr} inte har blivit dereferenserad innan så kommer dess \emph{Thunk} att tvingas tills det att resultatet är en WHNF och \emph{HeapPtr}-objektet uppdateras till att peka mot denna.
 
 \subsubsection{Env}
-Env är en stack av \emph{Javascript hashes}. Hasharna består av en bindning mellan en \emph{Identifier} och antingen en \emph{HeapPtr} eller ett (\emph{Pattern}, \emph{HeapPtr}) par.  Den andra bindingstypen är resultatet av en \emph{VariableDeclaration} där man måste utföra en \emph{pattern match} för att avgöra vilken \emph{HeapPtr} som hör till vilken \emph{Identifier}. När man läser ut en \emph{Identifier} som är bunden enligt den andra typen av binding, kommer en \emph{pattern match} att utföras och alla \emph{identifiers} i det \emph{pattern} som matchas kommer att bindas om som den första typen alternativt en \emph{pattern match fail} inträffar och ett \emph{exception} genereras.
+Env är en stack av \emph{Javascript hashes}. Hasharna består av en bindning mellan en \emph{Identifier} och antingen en \emph{HeapPtr} eller ett (\emph{Pattern}, \emph{HeapPtr}) par.  Den andra bindningstypen är resultatet av en \emph{VariableDeclaration} där interpretatorn måste utföra en \emph{pattern match} för att avgöra vilken \emph{HeapPtr} som hör till vilken \emph{Identifier}. När interpretatorn läser ut en \emph{Identifier} som är bunden enligt den andra typen av bindning, kommer en \emph{pattern match} att utföras och alla \emph{identifiers} i det \emph{pattern} som matchas kommer att bindas om som den första typen alternativt en \emph{pattern match fail} inträffar och ett \emph{exception} genereras.
 
 \begin{lstlisting}
 Env {
@@ -355,7 +355,7 @@ Env {
 \end{lstlisting}
 
 \subsection{Abstrakt syntaxträd och evaluering} 
-Vår AST representeras av javascript-objekt men dess strukturella uppbyggnad ges här av Haskells datadefinitioner.
+Vår AST representeras av javascriptobjekt men dess strukturella uppbyggnad ges här av Haskells datadefinitioner.
 
 \subsubsection{Declaration}
 Den första datatypen av intresse är \emph{Declaration}. En \emph{Declaration} representerar en namnbindning antigen i en moduls globala definitionsområde eller i en \emph{let}- eller \emph{where}-bindning.
@@ -378,7 +378,7 @@ data Constructor = Constructor Identifier Int
 \end{lstlisting}
 Värt att notera här är avsaknaden av typvariabler och typargument, detta kommer att åtgärdas när typcheckaren är integrerad.
 
-Under interpreteringen av en \emph{Declaration} binds de namn (Identifiers) som definieras av \emph{Declaration} till \emph{Env}-objektet. Vilken typ av binding som används beror på typen av \emph{Declaration}. En \emph{Variable} ger en \emph{Identifier => (Pattern, Expression)}-bindning medan en \emph{Function} eller \emph{Data} ger en \emph{Identifier => Expression}-bindning.
+Under interpreteringen av en \emph{Declaration} binds de namn (Identifiers) som definieras av \emph{Declaration} till \emph{Env}-objektet. Vilken typ av bindning som används beror på typen av \emph{Declaration}. En \emph{Variable} ger en \emph{Identifier => (Pattern, Expression)}-bindning medan en \emph{Function} eller \emph{Data} ger en \emph{Identifier => Expression}-bindning.
 
 \subsubsection{Expression}
 En \emph{Expression} är representationen av ett haskelluttryck.
@@ -435,8 +435,8 @@ En \emph{VariableBinding} matchar alla uttryck och binder uttrycket till \emph{I
 
 \subsection{HIJi}
 
-HIJi är ett program som ger användaren ett GHCi-liknande användargränssnitt till haskelltolken i en webläsare. 
-HIJi tar indata genom att funktioner skrivs in i HIJi som sedan tolkas av parsern och i sin tur bygger upp det abstrakta syntaxträdet. Därefter evalueras uttrycket av interpretern och resultatet blir synligt i HIJi.
+HIJi är ett program som ger användaren ett GHCi-liknande användargränssnitt till haskelltolken i en webbläsare.
+HIJi tar indata genom att funktioner skrivs in i HIJi som sedan tolkas av parsern och i sin tur bygger upp det abstrakta syntaxträdet. Därefter evalueras uttrycket av interpretatorn och resultatet blir synligt i HIJi.
 
 HIJi har stöd för att ladda externa moduler. Det görs genom att skriva :l \emph{namn-på-modul}. Användaren får då tillgång till alla de funktioner som är skrivna i den modulen. Modulerna måste vara placerade på servern som HIJi laddades ifrån. Modulerna kan ej laddas direkt från användarens hårddisk på grund av att Javascript av säkerhetsskäl ej har läs- och skrivrättigheter av användarens filsystem. HIJi har även en förladdad modul, Prelude, som innehåller en delmängd av de funktioner som GHCi har i sin motsvarighet. 
 
@@ -451,16 +451,16 @@ Den indata som användaren skriver till HIJi sparas i ett objekt för att hanter
     \end{center}
 \end{figure}
 
-Figur \ref{fig:hiji} visar hur HIJi ser ut. De första raderna visar, precis som i GHCi, vilka moduler som för närvarande är laddade. I det här exemplet är den förladdade modulen Prelude laddad. Därefter följer en kommandotolk där användaren fritt kan skriva in egna funktioner. I figuren är en lambda-funktion inskriven.
+Figur \ref{fig:hiji} visar hur HIJi ser ut. De första raderna visar, precis som i GHCi, vilka moduler som för närvarande är laddade. I det här exemplet är den förladdade modulen Prelude laddad. Därefter följer en kommandotolk där användaren fritt kan skriva in egna funktioner. Figuren visar ett antal olika exempel på hur HIJi kan användas. 
 
 HIJi är skapat för att likna GHCi i så stor utsträckning som möjligt.
 Genom att efterlikna GHCi kommer användare känna igen sig när de tar steget från HIJi till GHCi. Det blir för dem ett naturligt steg och kortar inlärningströskeln. Även för haskellprogrammerare som är vana användare av GHCi blir det lättare att använda sig av HIJi, de behöver inte fundera hur verktyget ska användas.
 
 \subsection{Prelude}
 I våra avgränsningar angav vi vilka delar av haskellspecifikationen vi skulle fokusera på. De delar som vi har fullt stöd för är lambda-funktioner, namngivna funktioner, algebraiska datatyper, pattern matching och guards. 
-I HIJis förladdade  modul, Prelude, har vi definerat upp ett antal funktioner som visar på att vi har implementerat dessa egenskaper från specifikationen.
+I HIJis förladdade  modul, Prelude, har vi definierad upp ett antal funktioner som visar på att vi har implementerat dessa egenskaper från specifikationen.
 Alla funktioner som är definierade i Prelude är namngivna funktioner. Ett exempel på en namngiven funktion är \emph{id}. 
-Algebraiska datatyper stöds och i  Prelude har vi definerat upp datatypen Bool och ett par funktioner, däribland (||), som använder sig utav den här datatypen. Funktionen (||) använder sig av pattern matching. Resultatet av \emph{case x of} kommer matcha antingen mot \emph{True} eller \emph{False}.
+Algebraiska datatyper stöds och i  Prelude har vi definierat upp datatypen Bool och ett par funktioner, däribland (||), som använder sig utav den här datatypen. Funktionen (||) använder sig av pattern matching. Resultatet av \emph{case x of} kommer matcha antingen mot \emph{True} eller \emph{False}.
 Funktionen \emph{filter} från Prelude är ett exempel på att guards fungerar. Filter är också ett exempel på att pattern matching och rekursiva funktioner är implementerade. 
 
 \begin{lstlisting}
