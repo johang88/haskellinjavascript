@@ -1,10 +1,5 @@
 // The parser
 
-/* 
-Todo:
-  - List comp.
-*/
-
 (function(parser, ast) {
     parser.lastInternalName = 0;
 
@@ -56,7 +51,7 @@ Todo:
         var integerlit = function(state) {
                 if (enableHash) {
                     return choice( action(sequence(repeat1(range('0', '9')), '#'), function(ast) {
-                                    return parseInt(ast[0].join(""));
+				return new haskell.ast.PrimitiveValue(parseInt(ast[0].join("")));
                                 }),
                                 integer)(state);
                 } else {
@@ -124,18 +119,18 @@ Todo:
         
         var qtycon = action(sequence(range('A', 'Z'), ident_), function(ast) { return ast.join(""); });
         
-        var qtycls = ident;
-        
         var conid = action(sequence(range('A', 'Z'), ident_), function(ast) { return ast.join(""); });
         var consym = butnot(sym, reservedop);
+        
+        var tycls = conid;
+        
+        var qtycls = tycls;
         
         var qconsym = consym;
         var qconid = conid;
 
         var tycon = qtycon;
-        var tyvar = ident;
-        
-        var tycls = epsilon_p;        
+        var tyvar = varid;        
         var gconsym = choice(':', qconsym);
         
         var qconop = choice(gconsym, sequence(expect(ws('`')), qconid, expect(ws('`'))));
@@ -144,11 +139,11 @@ Todo:
         
         var qop = choice(qvarop, qconop);
         
-        var op = choice(varop, conop);
-        
         var conop = choice(consym, sequence(expect(ws('`')), conid, expect(ws('`'))));
         
         var varop = choice(varsym, sequence(expect(ws('`')), varid, expect(ws('`'))));
+
+        var op = choice(varop, conop);
         
         var qcon = choice(qconid, sequence(expect(ws('(')), gconsym, expect(ws(')'))));
         
@@ -174,6 +169,8 @@ Todo:
         
         var list_action = function(p) {
             return action(p, function(ast) {
+		    if (ast[0] == false) ast[0] = [];
+		    return new haskell.ast.List(ast[0]);
                 // 0,1,2
                 // 0 : 1 : 2 : []
                 // ((: 0) 1)
@@ -283,9 +280,35 @@ Todo:
         
         var fbind = undefined;
         
-        var stmt = undefined;
+	// Redefined later with the proper definition
+        var decls = function(state) { return decls(state); };
+
+        var stmt_exp_action = function(p) {
+            return action(p, function(ast) {
+                return new haskell.ast.DoExpr(ast);
+            });
+        }
         
-        var stmts = epsilon_p;
+        var stmt_bind_action = function(p) {
+            return action(p, function(ast) {
+                return new haskell.ast.DoBind(ast[0], ast[1]);
+            });
+        }
+        
+        var stmt_let_action = function(p) {
+            return action(p, function(ast) {
+                return new haskell.ast.DoLet(ast[0][0]);
+            });
+        };
+        
+        var infixexp = function(state) { return infixexp(state); };
+        
+        var stmt = choice( stmt_bind_action(sequence(ws(pat), expect(ws("<-")), ws(infixexp))),
+			   stmt_exp_action(ws(infixexp)),
+                           stmt_let_action(sequence(expect(ws("let")), ws(decls)))
+                           );
+                            
+        var stmts = list(stmt, ws(";"));
         
         var gdpat = undefined;
         
@@ -303,8 +326,6 @@ Todo:
         var alts = list(ws(alt), ws(';'));
         
         var qval = undefined;
-        
-        var infixexp = function(state) { return infixexp(state); };
         
         var right_section_action = function(p) {
             return action(p, function(ast) {
@@ -342,6 +363,29 @@ Todo:
             });
         };
         
+        var qual_generator_action = function(p) {
+            return action(p, function(ast) {
+		    return new haskell.ast.ListBind(ast[0], ast[1]);
+            });
+        }
+        
+        var qual_let_action = function(p) {
+            return action(p, function(ast) {
+		    return new haskell.ast.ListLet(ast[0]); 
+            });
+        }
+        
+        var qual_exp_action = function(p) {
+            return action(p, function(ast) {
+		    return new haskell.ast.ListGuard(ast); 
+            });
+        }
+        
+        var qual = choice(  qual_generator_action(sequence(ws(pat), expectws("<-"), ws(exp))),
+                            qual_let_action(sequence(expectws("let"), ws(decls))),
+                            qual_exp_action(ws(exp))
+                         );
+        
         var qvar_exp_action = function(p) {
             return action(p, function(ast) {
                 return new haskell.ast.VariableLookup(ast);
@@ -354,17 +398,45 @@ Todo:
             });
         };
         
+        var aexp_list_comp_action = function(p) {
+            return action(p, function(ast) {
+		    return new haskell.ast.ListComprehension(ast[0], ast[1]);
+            });
+        }
+        
+        var aexp_arithmetic_action = function(p) {
+            return action(p, function(ast) {
+                if (ast[1]) {
+                    ast[1] = ast[1][0];
+                }
+                return new haskell.ast.ArithmeticSequence(ast[0], ast[1], ast[2]); 
+            });
+        }
+        
+        var aexp_empty_tuple_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        };
+        
+        var aexp_tuple_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        };
+        
         var aexp = choice(  qvar_exp_action(ws(qvar)),
                             qvar_exp_action(ws(gcon)),
                             aexp_constant_action(ws(literal)),
                             action(sequence(expect(ws('(')), ws(exp), expect(ws(')'))), function(ast) { return ast[0]; }), // parans
-                            sequence(ws('('), ws(exp), ws(','), ws(exp), repeat0(sequence(ws(','), ws(exp))) , ws(')')), // tuple
+                            aexp_empty_tuple_action(sequence(expectws('('), expectws(')'))), // empty tuple
+                            aexp_tuple_action(sequence(expectws('('), ws(exp), repeat1(sequence(ws(','), ws(exp))) , expectws(')'))), // tuple
                             list_action(sequence(expect(ws('[')), optional(wlist(exp, ',')), expect(ws(']')))),  // list constructor
                             left_section_action(sequence(expect(ws('(')), ws(infixexp), ws(qop), expect(ws(')')))), // left section
-                            right_section_action(sequence(expect(ws('(')), ws(qop), ws(infixexp), expect(ws(')')))) // right section, todo: look into resolution of infixexp in this case, see Haskell Report Chapter 3
+                            right_section_action(sequence(expect(ws('(')), ws(qop), ws(infixexp), expect(ws(')')))), // right section, todo: look into resolution of infixexp in this case, see Haskell Report Chapter 3
+                            aexp_arithmetic_action(sequence(expectws('['), ws(exp), optional(sequence(expectws(','), ws(exp))), expectws('..'), optional(ws(exp)), expectws(']'))), // arithmetic sequence
+                            aexp_list_comp_action(sequence(expectws('['), ws(exp), expectws('|'), list(qual, ws(',')), expectws(']'))) // list comprehension
                             // Todo:
-                            //  Arithmetic sequence
-                            //  List comprehension
                             //  Labeled construction
                             //  Labeled update
                           );
@@ -402,7 +474,6 @@ Todo:
             });
         };
         
-        var decls = function(state) { return decls(state); };
         
         var let_action = function(p) {
             return action(p, function(ast) {
@@ -422,11 +493,23 @@ Todo:
             });
         }
         
+        var do_action = function(p) {
+            return action(p, function(ast) {
+                return new haskell.ast.Do(ast[0]);
+            });
+        };
+        
+        var if_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        };
+        
         var exp_10 = choice(lambda_exp_action (sequence(expect(ws('\\')), repeat1(ws(apat)), expect(ws("->")), ws(exp))),
                             let_action(sequence(expect(ws("let")), ws(decls), expect(ws("in")), ws(exp))),
-                            sequence(ws("if"), ws(exp), ws("then"), ws(exp), ws("else"), ws(exp)),
+                            if_action(sequence(expectws("if"), ws(exp), expectws("then"), ws(exp), expectws("else"), ws(exp))),
                             case_action(sequence(expect(ws("case")), ws(exp), expect(ws("of")), expect(ws("{")), ws(alts), expect(ws("}")))),
-                            sequence(ws("do"), ws("{"), ws(stmts), ws("}")),
+                            do_action(sequence(expect(ws("do")), expect(ws("{")), ws(stmts), expect(ws("}")))),
                             ws(fexp)
                             );
         
@@ -575,32 +658,125 @@ Todo:
         var exp = choice(sequence(ws(infixexp), ws("::"), optional(ws(context), ws("=>")), ws(type)),
                             exp_action(ws(infixexp)));
         
-        var gd = undefined;
+        var gd_action = function(p) {
+            return action(p, function(ast) {
+                return ast[0];
+            });
+        };
         
-        var gdrhs = undefined;
+        var gd = gd_action(sequence(expectws('|'), ws(exp)));
         
-        // todo: missing second choice
+        var gdrhs_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        };
+        
+        var gdrhs_fix_list_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });  
+        };
+        
+        var gdrhs = gdrhs_action(repeat1(gdrhs_fix_list_action(sequence(ws(gd), expectws('='), ws(exp)))));
+        
         var decl_rhs_action = function(p) {
             return action(p, function(ast) {
                 // todo: desugar where
                 return ast[0];
             });
         };
-        var rhs = decl_rhs_action(sequence(expect(ws('=')), ws(exp), optional(sequence(expect(ws("where")), ws(decls)))));
+        
+        var rhs_gurad_action = function(p) {
+            return action(p, function(ast) {
+                return ast[0];
+            });  
+        };
+        
+        var rhs = choice(   decl_rhs_action(sequence(expect(ws('=')), ws(exp), optional(sequence(expect(ws("where")), ws(decls))))),
+                            rhs_gurad_action(sequence(ws(gdrhs), optional(sequence(expect(ws("where")), ws(decls)))))
+                        );
         
         // todo: Should be quite a lot of choices here, but those are for 
         //       operators so it's not very important right now
         var funlhs = sequence(ws(var_), repeat0(ws(apat)));
         
-        var inst = undefined;
+        var inst_gtycon_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        };
         
-        var dclass = undefined;
+        var inst_gtycon_tyvars_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        };
         
-        var deriving = epsilon_p;
+        var inst_tyvars_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        };
         
-        var fielddecl = undefined;
+        var inst_tyvar_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        };
         
-        var newconstr = epsilon_p;
+        var inst_tyvar_arrow = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        };
+
+	// redefined later
+        var gtycon = function(state) { return gtycon(state); };
+
+        var inst = choice(  inst_gtycon_action(ws(gtycon)),
+                            inst_gtycon_tyvars_action(sequence(expectws('('), gtycon, list(ws(tyvar), ws(',')), expectws(')'))),
+                            inst_tyvars_action(list(ws(tyvar), ws(','))),
+                            inst_tyvar_action(sequence(expectws('['), tyvar, expectws(']'))),
+                            inst_tyvar_arrow(sequence(expectws('('), tyvar, expectws("->"), tyvar, expectws(')')))
+                        );
+        
+        var dclass = qtycls;
+        
+        var deriving_action = function(p) {
+            return action(p, function(ast) {
+                // if(ast[0] instanceof Array) 
+                //      ast = ast[0];
+                return ast;
+            });
+        };
+        
+        var deriving = deriving_action(sequence(expectws("deriving"), choice(
+                                    ws(dclass),
+                                    sequence(expectws('('), list(ws(dclass), ws(',')), expectws(')'))
+                                )));
+        
+        var fielddecl = sequence(ws(vars), expectws("::"), choice(ws(type), sequence(optional(ws('!')), ws(atype))));
+        
+        var newconstr_con_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        };
+        
+        var newconstr_var_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        };
+
+	// redefined later
+        var atype = function(state) { return atype(state); };
+        var type = function(state) { return type(state); };
+
+        var newconstr = choice( newconstr_con_action(sequence(con, atype)),
+                                newconstr_var_action(sequence(con, expectws('{'), var_, expectws("::"), type, expectws('}')))
+                        );
         
         var constr_action = function(p) {
             return action(p, function(ast) {
@@ -610,20 +786,53 @@ Todo:
             });
         };
         
-        var atype = function(state) { return atype(state); };
-        var constr = choice(constr_action(sequence(ws(con), repeat0(sequence(optional(ws('!')), ws(atype)))))
-                          //  sequence(choice(ws(btype), sequence(optional(ws('!')), ws(atype))), ws(conop), choice(ws(btype), sequence(optional(ws('!')), ws(atype))))
+        var constr_op_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        };
+        
+        var constr_fielddecl_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        };
+        
+        var constr = choice(constr_action(sequence(ws(con), repeat0(sequence(optional(ws('!')), ws(atype))))),
+                            constr_op_action(sequence(choice(ws(btype), sequence(optional(ws('!')), ws(atype))), ws(conop), choice(ws(btype), sequence(optional(ws('!')), ws(atype))))),
+                            constr_fielddecl_action(sequence(ws(con), expectws('{'), list(ws(fielddecl), ws(',')), expectws('}')))
                            ); // Todo: fielddecl stuffz
         
         var constrs = list(ws(constr), ws('|'));
         
         var simpletype = sequence(ws(tycon), optional(ws(list(tyvar, ' '))));
         
-        var simpleclass = undefined;
+        var simpleclass_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        };
         
-        var scontext = undefined;
+        var simpleclass = simpleclass_action(sequence(ws(qtycls), ws(tyvar)));
+        
+        var scontext_one_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        }
+        
+        var scontext_many_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        }
+        
+        var scontext = choice(  scontext_one_action(simpleclass),
+                                scontext_many_action(sequence(expectws('('), list(ws(simpleclass), ws(',')), expectws(')')))
+                             );
 
-        var gtycon = choice(qtycon,
+	// redefinition
+        gtycon = choice(qtycon,
                             sequence(repeat1(ws(var_)), repeat0(ws(apat))),
                             "()",
                             "[]",
@@ -631,16 +840,18 @@ Todo:
                             sequence(ws('('), repeat1(ws(',')), ws(')'))
                             );
         
-        var type = function(state) { return type(state); };
-        var atype = choice( gtycon,
-                            tyvar,
-                            sequence(ws('('), list(ws(type), ','), ws(')')),
-                            sequence(ws('['), ws(type), ws(']')),
-                            sequence(ws('('), ws(type), ws(')'))
-                            );
+        
+	// redefinition
+	atype = choice( gtycon,
+			tyvar,
+			sequence(ws('('), list(ws(type), ','), ws(')')),
+			sequence(ws('['), ws(type), ws(']')),
+			sequence(ws('('), ws(type), ws(')'))
+			);
         
         var btype = repeat1(ws(atype));
-        var type = list(ws(btype), ws("->"));
+	// redefinition
+        type = list(ws(btype), ws("->"));
         
         var fixity = choice(ws("infixl"), ws("infixr"), ws("infix"));
         
@@ -662,7 +873,7 @@ Todo:
                 
                 var prec = 9;
                 if (ast[1] != false)
-                    prec = ast[1].value.num;
+                    prec = ast[1].num;
                     
                 var ops = ast[2];
                 
@@ -687,13 +898,44 @@ Todo:
                                 epsilon_p
                             );
         
-        var idecl = undefined;
+        var idecl_fun_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        };
         
-        var idecls = epsilon_p;
+        var idecl = idecl_fun_action(sequence(choice(ws(funlhs), ws(var_)), ws(rhs)));
         
-        var cdecl = undefined;
+        var idecls_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        };
         
-        var cdecls = epsilon_p;
+        var idecls = idecls_action(list(ws(idecl), ws(';')));
+        
+        var cdecl_gendecl_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        };
+        
+        var cdecl_fun_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        };
+        
+        var cdecl = choice( cdecl_gendecl_action(gendecl),
+                            cdecl_fun_action(sequence(choice(ws(funlhs), ws(var_)), ws(rhs))));
+        
+        var cdecls_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        };
+        
+        var cdecls = cdecls_action(list(ws(cdecl), ws(';')));
         
         var fun_action = function(p) {
             return action(p, function(ast) {
@@ -704,14 +946,18 @@ Todo:
                         var patterns = ast[0][1];
                         var fun_ident = ast[0][0];
                         
-                        var name = new haskell.ast.VariableBinding(fun_ident);
+                        if (patterns.length == 0) {
+                            return new haskell.ast.Variable(
+							    new haskell.ast.VariableBinding(fun_ident),
+							    ast[1]
+                            );
+                        }
+                        
+                        //var name = new haskell.ast.VariableBinding(fun_ident);
                         
                         var fun = ast[1];
-                        for (var i = patterns.length - 1; i >= 0; i--) {
-                            fun = new haskell.ast.Lambda(patterns[i], fun);
-                        }
-
-                        return new haskell.ast.Variable(name, fun);
+                        
+                        return new haskell.ast.Function(fun_ident, patterns, fun);
                     }
                 } catch (e) {
                     console.log("%o", e);
@@ -726,7 +972,14 @@ Todo:
                             gendecl
                          );
         
-        var decls = action(sequence(expect(ws('{')), list(ws(decl), ws(';')), expect(ws('}'))), function(ast) { return ast[0]; });
+	// Redefinition, see "var decls"
+        decls = action(sequence(expect(ws('{')), list(ws(decl), ws(';')), expect(ws('}'))), function(ast) { return ast; });
+        
+        var type_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        };
         
         var data_action = function(p) {
             return action(p, function(ast) {
@@ -736,19 +989,43 @@ Todo:
             });
         };
         
-        var topdecl = choice(   sequence(ws("type"), ws(simpletype), ws('='), ws(type)),
+        var newtype_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        };
+        
+        var class_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        }
+        
+        var instance_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        };
+        
+        var default_action = function(p) {
+            return action(p, function(ast) {
+                return ast;
+            });
+        };
+        
+        var topdecl = choice(   type_action(sequence(ws(qtycls), ws(simpletype), ws('='), ws(type))),
                                 data_action(sequence(expect(ws("data")), optional(sequence(context, expect("=>"))), ws(simpletype), expect(ws('=')), constrs, optional(deriving))),
-                                sequence(ws("newtype"), optional(sequence(context, "=>")), ws(simpletype), ws('='), newconstr, optional(deriving)),
-                                sequence(ws("class"), optional(sequence(scontext, "=>")), tycls, tyvar, optional(sequence(ws("where"), cdecls))),
-                                sequence(ws("instance"), optional(sequence(scontext, "=>")), qtycls, inst, optional(sequence(ws("where"), idecls))),
-                                sequence(ws("default"), ws('('), list(type, ','), ws(')')),
+                                newtype_action(sequence(ws("newtype"), optional(sequence(context, "=>")), ws(simpletype), ws('='), newconstr, optional(deriving))),
+                                class_action(sequence(expectws("class"), optional(sequence(scontext, expectws("=>"))), tycls, tyvar, optional(sequence(expectws("where"), cdecls)))),
+                                instance_action(sequence(expectws("instance"), optional(sequence(scontext, "=>")), qtycls, inst, optional(sequence(expectws("where"), idecls)))),
+                                default_action(sequence(expectws("default"), expectws('('), list(type, ','), expectws(')'))),
                                 ws(decl)
                             );
         
         var topdecls_action = function(p) {
             return action(p, function(ast) {
                 return ast.filter(function(element) {
-                    return element instanceof haskell.ast.Variable || element instanceof haskell.ast.Data;
+                    return element instanceof haskell.ast.Declaration;
                 });
             });
         };
@@ -812,7 +1089,7 @@ Todo:
         toplevel_exp = action(toplevel_exp, function(ast) {
             return ast[0];
         });
-        var program = action(sequence(choice(module, toplevel_exp), ws(end_p)), function(ast) { return ast[0]; });
+        var program = action(sequence(choice(toplevel_exp, module), ws(end_p)), function(ast) { return ast[0]; });
         
         // Pragma macro parser
         var pragmaId = join_action(repeat1(negate(choice('\t', ' ', '\r', '\n', "#-}"))), "");
@@ -823,10 +1100,10 @@ Todo:
                     if (p == "MagicHash") {
                         enableHash = true;
                     }
-                    return ast;
+                    return "";
                 });
                 
-        var grammar = action(sequence(repeat0(pragma), program), function(ast) {
+        var grammar = action(sequence(program), function(ast) {
                 return ast[ast.length - 1];
             });
         
@@ -846,11 +1123,14 @@ Todo:
         comments = join_action(comments, "");
         
         // Step 1: Strip comments
+        comments = join_action(sequence(repeat0(pragma), comments), "");
+        
         var stripped = comments(ps(code)).ast;
         
         // Step 2: Parse lexical syntax and convert to context free
         var lexer_state = {
-            indents: new Array()
+            indents: new Array(),
+            current: 0
         }
          
         var whitestuff = choice('\t', ' ');
@@ -864,6 +1144,8 @@ Todo:
                 }
             }
             
+            lexer_state.current += cnt;
+            
             lexer_state.indents.push({ depth: cnt, bracket: false });
             var o = new LexObject(cnt, cnt);
             o.isStartTab = true;
@@ -875,20 +1157,35 @@ Todo:
             this.indent = indent;
         }
         
-        var lexeme = join_action(repeat1(negate(choice('\n', '\r', ' ', '\t', ';', '{', '}'))), "");
-        lexeme = choice(';', '{', '}', lexeme);
+        var sym_lexer = sym;
+        if (enableHash) {
+            sym_lexer = butnot(sym, '#')
+        }
+        
+        var lexeme = join_action(repeat1(negate(choice('\n', '\r', ' ', '\t', ';', '{', '}', '(', ')', '[', ']', ',', sym_lexer))), "");
+        lexeme = choice(';', '{', '}', join_action(sequence('(', sym, ')'), ""), '(', ')', '[', ']', ',', sym, lexeme);
         lexeme = action(lexeme, function(ast) {
-            return new LexObject(ast, lexer_state.indents[lexer_state.indents.length - 1].depth);
+            var indent = lexer_state.current;
+            lexer_state.current += ast.length;
+            return new LexObject(ast, indent);
         });
         
         var ws_ = function(p) {
-            return action(sequence(expect(repeat0(" ")), p), function(ast) {
-               return ast[ast.length - 1]; 
+            return action(sequence(repeat0(choice(' ', '\t')), p), function(ast) {
+                for (var i = 0; i < ast[0].length; i++) {
+                    if (ast[0][i] == '\t')
+                        lexer_state.current += 8;
+                    else
+                        lexer_state.current += 1;
+                }
+                lexer_state.current += ast[0].length;
+                return ast[ast.length - 1]; 
             });
         }
         
         var concat_action = function(p) {
             return action(p, function(ast) {
+                lexer_state.current = 1;
                 var a = ast[1];
                 /*for (var i in a) {
                     ast.push(a[i]);
@@ -957,92 +1254,83 @@ Todo:
         };
         
         var applyLayoutRules = function(ts, ms, out) {
-            if (ts.length == 0 && ms.length == 0) {
-                // done
-            } else if (ts.length == 0) {
-                var m = ms[0];
-                ms.shift();
-                
-                if (m != 0) {
-                    out.push('}');
-                    applyLayoutRules(ts, ms, out);
-                } else {
-                    console.log("layout error");
-                }
-            } else {
-                var t = ts[0];
-                
-                if (t.lex == "let") {
-                    layout_state.let_stack.push(t);
-                }
-                
-                if (t.isArrowsIndent) {
-                    if (ms[0] == t.indent) {
-                        ts.shift();
-                        out.push(';');
-                        applyLayoutRules(ts, ms, out);
-                    } else if (t.indent < ms[0]) {
-                        ms.shift();
-                        out.push('}');
-                        applyLayoutRules(ts, ms, out);
-                    } else {
-                        ts.shift();
-                        ms.shift();
-                        applyLayoutRules(ts, ms, out);
-                    }
-                } else if (t.isBracketsIndent) {
-                    var n = t.indent;
-                    
-                    if (ms.length > 0 && n > ms[0]) {
-                        var m = ms[0];
-                        out.push('{');
-                        ts.shift();
-                        ms.unshift(n);
-                        applyLayoutRules(ts, ms, out);
-                    } else if (ms.length == 0 && n > 0) {
-                        ts.shift();
-                        out.push('{');
-                        var a = new Array();
-                        a.push(n);
-                        applyLayoutRules(ts, a, out);
-                    } else {
-                        t.isBracketsIndent = false;
-                        t.isArrowsIndent = true;
-                        ms.shift();
-                        out.push('{');
-                        out.push('}');
-                        applyLayoutRules(ts, ms, out);
-                    }
-                } else if (t.lex == '}') {
-                    var n = t.indent;
-                    if (n == 0) {
-                        ts.shift();
-                        ms.shift();
-                        out.push('}');
-                        applyLayoutRules(ts, ms, out);
-                    }  else {
-                        console.log("layout error");
-                    }
-                } else if (t.lex == '{') {
-                    ts.shift();
-                    ms.unshift(0);
-                    out.push('{');
-                    applyLayoutRules(ts, ms, out);
-                } else {
+            while (!(ts.length == 0 && ms.length == 0)) {
+                if (ts.length == 0) {
                     var m = ms[0];
-                    if (m != 0 && m != undefined && t.lex == "in" && layout_state.let_stack.length > 0) { 
-                        // parse-error(t) is more or less equals to checking for in
-                        // or maybe not, but at least it expands let ... in correctly
-                        // we also need to make sure that we are actually in a let expression
-                        // so we keep track of all nested lets in a stack
-                        layout_state.let_stack.pop();
+                    ms.shift();
+                    
+                    if (m != 0) {
                         out.push('}');
-                        ms.shift();
-                        applyLayoutRules(ts, ms, out);
                     } else {
+                        console.log("layout error");
+                        break;
+                    }
+                } else {
+                    var t = ts[0];
+                    
+                    if (t.lex == "let") {
+                        layout_state.let_stack.push(t);
+                    }
+                    
+                    if (t.isArrowsIndent) {
+                        if (ms[0] == t.indent) {
+                            ts.shift();
+                            out.push(';');
+                        } else if (t.indent < ms[0]) {
+                            ms.shift();
+                            out.push('}');
+                        } else {
+                            ts.shift();
+                        }
+                    } else if (t.isBracketsIndent) {
+                        var n = t.indent;
+                        
+                        if (ms.length > 0 && n > ms[0]) {
+                            var m = ms[0];
+                            out.push('{');
+                            ts.shift();
+                            ms.unshift(n);
+                        } else if (ms.length == 0 && n > 0) {
+                            ts.shift();
+                            out.push('{');
+                            ms.push(n);
+                        } else {
+                            t.isBracketsIndent = false;
+                            t.isArrowsIndent = true;
+                            ms.shift();
+                            out.push('{');
+                            out.push('}');
+                        }
+                    } else if (t.lex == '}') {
+                        var m = ms.shift();
+                        if (m == 0) {
+                            ts.shift();
+                            out.push('}');
+                        } else if(m != undefined) { // TODO: see if there is a way around this stupid shit
+                                                    // or if it has any consequences.
+                            out.push('}');
+                        } else {
+                            console.log("layout error");
+                            break;
+                        }
+                    } else if (t.lex == '{') {
                         ts.shift();
-                        out.push(t.lex);
-                        applyLayoutRules(ts, ms, out);
+                        ms.unshift(0);
+                        out.push('{');
+                    } else {
+                        var m = ms[0];
+                        if (m != 0 && m != undefined && t.lex == "in" && layout_state.let_stack.length > 0) { 
+                            // parse-error(t) is more or less equals to checking for in
+                            // or maybe not, but at least it expands let ... in correctly
+                            // we also need to make sure that we are actually in a let expression
+                            // so we keep track of all nested lets in a stack
+                            layout_state.let_stack.pop();
+                            out.push('}');
+                            ms.shift();
+                        } else {
+                            ts.shift();
+                            out.push(t.lex);
+                        }
                     }
                 }
             }

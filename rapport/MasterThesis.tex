@@ -1,0 +1,249 @@
+% USE PDFLATEX WITH THIS DOCUMENT. If you wish to use ordinary latex (why?) then convert the figures in figures/ to eps.
+% If you are using Chalmers linux system, you might need to change to a newer tex dist.
+% Do so with: vcs-what latex 
+% look up the newest version and select it, a.t.m that would be: vcs-select -p texlive-20080816
+% I recommend using kile in linux. Make it available by adding the unsup software 
+% echo unsup ~/.vcs4/pathsetup
+\documentclass[a4paper,12pt]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[swedish]{babel}
+%\usepackage[latin1]{inputenc} % Use the same as the encoding of the textfile
+\usepackage[utf8]{inputenc} % But this is probably the best choice. This doument is currently in utf8 (so is all other files)
+\usepackage{amsmath,amsfonts,amsthm,mathtools} % Math. Look up the amsmath manual (google) for many great examples.
+\usepackage{graphicx,placeins,float} % Figures and placements, float must be loaded before hypperref
+\usepackage[colorlinks,citecolor=blue]{hyperref} % Warning this package conflicts with the package algorithm
+\usepackage{fancyhdr,url,tikz} % Other usefull stuff. tikz is good for making drawings (but difficult)
+\usepackage{listings} % Source code
+% \usepackage{a4wide} % Gives a wider page
+\usepackage{mycommands} % Here you can define your personal favourites. See mycommands.cls
+\usepackage{pgfplots} % Anoth nice library for plots
+
+\usepackage{natbib} % ger Harvard-referenser
+
+
+%mina andringar för att få riktiga paragrafer vid radbrytning
+\setlength{\parskip}{12pt}
+\setlength{\parindent}{0pt}
+
+
+
+% mysubtitle, cover* and divisionnameB may be uncommented if nonexistant.
+\newcommand{\mytitle}{Haskell in Javascript}
+%\newcommand{\mysubtitle}{Some subtitle}
+\newcommand{\writtenmonth}{May}
+\newcommand{\writtenyear}{2010}
+\newcommand{\authors}{Adam Bengtsson\\Mikael Bung\\Johan Gustafsson\\Mattis Jeppsson}
+\newcommand{\authorsc}{ Adam Bengtsson, Mikael Bung, Johan Gustafsson, \\Mattis Jeppsson} % again with comma
+\newcommand{\YYYYNN}{2010:05}
+%\newcommand{\ISSN}{1652-8557}
+%\newcommand{\covercaption}{Haskell 98 implementerat i Javascript för att köras i en webbläsare}
+% \newcommand{\coverfigure}{figures/COVER_93_iso.png}
+\newcommand{\departmentname}{Computer Science and Engineering}
+\newcommand{\divisionnameA}{Computer Engineering}
+%\newcommand{\divisionnameB}{Fluid Mechanics}
+% \newcommand{\nameofprinters}{Chalmers Reproservice}
+\newcommand{\nameofprogramme}{Computer Science and Engineering Programme}
+\newcommand{\keywords}{Javascript, Haskell, Parser, Interpreter, Type Checker}
+% This is just to keep the swedish letters at one place in case there are problems with encoding
+\newcommand{\city}{Göteborg} 
+\newcommand{\country}{Sweden} 
+\newcommand{\university}{Chalmers University of Technology\\ Gothenburg University}
+\newcommand{\thesis}{Bachelor's thesis}
+\newcommand{\telephone}{+ 46 (0)31-772 1000}
+\newcommand{\postcode}{SE-412 96}
+% End of input.
+
+% Use section number first in numbering
+\numberwithin{equation}{section}
+\numberwithin{figure}{section}
+\numberwithin{table}{section}
+
+% Setting up the marginals a bit larger
+%\textheight=730pt % default 609pt, ~710 if you dont use a4wide
+%\headsep=0pt % default 25pt, since we have no headers in this document
+%\headheight=0pt% 12 pt
+%\voffset=-0.4in % default 0
+
+% Set up headers to match styleguide
+\pagestyle{fancy}
+\renewcommand{\headrulewidth}{0pt}
+\fancyhead{}
+\fancyfoot{}
+\fancyfoot[C]{\footnotesize \includegraphics[height=2.5mm]{figures/Logo.pdf}, \textit{\departmentname}, \thesis\ \YYYYNN}
+\fancyfoot[RO,LE]{\thepage}
+
+% To use code use \lstinputlisting[langauge=matlab,style=mystyle]{somematlabfile.m}
+% Here is a suitable style for code.
+
+%\lstset{language=Haskell}
+%\lstset{keywordstyle=\color{blue}\textbf} 
+%\lstset{stringstyle=\color{red}}
+
+\lstdefinestyle{mystyle}{showstringspaces=false, basicstyle=\scriptsize\ttfamily,
+        frame=shadowbox, breaklines=true, numbers=left, commentstyle=\color{gray},
+        keywordstyle=\color{blue}\textbf, stringstyle=\color{red}}
+
+% Metadata ion the PDF file (makes it searchable)
+\hypersetup{pdfauthor={\authorsc},pdftitle={\mytitle},pdfsubject={\thesis},pdfkeywords={\keywords}}
+        
+% The following part is automatically generated, go to document start
+\begin{document}
+\thispagestyle{empty}
+\begin{tikzpicture}[remember picture,overlay]
+ \node[yshift=-6.4cm] at (current page.north west)
+   {\begin{tikzpicture}[remember picture, overlay]
+     % First draw the grid and then the Logo and avancez logo.
+     \draw[clip] (0cm,6.4cm)--(\paperwidth,6.4cm)--(\paperwidth,0cm)--(0.725\paperwidth,0cm)
+               .. controls (0.703\paperwidth,0) and (0.703\paperwidth,0.8cm)..
+               (0.68\paperwidth,0.8cm)--(0cm,0.8cm)--cycle;
+     \draw[step=5mm,black] (0,0) grid (\paperwidth,6.4cm);
+     \node[anchor=west,xshift=2.05cm,yshift=3.27cm,rectangle]{\includegraphics[width=13.2cm]{figures/Logo.pdf}};
+     \node[anchor=west,xshift=15.65cm,yshift=3.3cm,rectangle]{\includegraphics[width=3.6cm]{figures/Avancez.pdf}};
+ %    \node[anchor=west,xshift=1.15cm,yshift=0.1cm,rectangle]{\includegraphics[width=13.2cm]{figures/gulogga.png}};
+
+     \end{tikzpicture}};
+\end{tikzpicture}
+\ \vfill
+\makeatletter\@ifundefined{coverfigure}{}{
+ \begin{center}
+  \includegraphics[width=\textwidth,height=0.4\paperheight,keepaspectratio]{\coverfigure}
+ \end{center}
+}\makeatother
+{\huge\noindent \mytitle\par} % title, 21
+{\large\noindent \ \par} % subtitle, 16
+%{\normalsize\noindent\textit{Master of Science Thesis}\par};
+{\normalsize\noindent\textit{\thesis\ in \nameofprogramme}\par} % 14
+\vskip 5mm
+{\Large\noindent \uppercase\expandafter{\authors}\par}% 18
+\vskip 6mm
+{\small\noindent
+Department of \departmentname\\
+\textit{Division of \divisionnameA}
+\makeatletter\@ifundefined{divisionnameB}{}{\textit{and Division of \divisionnameB}}\makeatother\\
+\uppercase\expandafter{\university}\\
+\city, \country\ \writtenyear\\
+\thesis\ \YYYYNN\par}
+
+ \newpage
+\thispagestyle{empty}
+\mbox{}
+
+\newpage
+\thispagestyle{empty}
+\begin{center}
+ {\uppercase\expandafter{\thesis}\ \YYYYNN\par}
+ \vskip 40mm
+ {\Large \mytitle\par}
+ \vskip 5mm
+ \makeatletter\@ifundefined{mysubtitle}{}{{\mysubtitle\par}}\makeatother
+ \vskip 5mm
+ {\thesis\ in \nameofprogramme\par} % (if applicable) (if applicable)
+ {\uppercase\expandafter{\authors}\par}
+ \vfill
+ {Department of Computer Science\par}
+ {\textit{Division of \divisionnameA}
+  \makeatletter\@ifundefined{divisionnameB}{}{\textit{and Division of \divisionnameB}}\makeatother
+ \par}
+ {\uppercase\expandafter{\university}\par}
+ \vskip 2mm
+ {\city, \country\ \writtenyear\par}
+\end{center}
+
+\newpage
+{\noindent \mytitle\\
+\makeatletter\@ifundefined{mysubtitle}{}{\mysubtitle\\}\makeatother
+{\uppercase\expandafter{\authors}}\par}
+\vskip 10mm
+{\noindent \copyright {\uppercase\expandafter{\authorsc}}, \writtenyear\par}
+\vskip 20mm
+{\noindent \thesis\ \YYYYNN\\
+Department of \departmentname\\
+\makeatletter\@ifundefined{divisionnameB}{}{ and Division of \divisionnameB}\makeatother
+\\
+\university\\
+\postcode\ \city\\
+\country\\
+Telephone: \telephone\par}
+\vfill
+\makeatletter\@ifundefined{covercaption}{}{{\noindent Cover:\\\covercaption\par}\vskip 5mm}\makeatother
+{\noindent \nameofprinters 
+%/ Department of \departmentname
+\\\city, \country\ \writtenyear\par}
+\thispagestyle{empty}
+
+\newpage
+%\thispagestyle{justpage}
+\setcounter{page}{1}
+\pagenumbering{Roman}
+%{\noindent \mytitle\\
+%\makeatletter\@ifundefined{mysubtitle}{}{\mysubtitle\\}\makeatother
+%\thesis\ in \nameofprogramme\\ % (if applicable)
+%{\uppercase\expandafter{\authors}}\\
+%Department of \departmentname\\
+%Division of \divisionnameA
+%\makeatletter\@ifundefined{divisionnameB}{}{ and Division of \divisionnameB}\makeatother\\
+%\university\par}
+
+
+\hyphenpenalty=10000
+\tolerance=5000
+
+%\hyphenation{dereference,heapptr,expression} %, typcheckaren, miss-lyckande, ghci, haskelltolk, haskell, typinformation, javascript, interpreter, programmering, interpretatorn, functions, haskell-kompilator, lambda, modul, exempelvis, grammatik, interpreteringen, pekar, av-sockrar, upp-byggnad, funktions-defenitioner, returnera, av-sockrade, skickas }
+
+\phantomsection\addcontentsline{toc}{section}{Abstract}\input{kapitel/abstract}
+%\noindent Keywords: \keywords
+
+% Either a swedish translation, or an emtpy page.
+\newpage
+\phantomsection\addcontentsline{toc}{section}{Sammanfattning}\input{kapitel/sammanfattning}
+
+\newpage
+\mbox{}
+
+%\newpage
+\phantomsection\addcontentsline{toc}{section}{Innehåll}
+\tableofcontents
+
+% Here you can add preface and notations
+%\cleardoublepage
+%\phantomsection\addcontentsline{toc}{section}{Preface}\input{Preface}
+%\vskip 1cm
+%\noindent \city\ \writtenmonth\ \writtenyear\\
+%\authorsc
+%\newpage
+%\phantomsection\addcontentsline{toc}{section}{Notations}\input{Notations}
+
+\cleardoublepage
+\setcounter{page}{1}
+\pagenumbering{arabic}
+
+
+% Real contents of report starts here
+% Splitting it up to several files help when working together.
+% Floatbarriers prevent figures from beeing placed into the next chapter.
+\input{kapitel/inledning}\FloatBarrier 
+\newpage
+%\input{kapitel/teori}\FloatBarrier
+%\newpage
+\input{kapitel/metod.tex}\FloatBarrier
+\newpage
+\input{kapitel/resultat.tex}\FloatBarrier
+\newpage
+\input{kapitel/diskussion.tex}\FloatBarrier
+\newpage
+\input{kapitel/slutsatser.tex}\FloatBarrier
+\newpage
+% \input{Method}\FloatBarrier
+% \input{Results}\FloatBarrier
+% \input{Conclusions}
+% \input{Recommendations}
+
+% And the bilbiography saved as mybib.bib
+\bibliographystyle{plainnat}
+\bibliography{kallor} 
+
+% Appendices
+
+\end{document}
+

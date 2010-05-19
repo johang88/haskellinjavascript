@@ -1,35 +1,57 @@
 \documentclass[a4paper, 12pt]{article}
 
+\usepackage{float}
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
 \usepackage[swedish]{babel}
 \usepackage{graphicx}
 \usepackage{natbib} % ger Harvard-referenser
-
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{color}
 
 \setlength{\parskip}{12pt}
 \setlength{\parindent}{0pt}
 
+
 \begin{document}
     \title{Haskell in Javascript}
-    \author{Adam Bengtsson, Mikael Bung, Johan Gustafsson, Mattis Jeppsson}
+    \author{
+        Adam Bengtsson, 
+        Mikael Bung, 
+        Johan Gustafsson, 
+        Mattis Jeppsson 
+        \\ 
+        Institutionen för data- och informationsteknik 
+        \\ 
+        Chalmers Tekniska Högskola 
+        \\ 
+        41296 Göteborg
+    }
     \date{\today}
     \maketitle
-    \newpage
-
-    \tableofcontents
-    \newpage
-
-    % include all parts
-    \newpage
-    \input{kapitel/forord.tex}
+    \thispagestyle{empty}
     \newpage
     \input{kapitel/sammanfattning.tex}
+    \thispagestyle{empty}
     \newpage
     \input{kapitel/abstract.tex}
+    \thispagestyle{empty}
     \newpage
-    \input{kapitel/forkortningslista.tex}
+
+    \thispagestyle{empty}
+    \tableofcontents
+    \thispagestyle{empty}
+    \thispagestyle{empty}
     \newpage
+
+    \listoffigures
+    \thispagestyle{empty}
+    % include all parts
+
+   % \input{kapitel/forkortningslista.tex}
+    \newpage
+    \setcounter{page}{1}
     \input{kapitel/inledning.tex}
     \newpage
     \input{kapitel/teori.tex}
@@ -47,5 +69,5 @@
     % källor 
     \bibliographystyle{plainnat}
     \bibliography{kallor} 
-
+    
     \end{document}

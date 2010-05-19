@@ -1,1 +1,15 @@
-\section{Sammanfattning}
+\renewcommand{\abstractname}{Sammanfattning}
+
+\begin{abstract}
+
+Haskell är ett programmeringsspråk med en begränsad användarbas. Vår förhoppning är att göra det enklare för programmerare att lära sig Haskell genom att implementera språket i Javascript. På så vis blir det möjligt att köra Haskell i en webbläsare utan att behöva ladda ner en haskellkompilator, som till exempel \emph{Glasgow Haskell Compiler} (GHC).
+  I den här rapporten beskriver vi vårt arbete och resultat av att implementera Haskell i Javascript. 
+\\
+\\
+  Resultatet består av en parser, typcheckare, interpretator och ett användargränssnitt liknande GHCi.
+  Parsern tar användaren indata och konverterar den till en intärn datastruktur, kallat abstrakt syntaxträd.  Typcheckaren analyserar sedan det abstrakta syntaxträdet för att kontrollera att det ej förekommer några typfel. Om inga fel har påträffats så skickas trädet vidare till interpretatorn som tolkar trädet på ett väldefinerat vis. 
+\\
+\\
+  Resultatet visar att det är möjligt att implementera Haskell i Javascript, men det behövs mycket mer arbete för att skapa en nybörjarvänlig miljö att lära sig Haskell i. 
+
+\end{abstract}

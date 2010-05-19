@@ -1,8 +1,16 @@
+// TODO omm man bläddrar upp i historyn så ska det man skrivit in sparas
 var ENTER = '13';
 var UP    = '38';
 var DOWN  = '40';
 var is_module_loaded = false;
 var modules = new Array();
+
+
+var commands = new Array();
+commands[":l"]    = "LOAD";
+commands[":load"] = "LOAD";
+commands[":h"]    = "HELP";
+commands[":help"] = "HELP";
 
 (function($){
 
@@ -40,18 +48,25 @@ var modules = new Array();
         
         // history
         var hiss = new historry;
-        // load history from cookie
-        hiss_cookie = $.cookie("hiss");
-        if(hiss_cookie != null){
-            hiss.history_array = JSON.parse(hiss_cookie);
+
+        try{
+            // load history from cookie
+            hiss_cookie = $.cookie("hiss");
+            if(hiss_cookie != null){
+                hiss.history_array = JSON.parse(hiss_cookie);
+            }
+        }
+        catch(err){
+            console.log("Error: History not loaded from cookie");
         }
 
         var env = new haskell.interpreter.RootEnv();
-        haskell.interpreter.primitives(env);
+        haskell.primitives.init(env);
         
-        //  ladda prelude
-        load_module('Prelude.hs');
+        load_module('hs/Prelude.hs');
+
         modules[0] = "Prelude";
+
         this.html("<ol>" + makeInput(modules) + "</ol>");
 
         $("input:text:visible:first").focus();
@@ -59,17 +74,21 @@ var modules = new Array();
         this.keydown(function(e){
             var input = $('input', this);
             var line = input.attr("value");
-            if(e.keyCode==UP){
+            if(e.which==UP){
                 input.attr("value", hiss.older(line));
             }
-            if(e.keyCode==DOWN){
+            if(e.which==DOWN){
                 input.attr("value", hiss.newer(line));
             }
-            if (e.keyCode==ENTER){
-
+            if (e.which==ENTER){              
                 // history
                 hiss.addHistory(line);
-                $.cookie("hiss", JSON.stringify(hiss.history_array), {expires: 3 });              
+                try{
+                   $.cookie("hiss", JSON.stringify(hiss.history_array), {expires: 3 });              
+                }
+                catch(err){
+                    console.log("Error: History not saved to cookie");
+                }
                 input.attr("value","");
 
                 if(isCommand(line)){
@@ -78,7 +97,56 @@ var modules = new Array();
                 {
                     try {
                         var newLine = makeEntered(modules, line);
-                        var output = makeOutput(evaluateHaskell(line, env));
+                        
+                        var showResult = function(result) {
+                            if (result.type == "Data") {
+                                var str = result.identifier;
+                                var op = " ";
+                                
+                                if (str == "I#") {
+                                    str = "";
+                                } else if (str == ":") {
+                                    str = "";
+                                    op = ",";
+                                }
+                                
+                                if (result.ptrs) {
+                                    var first = true;
+                                    for (var i = 0; i < result.ptrs.length; i++) {
+                                        if (str.length == 0 && first) {
+                                            str = showResult(result.ptrs[i].dereference());
+                                            if (typeof str.str != "undefined") 
+                                                str = str.str;
+                                            first = false;
+                                        } else {
+                                            var res = showResult(result.ptrs[i].dereference());
+                                            if (res.str)
+                                                res = res.str;
+                                            str = str + op + res;
+                                        }
+                                    }
+                                }
+                                
+                                return { str: str, isList: op == "," };
+                            } if (result.force) {
+                                return result.force();
+                            } else if (result.ptrs) {
+                                return result.ptrs[0].dereference();
+                            } else {
+                                return result; 
+                            }
+                        }
+                        
+                        var result = showResult(evaluateHaskell(line, env));
+                        if (result.isList) {
+                            result = result.str;
+                            result = result.substring(0, result.length - 3);
+                            result = "[" + result + "]";
+                        } else if (result.str) {
+                            result = result.str;
+                        }
+                        
+                        var output = makeOutput(result);
                         $('.input', this).after(output).replaceWith(newLine);
                         $("ol",this).append(makeInput(modules));
                     }
@@ -127,11 +195,11 @@ var modules = new Array();
         
         function runCommand(i, input2, line){
             var input   = trim(i);
-            var command = input.substr(0,2);
-            var arg     = trim(input.substr(2)); 
-            var module_name = arg.substr(0, arg.lastIndexOf('.'));  
+            var command = input.indexOf(" ") != -1 ? input.substr(0, input.indexOf(" ")) : input;
             // load module
-            if(command == ':l'){
+            if(commands[command] == "LOAD"){
+                var arg     = trim(input.substr(command.length)); 
+                var module_name = arg.substr(0, arg.lastIndexOf('.'));  
                 load_module(arg);
                 if(is_module_loaded){
                     var module_already_in_modules = false;
@@ -157,19 +225,35 @@ var modules = new Array();
                         $('.input').after(output).replaceWith(newLine);
                         $("ol").append(makeInput(modules));
                 }
+            }else if(commands[command] == "HELP"){
+                var newLine     = makeEntered(modules, line);
+                var output_row  = new Array();
+                output_row.push(makeOutput("Help"));
+                output_row.push(makeOutput(" "));
+                output_row.push(makeOutput("Commands:"));
+                output_row.push(makeOutput(":l [Module]  ... load a module"));
+                var str = "$('.input')";
+                for (var i = output_row.length-1; i>=0; i--){
+                    str += ".after(" + output_row[i] + ")";
+ //                   $('.input').after(output_row[i]).after(output).replaceWith(newLine);
+                }
+                str += ".replaceWith(newLine);";
+                alert(str);
+                eval(str);
+               // var output  = makeOutput("HELP HELP HELP" + "<br>" + "asdas");
+              //  $('.input').after(output1).after(output).replaceWith(newLine);
+             //   $('.input').after(output).replaceWith(newLine);
+             //   $('.input').after(output).replaceWith(newLine);
+                $("ol").append(makeInput(modules));
             }
         }
     };
 
 })(jQuery);
 
-
-// do nicer
 function trim(str){
     return str.replace(/^\s+|\s+$/g,"");
 }
-
-
 
 // historry-class with nice name
 // !!!WARNING!!! NICE NAME. conflict with javascript
