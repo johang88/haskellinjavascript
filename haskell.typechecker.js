@@ -1,12 +1,4 @@
 (function (typechecker, ast) {
-     Array.prototype.map = function(f) {
-	 var ys = [];
-	 for(var ii in this) {
-	     ys[ii] = f(this[ii]);
-	 }
-	 return ys;
-     };
-
      var inject = function(arr, f, acc) {
 	 for(var ii in arr) {
 	     acc = f(arr[ii], acc);
@@ -14,8 +6,44 @@
 	 return acc;
      };
 
+     var injectRight = function(arr, f, acc) {
+	 for(var ii = arr.length-1; ii >= 0; ii--) {
+	     acc = f(arr[ii], acc);
+	 }
+	 return acc;
+     };
 
-     uniqueBy = function(arr, comp) {
+     var any = function(arr, f) {
+	 return inject(
+	     arr,
+	     function(p, acc) {
+		 return f(p) || acc;
+	     },
+	     false);
+     };
+
+     var elem = function(arr, p) {
+	 return any(
+	     arr,
+	     function(pp) {
+		 return p.compare(pp);
+	     });
+     };
+
+     typechecker.any = any;
+
+     var all = function(arr, f) {
+	 return inject(
+	     arr,
+	     function(p, acc) {
+		 return f(p) && acc;
+	     },
+	     true);
+     };
+
+     typechecker.all = all;     
+
+     var uniqueBy = function(arr, comp) {
 	 var ys = [];
 	 var member = function(x) {
 	     for(var ii in ys) {
@@ -33,11 +61,66 @@
 	 return ys;
      };
 
-     unionBy = function(arr, otherArray, comp) {
-	 return arr.concat(otherArray).uniqueBy(comp);
+     var flatten = function(arr) {
+	 return inject(
+	     arr,
+	     function(a, acc) {
+		 return acc.concat(a);
+	     },
+	     []);
      };
 
+     typechecker.flatten = flatten;
 
+     var unionBy = function(arr, otherArray, comp) {
+	 return uniqueBy(arr.concat(otherArray), comp);
+     };
+
+     var intersectBy = function(arr, otherArray, comp) {
+	 return inject(
+	     arr,
+	     function(a, acc) {
+		 if(any(
+			otherArray,
+			function(b) {
+			    return comp(a, b);
+			})) {
+		     return acc.concat([a]);
+		 }
+		 return acc;
+	     },
+	     []
+	 );
+     };
+
+     var filter = function(arr, f) {
+	 return inject(
+	     arr,
+	     function(a, acc) {
+		 if(f(a)) {
+		     return acc.concat([a]);
+		 }
+		 return acc;
+	     },
+	     []
+	 );
+     };
+
+     var diff = function(arr, diffArr){
+	 return inject(
+	     arr,
+	     function(a, acc) {
+		 if(!elem(diffArr, a)) {
+		     return acc.concat([a]);
+		 }
+		 return acc;
+	     },
+	     []);
+     };
+
+     typechecker.filter = filter;
+     typechecker.unionBy = unionBy;
+     typechecker.intersectBy = intersectBy;
      ast.Num.prototype.infer = function(namegen) {
 	 var v = typechecker.newTVar(new typechecker.Star(), namegen);
 	 return {
@@ -52,6 +135,36 @@
 	     preds: [],
 	     assumps: [],
 	     type: v
+	 };
+     };
+
+     ast.VariableBinding.prototype.infer = function(namegen) {
+	 var v = typechecker.newTVar(new typechecker.Star(), namegen);
+	 return {
+	     preds: [],
+	     assumps: [
+		 typechecker.toScheme(
+		     this.identifier,
+		     v)
+	     ],
+	     type: v
+	 };
+     };
+
+     ast.ConstantPattern.prototype.infer = function(namegen) {
+	 var t = this.value.infer(namegen);
+	 t["assump"] = [];
+	 return t;
+     };
+
+     ast.Combined.prototype.infer = function(namegen) {
+	 var t = this.pattern.infer(namegen);
+	 return {
+	     preds: t.preds,
+	     assumps: typechecker.toScheme(
+		 this.identifier,
+		 t.type),
+	     type: t.type
 	 };
      };
 
@@ -98,8 +211,8 @@
 	 this.id = function () { return id; };
 	 this.kind = function() { return kind; };
 	 this.apply = function(subst) {
-	     if (subst.lookup(this.id()) != undefined) {
-		 return subst.lookup(this.id());
+	     if (subst.lookup(this) != undefined) {
+		 return subst.lookup(this);
 	     }
 	     return (new typechecker.TVar(this.id(), this.kind()));
 	 };
@@ -114,26 +227,30 @@
 		 this.kind().equals(otherType.kind());
 	 };
 	 this.substWith = function(replaceWith) {
-	     var s = {};
-	     s[this.id()] = replaceWith;
-	     return new typechecker.Subst(s);
+	     return new typechecker.Subst().add(
+		 this,
+		 replaceWith);
 	 };
 	 this.mgu = function(otherType) {
 	     if(this.compare(otherType)) {
 		 return typechecker.nullSubst();
 	     }
-	     var tv = otherType.tv();
-	     for(var ii in tv) {
-		 if(this.compare(tv[ii])) {
+	     if(elem(otherType.tv(), this)) {
 		     throw "occurs check fails";
-		 }
 	     }
 	     if(!this.kind().equals(otherType.kind())) {
 		 throw "kinds do not match";
 	     }
 	     return this.substWith(otherType);
 	 };
+	 this.match = function(otherType) {
+	     if(!otherType.kind().equals(this.kind())) {
+		 throw "types do not match";
+	     }
+	     return this.substWith(otherType);
+	 };
 	 this.inst = function(ts) { return this; };
+	 this.hnf = function() { return true; };
      };
      
       typechecker.newTVar = function(kind, namegen) {
@@ -164,7 +281,14 @@
 	     }
 	     throw "types do not unify";
 	 };
+	 this.match = function(otherType) {
+	     if(otherType.compare(this)) {
+		 return typechecker.nullSubst();
+	     }
+	     throw "types do not match";
+	 };
 	 this.inst = function(ts) { return this; };
+	 this.hnf = function() { return false; };
      };
 
      typechecker.TAp = function(t1, t2) {
@@ -176,7 +300,33 @@
 	     return new typechecker.TAp(t1.apply(subst),t2.apply(subst));
 	 };
 	 this.tv = function() {
-	     return t1.tv().concat(t2.tv());
+	     if(t1.type() == "TVar" &&
+		t2.type() == "TVar" &&
+		t1.compare(t2)) {
+		 return [t1];
+	     }
+	     return unionBy(
+		 t1.tv(),
+		 t2.tv(),
+		 function(a, b) {
+		     return a.compare(b);
+		 });
+	 };
+	 this.mgu = function(otherType) {
+	     if(otherType.type() == "TAp") {
+		 var s1 = this.t1().mgu(otherType.t1());
+		 var s2 = this.t2().apply(s1).mgu(otherType.t2().apply(s1));
+		 return s1.compose(s2);
+	     }
+	     throw "types do not unify";
+	 };
+	 this.match = function(otherType) {
+	     if(otherType.type() == "TAp") {
+		 var s1 = this.t1().match(otherType.t1());
+		 var s2 = this.t2().match(otherType.t2());
+		 return s1.merge(s1, s2);
+	     }
+	     throw "types do not match";
 	 };
 	 this.compare = function(otherType) {
 	     return otherType.type() == "TAp" &&
@@ -188,6 +338,9 @@
 		 this.t1().inst(ts),
 		 this.t2().inst(ts));
 	 };
+	 this.hnf = function() {
+	     return this.t1().hnf();
+	 };
      };
      typechecker.TGen = function(id) {
 	 this.id = function() { return id; };
@@ -196,46 +349,91 @@
 	 this.inst = function(ts) { return ts[this.id()]; };
      };
 
-     typechecker.Subst = function(mappings) {
+     typechecker.tArrow = function() {
+	 return new typechecker.TCon(
+	     "(->)",
+	     new typechecker.Kfun(
+		 new typechecker.Star(),
+		 new typechecker.Kfun(
+		     new typechecker.Star(),
+		     new typechecker.Star())));
+     };
+     typechecker.fn = function(a,b) {
+	return new typechecker.TAp(
+	    new typechecker.TAp(
+		typechecker.tArrow(),
+		a),
+	    b);
+     };
+
+     typechecker.Subst = function() {
+	 var mappings = {};
+	 this.add = function(from, to) {
+	     mappings[from.id()] = {
+		 from: from,
+		 to: to
+	     };
+	     return this;
+	 };
 	 this.inject = function(f, acc) {
 	     for(var id in mappings) {
-		 acc = f(id, mappings[id], acc);
+		 acc = f(mappings[id].from, mappings[id].to, acc);
 	     }
 	     return acc;
 	 };
-	 this.lookup = function(id) {
-	     return mappings[id];
+	 this.lookup = function(v) {
+	     return (mappings[v.id()] != undefined &&
+		     mappings[v.id()].from.compare(v)) ?
+		 mappings[v.id()].to :
+		 undefined;
+	 };
+	 this.exists = function(v) {
+	     return this.lookup(v) != undefined;
 	 };
 	 this.compose = function(otherSubst) {
 	     var curSubst = this;
 	     var newSubst = this.inject(
-		 function(id, type, acc) {
-		     acc[id] = type;
-		     return acc;
+		 function(from, to, acc) {
+		     return acc.add(from, to);
 		 },
-		 {});
+		 new typechecker.Subst());
 	     otherSubst.inject(
-		 function(id, type, acc) {
-		     acc[id] = type.apply(curSubst);
-		     return acc;
+		 function(from, to, acc) {
+		     return acc.add(from, to.apply(curSubst));
 		 },
 		 newSubst);
-	     return new typechecker.Subst(newSubst);
+	     return newSubst;
+	 };
+	 this.merge = function(otherSubst) {
+	     var newSubst = this.inject(
+		 function(from, to, acc) {
+		     return acc.add(from, to);
+		 },
+		 new typechecker.Subst());
+	     otherSubst.inject(
+		 function(from, to, acc) {
+		     if(acc.exists(from) && !acc.lookup(from).compare(to)) {
+			     throw "merge fails";
+		     }
+		     return acc.add(from, to);
+		 },
+		 newSubst);
+	     return newSubst;
 	 };
 	 this.compare = function(otherSubst) {
 	     var curSubst = this;
 	     return this.inject(
-		 function(id, type, acc) {
+		 function(from, to, acc) {
 		     return acc &&
-			 otherSubst.lookup(id) != undefined &&
-			 type.compare(otherSubst.lookup(id));
+			 otherSubst.lookup(from) != undefined &&
+			 to.compare(otherSubst.lookup(from));
 		 },
 		 true) &&
 		 otherSubst.inject(
-		     function(id, type, acc) {
+		     function(from, to, acc) {
 			 return acc &&
-			     curSubst.lookup(id) != undefined &&
-			     type.compare(curSubst.lookup(id));
+			     curSubst.lookup(from) != undefined &&
+			     to.compare(curSubst.lookup(from));
 		     },
 		     true);
 	 };
@@ -274,6 +472,27 @@
 		     function(pred) { return pred.inst(ts); }),
 		 this.t().inst(ts));
 	 };
+	 this.quantify = function(vs) {
+	     var vss = this.tv().filter(
+		 function(v) {
+		     return elem(vs, v);
+		 });
+	     var ks = vss.map(
+		 function(vv) {
+		     return vv.kind();
+		 });
+	     var i = 0;
+	     var s = inject(
+		 vss,
+		 function(vv, acc) {
+		     acc.add(vv, new typechecker.TGen(i));
+		     i++;
+		     return acc;
+		 });
+	     return new typechecker.Scheme(
+		 ks,
+		 this.apply(s));
+	 };
      };
 
      typechecker.Pred = function(id, type) {
@@ -286,6 +505,20 @@
 	     }
 	     throw "classes differ";
 	 };
+	 this.matchPred = function(otherPred) {
+	     if(this.id() == otherPred.id()) {
+		 return this.type().match(otherPred.type());
+	     }
+	     throw "classes differ";
+	 };
+	 this.overlap = function(otherPred) {
+	     try {
+		 this.mguPred(otherPred);
+	     } catch (x) {
+		 return false;
+	     }
+	     return true;
+	 };
 	 this.tv = function() { return this.type().tv(); };
 	 this.compare = function(otherPred) {
 	     return this.id() == otherPred.id() &&
@@ -293,6 +526,9 @@
 	 };
 	 this.inst = function(ts) {
 	     return new typechecker.Pred(this.id(), this.type().inst(ts));
+	 };
+	 this.inHnf = function() {
+	     return this.type().hnf();
 	 };
      };
 
@@ -314,10 +550,19 @@
 	 };
      };
 
+     typechecker.toScheme = function(id, type) {
+	 return new typechecker.Scheme(
+	     [],
+	     new typechecker.Qual(
+		 [],
+		 type));
+     };
+
      typechecker.Assump = function(id, scheme) {
 	 this.id = function() { return id; };
 	 this.scheme = function() { return scheme; };
      };
+
 
      typechecker.NameGen = function() {
 	 var curr = 0;
@@ -328,4 +573,272 @@
 	 };
      };
 
+     typechecker.Klass = function(supers, instances) {
+	 this.supers = function() { return supers; };
+	 this.instances = function() { return instances; };
+     };
+
+     typechecker.KlassEnvironment = function() {
+	 var env = {};
+	 this.lookup = function(id) {
+	     if(this.defined(id)) {
+		 return env[id];
+	     }
+	     throw "class not found";
+	 };
+	 this.modify = function(id, klass) {
+	     env[id] = klass;
+	     return this;
+	 };
+	 this.defined = function(id) {
+	     return env[id] != undefined;
+	 };
+	 this.addClass = function(id, supers) {
+	     var cur = this;
+	     if(this.defined(id)) {
+		 throw "class already defined";
+	     }
+	     supers.map(
+		 function(s) {
+		     if(!cur.defined(s)) {
+			 throw "superclass not defined";
+		     }
+		 });
+	     return this.modify(
+		 id,
+		 new typechecker.Klass(
+		     supers,
+		     []));
+	 };
+	 this.addInst = function(ps, p) {
+	     if(!this.defined(p.id())) {
+		 throw "no class for instance";
+	     }
+	     var qs = this.lookup(p.id()).instances().map(
+		 function(inst) {
+		     return inst.t();
+		 });
+	     qs.map(
+		 function(q) {
+		     if(p.overlap(q)) {
+			 throw "overlapping instances";
+		     }
+		 });
+	     return this.modify(
+		 p.id(),
+		 new typechecker.Klass(
+		     this.lookup(p.id()).supers(),
+		     this.lookup(p.id()).instances().concat(
+			 [new typechecker.Qual(ps, p)])));   
+		     
+	 };
+	 this.bySuper = function(pred) {
+	     var cur = this;
+	     return [pred].concat(
+		 flatten(
+		     this.lookup(pred.id()).supers().map(
+			 function(id) {
+			     return cur.bySuper(
+				 new typechecker.Pred(
+				     id,
+				     pred.type()));
+			 }
+		     )));
+	 };
+	 this.byInst = function(pred) {
+	     var ret = undefined;
+	     this.lookup(pred.id()).instances.map(
+		 function(qual) {
+		     if(ret != undefined) {
+			 return;
+		     }
+		     try {
+			 var u = qual.t().matchPred(pred);
+			 ret = qual.preds().map(
+			     function(p) {
+				 return p.apply(u);
+			     });
+		     } catch (x) {
+			 return;
+		     }
+		 }
+	     );
+	     return ret;
+	 };
+
+	 this.entail = function(ps, p) {
+	     var cur = this;
+	     var a = any(
+		 ps.map(
+		     function(pp) {
+			 return cur.bySuper(pp);
+		     }),
+		 function(pps) {
+		     return any(
+			 pps,
+			 function(pp) {
+			     return p.compare(pp);
+			 });
+		 });
+	     var qs = this.byInst(p);
+	     var b = qs == undefined
+		 ? false
+		 : all(
+		     qs,
+		     function(q) {
+			 return cur.entail(ps,q);
+		     });
+	     return a || b;
+	 };
+
+	 this.toHnfs = function(ps) {
+	     return flatten(
+		 ps.map(
+		     function(p) {
+			 return this.toHnf(p);
+		     }));
+	 };
+
+	 this.toHnf = function(p) {
+	     if(p.inHnf()) {
+		 return [p];
+	     }
+	     var ps = this.byInst(p);
+	     if(ps == undefined) {
+		 throw "context reduction";
+	     }
+	     return this.toHnfs(ps);
+	 };
+
+	 this.simplify = function(qs) {
+	     var rs = [];
+	     var ps = qs;
+	     while(ps.length != 0) {
+		 if(this.entail(
+			rs.concat(ps.slice(1)),
+			ps.slice(0,1))) {
+		     ps = ps.slice(1);
+		 } else {
+		     rs = ps.slice(0,1).concat(rs);
+		     ps = ps.slice(1);
+		 }
+	     }
+	     return rs;
+	 };
+
+	 this.reduce = function(ps) {
+	     return this.simplify(this.toHnfs(ps));
+	 };
+
+	 this.scEntail = function(ps, p) {
+	     var cur = this;
+	     return any(
+		 ps.map(
+		     function(pp) {
+			 return cur.bySuper(pp);
+		     }),
+		 function(pps) {
+		     return elem(pps, p);
+		 });
+	 };
+     };
+
+     typechecker.ambiguities = function(ce, vars, preds) {
+	 return diff(preds.tv(), vars).map(
+	     function(v) {
+		 return {
+		     type: v,
+		     preds: filter(
+			 ps,
+			 function (vv) {
+			     return elem(preds, vv);
+			 })
+		 };
+	     });
+     };
+
+     typechecker.numClasses = ["Num", "Fractional", "Integral", "Float",
+			       "Real", "RealFloat", "RealFrac"];
+
+     typechecker.stdClasses = ["Eq", "Ord", "Show", "Read", "Bounded",
+			       "Enum", "Ix", "Functor", "Monad",
+			       "MonadPlus"].concat(typechecker.numClasses);
+
+     typechecker.candidates = function(ce, ambig) {
+	 return all(
+	     ambig.preds,
+	     function(p) {
+		 return p.type().compare(ambig.type);
+	     }) && any(
+		 ambig.preds,
+		 function(p) {
+		     return elem(
+			 typechecker.numClasses,
+			 p.id());
+		 }) && all(
+		     ambig.preds,
+		     function(p) {
+			 return elem(
+			     typechecker.stdClasses,
+			     p.id());
+		     }) ? filter(
+			 ce.defaults(),
+			 function(t) {
+			     return all(
+				 ambig.preds,
+				 function(p) {
+				     return ce.entail(
+					 [],
+					 new typechecker.Pred(
+					     p.id(),
+					     t));
+				 }
+			     );
+			 }) :[]; 
+     };
+     
+     typechecker.defaultPreds = function(ce, ts, ps) {
+	 var ambigs = typechecker.ambiguities(ce, ts, ps);
+	 var candidates = ts.map(
+	     ambigs,
+	     function(t) {
+		 return typechecker.candidates(ce, t);
+		 });
+	 if(any(
+		candidates,
+		function(c) {
+		    return c.length == 0;
+		})) {
+	     throw "cannot resolve ambiguity";
+	 }
+	 return flatten(
+	     candidates.map(
+		 function(ambig) {
+		     return ambig.preds;
+		 }
+		 )
+	 );
+     };
+
+     typechecker.defaultSubst = function(ce, ts, ps) {
+	 var ambigs = typechecker.ambiguities(ce, ts, ps);
+	 var candidates = ts.map(
+	     ambigs,
+	     function(t) {
+		 return typechecker.candidates(ce, t);
+		 });
+	 if(any(
+		candidates,
+		function(c) {
+		    return c.length == 0;
+		})) {
+	     throw "cannot resolve ambiguity";
+	 }
+	 var subst = new typechecker.Subst();
+	 for(var i in ts) {
+	     subst.add(ts[i], ambigs[i].type);
+	 }
+	 return subst;
+     };
+ 
 }) (haskell.typechecker, haskell.ast);
