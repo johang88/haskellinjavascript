@@ -1,12 +1,15 @@
 var ENTER = '13';
 var UP    = '38';
 var DOWN  = '40';
+var is_module_loaded = false;
+var modules = new Array();
 
 (function($){
 
     var evaluateHaskell = function(line, env)
     {
-        ast = haskell.parser.parse(line).ast;
+        var line_ = '{' + line + '}';
+        ast = haskell.parser.parse(line_).ast;
         if (ast == undefined){
             return "Syntax Error";
         }
@@ -23,15 +26,16 @@ var DOWN  = '40';
 
     };
     var makeInput = function(modules){
-        return "<li class='input'>" + makeModules(modules) + "<input type='text' name='inputBox' id='inbox'></li>";
+            return "<li class='input' id='inputTest'>" + makeModules(modules) + "<input type='text' name='inputBox' id='inbox'></li>";
     };
     var makeOutput = function(output) {
 	console.log("%o", output);
         return $("<li class='output'></li>").text(output.toString());
     };
-
+    
     $.fn.startHiji = function() {
-        var modules = new Array();
+
+        //var modules = new Array();
         var hist = new Array();
         
         // history
@@ -45,26 +49,9 @@ var DOWN  = '40';
         var env = new haskell.interpreter.RootEnv();
         haskell.interpreter.primitives(env);
         
- //  ladda prelude
-
-        $.get('Prelude.hs', function(prelude_data) {
-		console.log(prelude_data);
-		try {
-		    var ast = haskell.parser.parse(prelude_data);
-		    console.log("%o", ast);
-		    if (ast.ast == undefined) {
-			console.log("Syntax Error");
-		    }
-		    else {
-			haskell.interpreter.prepare(ast.ast, env);
-		    }
-		} catch(e) {
-		    console.log("%o", e);
-		}
-        });
-
+        //  ladda prelude
+        load_module('Prelude.hs');
         modules[0] = "Prelude";
-        modules[1] = "Control.Monad";
         this.html("<ol>" + makeInput(modules) + "</ol>");
 
         $("input:text:visible:first").focus();
@@ -79,29 +66,109 @@ var DOWN  = '40';
                 input.attr("value", hiss.newer(line));
             }
             if (e.keyCode==ENTER){
-                
+
                 // history
                 hiss.addHistory(line);
                 $.cookie("hiss", JSON.stringify(hiss.history_array), {expires: 3 });              
                 input.attr("value","");
-                try {
-                    var newLine = makeEntered(modules, line);
-                    var output = makeOutput(evaluateHaskell(line, env));
-                    $('.input', this).after(output).replaceWith(newLine);
-                    $("ol",this).append(makeInput(modules));
+
+                if(isCommand(line)){
+                    runCommand(line, input, line);
+                }else
+                {
+                    try {
+                        var newLine = makeEntered(modules, line);
+                        var output = makeOutput(evaluateHaskell(line, env));
+                        $('.input', this).after(output).replaceWith(newLine);
+                        $("ol",this).append(makeInput(modules));
+                    }
+                    catch(e) {
+                        console.log("%o", e);
+                    };
                 }
-                catch(e) {
-                    console.log("%o", e);
-                };
+
                 //set focus
                 $("input:text:visible:first").focus();
-
-            }else{
-             //   document.write(e.keyCode);
             }
         });
+
+        // load a module
+        function load_module(module){
+            is_module_loaded = false;
+            jQuery.ajax({
+                async : false,
+                url : module,
+                success: function(prelude_data){
+                    console.log(prelude_data);
+                    try {
+                            var ast = haskell.parser.parse(prelude_data);
+                            console.log("%o", ast);
+                            if (ast.ast == undefined) {
+                                console.log("Syntax Error");
+                            }
+                        else {
+                            haskell.interpreter.prepare(ast.ast, env);
+                            is_module_loaded = true;
+                        }
+                    } catch(e) {
+                        console.log("%o", e);
+                   }
+                }
+            });
+        }
+
+        function isCommand(l){
+            var line = trim(l);
+            if(line.charAt(0) == ':')
+                return true
+            else
+                return false
+        }
+        
+        function runCommand(i, input2, line){
+            var input   = trim(i);
+            var command = input.substr(0,2);
+            var arg     = trim(input.substr(2)); 
+            var module_name = arg.substr(0, arg.lastIndexOf('.'));  
+            // load module
+            if(command == ':l'){
+                load_module(arg);
+                if(is_module_loaded){
+                    var module_already_in_modules = false;
+                    for(x in modules){
+                        if(modules[x] == module_name)
+                            module_already_in_modules = true;
+                    }
+                    if(module_already_in_modules == false){
+                        var newLine = makeEntered(modules, line);
+                        var output = makeOutput("Module " + module_name +" loaded");
+                        $('.input').after(output).replaceWith(newLine);
+                        modules.push(module_name);
+                        $("ol").append(makeInput(modules));
+                    }else{
+                        var newLine = makeEntered(modules, line);
+                        var output = makeOutput("Module " + module_name + " already loaded");
+                        $('.input').after(output).replaceWith(newLine);
+                        $("ol").append(makeInput(modules));
+                    }
+                }else{
+                        var newLine = makeEntered(modules, line);
+                        var output = makeOutput("Module " + module_name + " not found");
+                        $('.input').after(output).replaceWith(newLine);
+                        $("ol").append(makeInput(modules));
+                }
+            }
+        }
     };
+
 })(jQuery);
+
+
+// do nicer
+function trim(str){
+    return str.replace(/^\s+|\s+$/g,"");
+}
+
 
 
 // historry-class with nice name
