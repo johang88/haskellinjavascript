@@ -120,7 +120,7 @@ commands[":help"] = "HELP";
                                             first = false;
                                         } else {
                                             var res = showResult(result.ptrs[i].dereference());
-                                            if (res.str)
+                                            if (typeof res.str != "undefined")
                                                 res = res.str;
                                             str = str + op + res;
                                         }
@@ -142,7 +142,7 @@ commands[":help"] = "HELP";
                             result = result.str;
                             result = result.substring(0, result.length - 3);
                             result = "[" + result + "]";
-                        } else if (result.str) {
+                        } else if (typeof result.str != "undefined") {
                             result = result.str;
                         }
                         
