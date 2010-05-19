@@ -20,7 +20,7 @@ transparens skulle också förenkla verifiering av projektets komponenter.
 
 Dock finns även en del nackdelar med en sådan implementation. Utan särskilda
 optimeringar i kompilatorn skulle en målrepresentation nödvändigtvis innehålla
-strukturer liknande dem man finner i en interpretator för ett lat evaluerat
+strukturer liknande dem som kan finnas i en interpretator för ett lat evaluerat
 språk. Det är ett rimligt antagande att sådana optimeringar på grund av sin komplexitet vore alltför stora för att genomföra i den aktuella tidsramen. Därför anser vi att denna typ av implementation lämpar sig bäst inom
 ramarna för ett existerande kompilatorprojekt såsom GHC där nödvändiga optimeringar redan finns inbyggda.
 
@@ -37,12 +37,12 @@ särskilt integrationslager för att få samma möjligheter.
 
 \subsection{Framtida förbättringar}
 
-Syftet med projektet, att skapa en fungerande Haskelltolk i Javascript, har vi lyckats implementera om man tar hänsyn till de avgränsningar som är uppsatta. Dock om man ser till motivationen bakom projektet, att vår Haskelltolk ska kunna användas som grund för att skapa en webbaserad interaktiv läroplattform, så finns det fortfarande mycket kvar att utveckla. Framförallt handlar det om att göra Haskelltolken och HIJi mer lättanvänd för nybörjare inom funktionell programmering.
+Syftet med projektet, att skapa en fungerande Haskelltolk i Javascript, har vi lyckats implementera om hänsyn tas till de avgränsningar som är uppsatta. Dock sett till motivationen bakom projektet, att vår Haskelltolk ska kunna användas som grund för att skapa en webbaserad interaktiv läroplattform, så finns det fortfarande mycket kvar att utveckla. Framförallt handlar det om att göra Haskelltolken och HIJi mer lättanvänd för nybörjare inom funktionell programmering.
 
 I parsern har vi identifierat två förbättringsmöjligheter. För det första, hjälpsamma och förklarande felmeddelanden är en viktigt del av ett utvecklingsverktyg och det generars för tillfället inte av parsern. 
 Om parsern stöter på ett fel rapporterar den endast att ett fel har inträffat och avslutar parsningsprocessen. 
 Att förbättra dessa felmeddelanden med exempelvis rad- och kolumnnummer och specifik information om vad för fel som har inträffat skulle göra parsern mer användbar.
-För att implementera detta behöver man kombinera steg 1 och 2 i parsningen för att rad- och kolumn-nummer ska bevaras korrekt då borttagning av nästlade kommentarer kan påverka dessa.
+För att implementera detta behöver parsern kombinera steg 1 och 2 i parsningen för att rad- och kolumn-nummer ska bevaras korrekt då borttagning av nästlade kommentarer kan påverka dessa.
 JSParse behöver modifieras så att det rapporterar var ett fel uppstod och i vilken parser.
 
 För det andra, konverteringen av icke kontextfri Haskellkod till kontextfri kan förbättras 
