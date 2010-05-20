@@ -47,8 +47,11 @@ foldr1 f xs = case xs of
 filter _ [] = []
 filter f (x:xs ) | f x = x : filter f xs
                  | otherwise = filter f xs
+                 
+iterate f x = f x : iterate f (f x)
 
-iterate f x = f x : iterate f x
+zipWith f (a:as) (b:bs) = f a b : zipWith f as bs
+zipWith _ _ _ = []
 
 head xs = case xs of
     (x:_) -> x
@@ -72,6 +75,16 @@ data Int = I# Int#
 (*) (I# i1) (I# i2) = I# (i1 *# i2)
 
 (==) (I# i1) (I# i2) = i1 ==# i2
+
+(>) (I# i1) (I# i2) = i1 ># i2
+
+(<) (I# i1) (I# i2) = i1 <# i2
+
+(<=) (I# i1) (I# i2) = i1 <=# i2
+
+(>=) (I# i1) (I# i2) = i1 >=# i2
+
+(%) (I# i1) (I# i2) = I# (remInt# i1 i2)
 
 stepDebug = stepDebug#
 
@@ -108,3 +121,27 @@ double m = do
        let doubleFunc = (*2)
        x <- m
        return (doubleFunc x)
+
+
+take 0 _      = []
+take n (x:xs) = x : take (n-1) xs
+take _ []     = []
+
+length [] = 0
+length (_:xs) = 1 + length xs
+
+
+const r _ = r
+
+-- Enum functions only for int so far, awaiting type classes
+enumHelper i p n = case p n of 
+                     True -> []
+                     False -> n : enumHelper i p (n+i)
+
+enumFrom e1 = enumHelper 1 (const False) e1
+
+enumFromThen e1 e2 = enumHelper (e2-e1) (const False) e1
+
+enumFromTo e1 e3 = enumHelper 1 (>e3) e1
+
+enumFromThenTo e1 e2 e3 = enumHelper (e2-e1) (>e3) e1

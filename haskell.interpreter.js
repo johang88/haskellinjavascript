@@ -228,8 +228,8 @@
         this.pattern = pattern;
         this.expression = expression;
         this.apply = function(argument) {
-            var substitution = this.env.substitute(this.pattern, argument);
-            return this.expression.eval(substitution);
+            var newEnv = this.env.substitute(this.pattern, argument);
+            return new interpreter.Closure(newEnv, this.expression);
         };
 
         this.stringify = function() {
@@ -260,11 +260,11 @@
 				var expression = matchedFunc.expression[j][1];
 				var guardResult = guard.eval(newEnv);
 				if (guardResult.identifier == "True") {
-				    return expression.eval(newEnv);
+				    return new interpreter.Closure(newEnv, expression);
 				}
 			    }
 			} else {
-			    return matchedFunc.expression.eval(newEnv);
+			    return new interpreter.Closure(newEnv, matchedFunc.expression);
 			}
 		    }
 		}
