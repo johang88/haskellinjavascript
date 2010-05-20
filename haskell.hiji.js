@@ -11,6 +11,8 @@ commands[":l"]    = "LOAD";
 commands[":load"] = "LOAD";
 commands[":h"]    = "HELP";
 commands[":help"] = "HELP";
+commands[":t"]    = "TYPE";
+commands[":type"] = "TYPE";
 
 (function($){
 
@@ -245,7 +247,14 @@ commands[":help"] = "HELP";
              //   $('.input').after(output).replaceWith(newLine);
              //   $('.input').after(output).replaceWith(newLine);
                 $("ol").append(makeInput(modules));
-            }
+            } else if (commands[command] == "TYPE") {
+		var arg     = trim(input.substr(command.length)); 
+		var ast = haskell.parser.parse(arg).ast;
+		var type = ast.infer(/* some env */);
+		var newLine = ast.stringify() + " :: " + type.stringify();
+		$('.input').after(output).replaceWith(newLine);
+		$("ol").append(makeInput(modules));
+	    }
         }
     };
 
