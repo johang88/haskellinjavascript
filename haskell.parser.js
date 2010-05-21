@@ -501,7 +501,7 @@
         
         var if_action = function(p) {
             return action(p, function(ast) {
-                return ast;
+		    return new haskell.ast.If(ast[0], ast[1], ast[2]);
             });
         };
         
