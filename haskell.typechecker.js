@@ -1,3 +1,4 @@
+
 (function (typechecker, ast) {
      var inject = function(arr, f, acc) {
 	 for(var ii in arr) {
@@ -121,16 +122,27 @@
      typechecker.filter = filter;
      typechecker.unionBy = unionBy;
      typechecker.intersectBy = intersectBy;
-     ast.Num.prototype.infer = function(namegen) {
-	 var v = typechecker.newTVar(new typechecker.Star(), namegen);
+
+     ast.Expression.prototype.infer = function(env) {
+	 return this.desugar().infer(env);
+     };
+
+     ast.Constant.prototype.infer = function(env) {
+	 return this.value.infer(env);
+     };
+
+     
+
+     ast.Num.prototype.infer = function(env) {
+	 var v = typechecker.newTVar(new typechecker.Star(), env);
 	 return {
 	     preds: [new typechecker.Pred("Num", v)],
 	     type: v
 	 };
      };
 
-     ast.Wildcard.prototype.infer = function(namegen) {
-	 var v = typechecker.newTVar(new typechecker.Star(), namegen);
+     ast.Wildcard.prototype.infer = function(env) {
+	 var v = typechecker.newTVar(new typechecker.Star(), env);
 	 return {
 	     preds: [],
 	     assumps: [],
@@ -138,32 +150,76 @@
 	 };
      };
 
-     ast.VariableBinding.prototype.infer = function(namegen) {
-	 var v = typechecker.newTVar(new typechecker.Star(), namegen);
+     ast.VariableBinding.prototype.infer = function(env) {
+	 var v = typechecker.newTVar(new typechecker.Star(), env);
 	 return {
 	     preds: [],
 	     assumps: [
-		 typechecker.toScheme(
+		 new typechecker.Assump(
 		     this.identifier,
-		     v)
+		     typechecker.toScheme(v))
 	     ],
 	     type: v
 	 };
      };
 
-     ast.ConstantPattern.prototype.infer = function(namegen) {
-	 var t = this.value.infer(namegen);
-	 t["assump"] = [];
+     ast.VariableLookup.prototype.infer = function(env) {
+	 var a = env.lookup(this.identifier);
+	 var inst = a.freshInst(env); 
+	 return {
+	     preds: inst.preds(),
+	     type: inst.t()
+	 };
+     };
+
+     ast.Application.prototype.infer = function(env) {
+	 var fInf = this.func.infer(env);
+	 var argInf = this.arg.infer(env);
+	 var t = env.newTVar(new typechecker.Star());
+	 env.unify(typechecker.fn(argInf, t), fInf);
+	 return {
+	     preds: fInf.preds().concat(argInf.preds()),
+	     type: t
+	 };
+     };
+
+     ast.ConstantPattern.prototype.infer = function(env) {
+	 var t = this.value.infer(env);
 	 return t;
      };
 
-     ast.Combined.prototype.infer = function(namegen) {
-	 var t = this.pattern.infer(namegen);
+     ast.PatternContructor.prototype.infer = function(env) {
+	 /*
+	 var sc = env.lookup(this.identifier);
+	 var ps = [];
+	 var ts = [];
+	 var as = [];
+	 this.patterns.map(
+	     function(pat) {
+		 var patInf = pat.infer(env);
+		 ps = ps.concat(patInf.preds);
+		 ts.push(patinf.type);
+		 as = as.concat(patinf.assumps);
+	     }
+	 );
+	 var inst = sc.freshInst(sc);
+	 var infert = injectRight(
+	     ts,
+	     function(t, acc) {
+		 typechecker.fn(t)
+	     });
+	 env.unify(inst.t(), ) */
+     };
+
+     ast.Combined.prototype.infer = function(env) {
+	 var t = this.pattern.infer(env);
 	 return {
 	     preds: t.preds,
-	     assumps: typechecker.toScheme(
-		 this.identifier,
-		 t.type),
+	     assumps: [
+		 new typechecker.Assump(
+		     this.identifier,
+		     typechecker.toScheme(t.type))
+		 ],
 	     type: t.type
 	 };
      };
@@ -253,8 +309,8 @@
 	 this.hnf = function() { return true; };
      };
      
-      typechecker.newTVar = function(kind, namegen) {
-	 return new typechecker.TVar(namegen.nextName(), kind);
+      typechecker.newTVar = function(kind, env) {
+	 return new typechecker.TVar(env.nextName(), kind);
       };
 
      typechecker.TCon = function(id, kind) {
@@ -493,6 +549,9 @@
 		 ks,
 		 this.apply(s));
 	 };
+	 this.stringify = function() {
+	     return this.t().stringify();
+	 };
      };
 
      typechecker.Pred = function(id, type) {
@@ -541,16 +600,19 @@
 		 this.qual().apply(subst));
 	 };
 	 this.tv = function() { return this.qual().tv(); };
-	 this.freshInst = function(namegen) {
+	 this.freshInst = function(env) {
 	     var ts = this.kinds().map(
 		 function(kind) {
-		     return typechecker.newTVar(kind, namegen);
+		     return typechecker.newTVar(kind, env);
 		 });
 	     return qual.inst(ts);
 	 };
+	 this.stringify = function() {
+	     return this.qual().stringify();
+	 };
      };
 
-     typechecker.toScheme = function(id, type) {
+     typechecker.toScheme = function(type) {
 	 return new typechecker.Scheme(
 	     [],
 	     new typechecker.Qual(
@@ -561,6 +623,28 @@
      typechecker.Assump = function(id, scheme) {
 	 this.id = function() { return id; };
 	 this.scheme = function() { return scheme; };
+     };
+
+     typechecker.Assumps = function(parent) {
+	 parent = parent == undefined ? { 
+	     lookup: function() {
+		 throw "no such identifier";
+	     }
+	 } : parent;
+	 var as = {};
+	 this.add = function(a) {
+	     as[a.id()] = a.scheme();
+	     return this;
+	 };
+	 this.lookup = function(id) {
+	     if(as[id] != undefined) {
+		 return as[id];
+	     }
+	     return parent.lookup(id);
+	 };
+	 this.createChild = function() {
+	     return new typechecker.Assumps(this);
+	 };
      };
 
 
@@ -816,8 +900,7 @@
 		 function(ambig) {
 		     return ambig.preds;
 		 }
-		 )
-	 );
+	     ));
      };
 
      typechecker.defaultSubst = function(ce, ts, ps) {
@@ -839,6 +922,29 @@
 	     subst.add(ts[i], ambigs[i].type);
 	 }
 	 return subst;
+     };
+
+     typechecker.Environment = function(assumps, subst, namegen) {
+	 this.nextName = function() {
+	     return namegen.nextName();
+	 };
+	 this.extSubst = function(otherSubst) {
+	     subst = subst.compose(otherSubst);
+	 };
+	 this.getSubst = function() {
+	     return subst;
+	 };
+	 this.unify = function(t1, t2) {
+	     var newSubst = t1.apply(
+		 this.getSubst()).mgu(t2.apply(this.getSubst()));
+	     this.extSubst(newSubst);
+	 };
+	 this.newTVar = function(kind) {
+	     return typechecker.newTVar(kind, namegen);
+	 };
+	 this.lookup = function(id) {
+	     return assumps.lookup(id);
+	 };
      };
  
 }) (haskell.typechecker, haskell.ast);
