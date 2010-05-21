@@ -249,7 +249,7 @@ commands[":type"] = "TYPE";
                 $("ol").append(makeInput(modules));
             } else if (commands[command] == "TYPE") {
 		var arg     = trim(input.substr(command.length)); 
-		var ast = haskell.parser.parse(arg).ast;
+		var ast = haskell.parser.parse("{" + arg + "}").ast;
 		var type = ast.infer(/* some env */);
 		var newLine = ast.stringify() + " :: " + type.stringify();
 		$('.input').after(output).replaceWith(newLine);
