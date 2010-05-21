@@ -3,5 +3,6 @@ var haskell = {
     interpreter: {},
     ast: {},
     primitives: {},
-    utilities: {}
+    utilities: {},
+    typechecker: {}
 };
