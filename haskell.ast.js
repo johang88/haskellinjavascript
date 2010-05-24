@@ -35,6 +35,7 @@
             	      | Let Pattern Expression Expression
                	      | Case Expression [(Pattern, Expression)]
                       | VariableLookup Identifier
+		      | If Expression Expression Expression
 		      | Do [DoNotation]
 		      | List [Expression]
 		      | ArithmeticSequence Expression (Maybe Expression) (Maybe Expression)
@@ -152,6 +153,32 @@
             return this.identifier;
         };
     };
+    ast.If = function(ifExpr, thenExpr, elseExpr) {
+	expectType(ifExpr, ast.Expression);
+	expectType(thenExpr, ast.Expression);
+	expectType(elseExpr, ast.Expression);
+	this.ifExpr = ifExpr;
+	this.thenExpr = thenExpr;
+	this.elseExpr = elseExpr;
+	this.eval = function(env) {
+
+	};
+	
+	this.stringify = function() {
+	    return "if " + this.ifExpr.stringify() + " then " + this.thenExpr.stringify() + " else " + this.elseExpr.stringify();
+	};
+
+	this.eval = function(env) {
+	    var expr = new interpreter.HeapPtr(new interpreter.Closure(env, this.ifExpr));
+	    var res = expr.dereference();
+	    if (new ast.PatternConstructor("True", []).match(env, expr)) {
+		return this.thenExpr;
+	    } else {
+		return this.elseExpr;
+	    }
+	};
+    };
+    ast.If.prototype = new ast.Expression();
     ast.Do = function(notations) {
 	expectTypeArray(notations, ast.DoNotation);
 	this.type="Do";
