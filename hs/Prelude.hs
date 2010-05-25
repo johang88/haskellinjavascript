@@ -44,6 +44,16 @@ foldr1 f xs = case xs of
     [x] -> x
     (x:xs) -> f x $ foldr1 f xs
 
+foldr _ b [] = b
+foldr f b (x:xs) = foldr f (f x b) xs
+
+foldl _ b [] = b
+foldl f b (x:xs) = foldl f (f b x) xs
+
+reverse = foldl (\a b -> b:a) []
+
+flip f a b = f b a
+
 filter _ [] = []
 filter f (x:xs ) | f x = x : filter f xs
                  | otherwise = filter f xs

@@ -11,6 +11,8 @@ commands[":l"]    = "LOAD";
 commands[":load"] = "LOAD";
 commands[":h"]    = "HELP";
 commands[":help"] = "HELP";
+commands[":t"]    = "TYPE";
+commands[":type"] = "TYPE";
 
 (function($){
 
@@ -120,7 +122,7 @@ commands[":help"] = "HELP";
                                             first = false;
                                         } else {
                                             var res = showResult(result.ptrs[i].dereference());
-                                            if (res.str)
+                                            if (typeof res.str != "undefined")
                                                 res = res.str;
                                             str = str + op + res;
                                         }
@@ -142,7 +144,7 @@ commands[":help"] = "HELP";
                             result = result.str;
                             result = result.substring(0, result.length - 3);
                             result = "[" + result + "]";
-                        } else if (result.str) {
+                        } else if (typeof result.str != "undefined") {
                             result = result.str;
                         }
                         
@@ -245,7 +247,14 @@ commands[":help"] = "HELP";
              //   $('.input').after(output).replaceWith(newLine);
              //   $('.input').after(output).replaceWith(newLine);
                 $("ol").append(makeInput(modules));
-            }
+            } else if (commands[command] == "TYPE") {
+		var arg     = trim(input.substr(command.length)); 
+		var ast = haskell.parser.parse(arg).ast;
+		var type = ast.infer(/* some env */);
+		var newLine = ast.stringify() + " :: " + type.stringify();
+		$('.input').after(output).replaceWith(newLine);
+		$("ol").append(makeInput(modules));
+	    }
         }
     };
 
