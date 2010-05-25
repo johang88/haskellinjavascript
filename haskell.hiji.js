@@ -24,7 +24,13 @@ commands[":type"] = "TYPE";
             return "Syntax Error";
         }
         console.log("%o", ast);
-        return haskell.interpreter.eval(ast, env);
+	if (ast.type == "DoExpr") {
+	    ast = new haskell.ast.DoExpr(new haskell.ast.Application(new haskell.ast.VariableLookup("hijiOutputLine#"), ast.expr));
+	}
+	var doexpr  = new haskell.ast.Do([ast,
+					  new haskell.ast.DoExpr(new haskell.ast.VariableLookup("hijiContinuation#"))
+					  ]);
+        return haskell.interpreter.eval(doexpr, env);
     };
     var makeModules = function(modules){
         return "<ul class='modules'><li>" + modules.join("</li><li>") + "</li></ul>";
@@ -64,6 +70,7 @@ commands[":type"] = "TYPE";
 
         var env = new haskell.interpreter.RootEnv();
         haskell.primitives.init(env);
+	haskell.primitives.initHiji(env);
         
         load_module('hs/Prelude.hs');
 
@@ -99,57 +106,12 @@ commands[":type"] = "TYPE";
                 {
                     try {
                         var newLine = makeEntered(modules, line);
+			// Global variable: 
+                        printArea = $("ol", this);                
+                        env = evaluateHaskell(line, env);
                         
-                        var showResult = function(result) {
-                            if (result.type == "Data") {
-                                var str = result.identifier;
-                                var op = " ";
-                                
-                                if (str == "I#") {
-                                    str = "";
-                                } else if (str == ":") {
-                                    str = "";
-                                    op = ",";
-                                }
-                                
-                                if (result.ptrs) {
-                                    var first = true;
-                                    for (var i = 0; i < result.ptrs.length; i++) {
-                                        if (str.length == 0 && first) {
-                                            str = showResult(result.ptrs[i].dereference());
-                                            if (typeof str.str != "undefined") 
-                                                str = str.str;
-                                            first = false;
-                                        } else {
-                                            var res = showResult(result.ptrs[i].dereference());
-                                            if (typeof res.str != "undefined")
-                                                res = res.str;
-                                            str = str + op + res;
-                                        }
-                                    }
-                                }
-                                
-                                return { str: str, isList: op == "," };
-                            } if (result.force) {
-                                return result.force();
-                            } else if (result.ptrs) {
-                                return result.ptrs[0].dereference();
-                            } else {
-                                return result; 
-                            }
-                        }
-                        
-                        var result = showResult(evaluateHaskell(line, env));
-                        if (result.isList) {
-                            result = result.str;
-                            result = result.substring(0, result.length - 3);
-                            result = "[" + result + "]";
-                        } else if (typeof result.str != "undefined") {
-                            result = result.str;
-                        }
-                        
-                        var output = makeOutput(result);
-                        $('.input', this).after(output).replaceWith(newLine);
+			//                        var output = makeOutput(result);
+			//                        $('.input', this).after(output).replaceWith(newLine);
                         $("ol",this).append(makeInput(modules));
                     }
                     catch(e) {

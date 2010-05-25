@@ -283,6 +283,8 @@
 	// Redefined later with the proper definition
         var decls = function(state) { return decls(state); };
 
+        var exp = function(state) { return exp(state); };
+
         var stmt_exp_action = function(p) {
             return action(p, function(ast) {
                 return new haskell.ast.DoExpr(ast);
@@ -303,8 +305,8 @@
         
         var infixexp = function(state) { return infixexp(state); };
         
-        var stmt = choice( stmt_bind_action(sequence(ws(pat), expect(ws("<-")), ws(infixexp))),
-			   stmt_exp_action(ws(infixexp)),
+        var stmt = choice( stmt_bind_action(sequence(ws(pat), expect(ws("<-")), ws(exp))),
+			   stmt_exp_action(ws(exp)),
                            stmt_let_action(sequence(expect(ws("let")), ws(decls)))
                            );
                             
@@ -319,7 +321,6 @@
             });
         };
         
-        var exp = function(state) { return exp(state); };
         
         var alt = sequence(ws(pat), expect(ws("->")), ws(exp));
         
@@ -1089,7 +1090,13 @@
         toplevel_exp = action(toplevel_exp, function(ast) {
             return ast[0];
         });
-        var program = action(sequence(choice(toplevel_exp, module), ws(end_p)), function(ast) { return ast[0]; });
+
+        var toplevel_stmt = choice(sequence(expect(ws('{')), ws(stmt), expect(ws('}'))), stmt);
+        toplevel_stmt = action(toplevel_stmt, function(ast) {
+            return ast[0];
+        });
+
+        var program = action(sequence(choice(toplevel_stmt, module), ws(end_p)), function(ast) { return ast[0]; });
         
         // Pragma macro parser
         var pragmaId = join_action(repeat1(negate(choice('\t', ' ', '\r', '\n', "#-}"))), "");
