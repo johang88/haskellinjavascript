@@ -8,7 +8,7 @@ Nedan följer en beskrivning av de arbetsmetoder, mjukvaror och kodbibliotek som
 För att implementera en tolk för Haskell behövs en parser för den aktuella syntaxen, en typcheckare för språkets definierade typregler och tillsist en interpretator som tolkar språket efter dess specifikation.
 Det upptäcktes tidigt att de tre modulerna, parser, interpretator och typcheckare inte behövde utvecklas sekvensiellt. De tre modulerna integrerar enbart med varandra genom det abstrakta syntaxträdet, vår interna representation av Haskell, vilket medför att det är lätt att utveckla de olika modulerna helt frånskilt från varandra. Figur \ref{fig:tolkens_struktur} visar hur denna interaktion mellan de olika modulerna är tänkt att gå till. Figuren visar även hur webbläsaren kommunicerar genom ett Javascript API och det abstrakta syntaxträdet och inte direkt med de olika komponenterna. 
 
-\begin{figure}[H]
+\begin{figure}[h]
     \begin{center}
         \includegraphics[width=1.0\textwidth]{image1.png}
         \caption{Överblick över tolkens struktur och interaktion}
