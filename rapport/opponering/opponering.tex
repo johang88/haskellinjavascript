@@ -18,31 +18,31 @@
 \tolerance=5000
 
 \begin{document}
-    \title{Opponering på Databases for Dummies 2}
-    \author{
-        Adam Bengtsson, 
-        Mikael Bung, 
-        Johan Gustafsson, 
-        Mattis Jeppsson 
-    }
-    \date{\today}
-    \maketitle
+
+\title{Opponering på Databases for Dummies 2}
+\author{
+    Adam Bengtsson, 
+    Mikael Bung, 
+    Johan Gustafsson, 
+    Mattis Jeppsson 
+}
+\date{\today}
+\maketitle
     
 
-\emph{Databases for dummies 2} är en rapport som beskriver ett program som ska användas för att administrera databaser, utan att man som användare har några kunskaper kring hur en databas fungerar. Vi har läst rapporten i opponeringssyfte och har en del tankar kring dess innehåll.
+\emph{Databases for dummies 2} är en rapport som beskriver ett program som ska användas för att administrera databaser, utan att som användare behöva några större förkunskaper. Vi har läst rapporten i opponeringssyfte och har en del tankar kring dess innehåll.
 
-Överlag tycker vi rapporten var intressant och väldigt väl beskriver arbetsgången av projektet. Vi är positiva till att alla prioritet 1 användarfall framgångsrikt har implementerats. Programmet ser ut att uppfylla de kriterier för att programmet ska vara användbart för sitt syfte. 
+Överlag tycker vi rapporten var intressant och väldigt väl beskriver arbetsgången av projektet. Vi är positiva till att alla användarfall med högsta prioritet framgångsrikt har implementerats. Programmets syfte, att underlätta databashantering, ser ut att vara uppfyllt. Det är dock en del stycken i rapporten som vi skulle vilja få mer utförligt förklarade.
 
-Det är dock en del stycken i rapporten som vi skulle vilja få en mer utförlig förklaring till.
-Av rapporten att döma används en tabullär struktur för att representera en databas. Vi är skeptiska till om detta är det bästa sättet att representera databaser på för en nybörjare. I rapporten har det ej beskrivts om vilka konceptuella modeller som har utforskats för att representera en databas i programmet. Till exempel att använda ER-diagram för att på ett grafiskt sätt beskriva en databas för användare. Att modellera det med ER-diagram skulle kunna underlätta för nybörjare att se sammanhanget mellan olika databaser och eliminera svårbegripliga begrepp som till exempel \emph{foreign keys}.
+Från rapporten har vi fått uppfattningen att en hel del förkunskaper om databaser krävs för att kunna använda programmet. Detta får oss att undra om inte alternativa representationer av databaser skulle förenkla för nybörjare. I rapporten beskrivs ej vilka konceptuella modeller som har utforskats för att representera databaser. Till exempel att använda ER-diagram för att på ett grafiskt sätt beskriva en databas för användare, se sammanhang mellan olika databaser och eliminera svårbegripliga begrepp som till exempel \emph{foreign keys}.
 
-Vi är fundersamma över designbeslutet att bara använda sig av en View-klass. I rapporten, sidan 7, rad 9,  nämns det att en namnkonvention för att kunna navigera i View-filen var nödvändig på grund av att den växte ur proptotion och därmed blev svår att navigera i. Som motivering till varför man inte valde att dela upp View-klassen i flera mindre View-klasser nämndes att det skulle vara tidskrävande att omstrukturera den utan att klargöra varför detta skulle vara tidskrävande.  
+Vi är också fundersamma över designbeslutet att bara använda sig av en View-klass. I rapporten, sidan 7, rad 9,  nämns det att en namnkonvention för att kunna navigera i View-filen var nödvändig då den växt ur proptotion och därmed blivit svår att navigera i. Som motivering till beslutet att inte dela upp View-klassen i flera mindre klasser, nämner rapporten att det vore alltför tidskrävande utan att närmare gå in på orsakerna till detta.
 
-Det grafiska användargränssnittet som beskrivs har ett modernt och proffisionellt utseende, samtidigt som det ser tillräckligt enkelt ut för att användas av nybörjare. Programmet ser självförklarande ut och liknar andra Windowsprogram i menyer vilket är positivt när det riktar sig till nybörjare. 
+Det grafiska användargränssnittet som beskrivs har ett modernt och profesionellt utseende, samtidigt som det ser tillräckligt enkelt ut för att användas av nybörjare med tillräckliga förkunskaper. Programmet ser självförklarande ut och liknar andra Windowsprogram i menyer vilket är en fördel när det riktar sig till nybörjare. 
 
-Vidare beskrivs i kapitel \"5. Discussion\", sidan 22, rad 14, att till en början användes enbart en enda controller-klass som hade prestandaproblem på grund av den hade så många jämförelser i sin action-listener, vilket skapade en fördröjning på flera sekunder. I rapporten hävdas det att prestandeproblemen upphörde när controller-klassen delades upp i flera mindre klasser. Vi är fundersamma hur dessa prestandaproblem var möjliga från och skulle gärna sett en mer utförlig förklaring kring det här problemet. 
+Vidare beskrivs i kapitel \"5. Discussion\", sidan 22, rad 14, att till en början användes en enda controller-klass. Den hade prestandaproblem på grund av många jämförelser i sin action-listener vilket skapade fördröjningar på flera sekunder. I rapporten hävdas att prestandeproblemen upphörde när controller-klassen delades upp i flera mindre klasser. Vi är fundersamma över hur dessa prestandaproblem var möjliga och skulle gärna se en mer utförlig förklaring kring problemet. 
 
-I teorikapitlet, sidan 2, finns ett avsnitt som beskriver vad ett ER-diagram är, men i rapporten som följer finns det ej något avsnitt som använder sig av ER-diagram, vilket medför att detta stycke känns överflödigt för att förstå rapporten.
+Vi har även synpunkter på att det i teorikapitlet, sidan 2, finns ett avsnitt som beskriver vad ER-diagram är, utan att rapporten som följer använder dessa. Detta medför att det nämnda avsnittet blir överflödigt för förståelsen av rapporten.
 
-Slutligen vill vi säga att rapporten hade en bra struktur och beskrev programmet som utvecklades på ett fullt tillräckligt vis.
-    \end{document}
+Slutligen vill vi säga att rapporten hade en bra struktur och beskrev programmet som utvecklades på ett fullt tillräckligt vis. 
+\end{document}
