@@ -1,4 +1,4 @@
-(function(ast, interpreter, utilities) {
+(function(ast, interpreter, utilities, typechecker) {
     expectType = utilities.expectType;
 
     expectTypeOf = utilities.expectTypeOf;
@@ -422,7 +422,7 @@
     /*
       data Declaration = Variable Pattern Expression
                        | Function Identifier [Pattern] [(Guard, Expression)]|Expression 
-                       | Data Identifier [Constructor]
+                       | Data Identifier [TVar] [Constructor]
     */
 
     ast.Declaration = function(){};
@@ -438,12 +438,14 @@
             return this.pattern.stringify() + " = " + this.expression.stringify();
         };
     };
-
-    ast.Data = function(identifier, constructors) {
+ 
+    ast.Data = function(identifier, tvars, constructors) {
 	expectTypeOf(identifier, "string");
+	expectTypeArray(tvars, typechecker.TVar);
 	expectTypeArray(constructors, ast.Constructor);
 	this.type = "Data";
 	this.identifier = identifier;
+	this.tvars = tvars;
 	this.constructors = constructors;
     };
 
@@ -486,14 +488,15 @@
     ast.Function.prototype = new ast.Declaration();
 
     /*
-      data Constructor = Constructor Identifier Integer
+      data Constructor = Constructor Identifier [Type]
      */
-    ast.Constructor = function(identifier, num) {
+
+    ast.Constructor = function(identifier, types) {
 	expectTypeOf(identifier, "string");
-	expectTypeOf(num, "number");
+	expectTypeArray(t, "number");
 	this.type = "Constructor";
 	this.identifier = identifier;
-	this.number = num;
+	this.types = types;
     };
 
     /*
@@ -605,4 +608,4 @@
     ast.Combined.prototype        = new ast.Pattern();
     ast.ConstantPattern.prototype = new ast.Pattern();
     ast.Wildcard.prototype        = new ast.Pattern();
-})(haskell.ast,haskell.interpreter, haskell.utilities);
+})(haskell.ast,haskell.interpreter, haskell.utilities, haskell.typechecker);

@@ -1,6 +1,6 @@
 // The parser
 
-(function(parser, ast) {
+(function(parser, ast, typechecker) {
     parser.lastInternalName = 0;
 
     parser.generateInternalName = function() {
@@ -782,8 +782,8 @@
         var constr_action = function(p) {
             return action(p, function(ast) {
                 var name = ast[0];
-                var count = ast[1].length;
-                return new haskell.ast.Constructor(name, count);
+                var arguments = ast[1];
+                return new haskell.ast.Constructor(name, arguments);
             });
         };
         
@@ -840,14 +840,24 @@
                             "(->)",
                             sequence(ws('('), repeat1(ws(',')), ws(')'))
                             );
+
+
+
+
+
+	var atype_list_action = function(p) {
+	    return action(p, function(ast) {
+		    return new typechecker.TAp(new typechecker.TCon("([])", new typechecker.Kfun(new typechecker.Star(), new typechecker.Star())), ast[0]));
+		});
+	};
         
         
 	// redefinition
 	atype = choice( gtycon,
 			tyvar,
-			sequence(ws('('), list(ws(type), ','), ws(')')),
-			sequence(ws('['), ws(type), ws(']')),
-			sequence(ws('('), ws(type), ws(')'))
+			sequence(expectws('('), list(ws(type), ws(',')), expectws(')')),
+			atype_list_action(sequence(expectws('['), ws(type), expectws(']'))),
+			sequence(expectws('('), ws(type), expectws(')'))
 			);
         
         var btype = repeat1(ws(atype));
@@ -1353,4 +1363,4 @@
         
         return result;
     };
-})(haskell.parser, haskell.ast);
+})(haskell.parser, haskell.ast, haskell.typechecker);

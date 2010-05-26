@@ -46,7 +46,7 @@
 							  return env;
 						      }));
 
-	// hijiOutputLine# :: IO ()
+	// hijiOutputLine# :: a -> IO ()
 	env.bind("hijiOutputLine#", primitives.createPrimitive(env, 1, 
 						    function(env, args) {
 							var arg = args[0];
