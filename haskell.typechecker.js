@@ -1,5 +1,5 @@
-
 (function (typechecker, ast) {
+
      var inject = function(arr, f, acc) {
 	 for(var ii in arr) {
 	     acc = f(arr[ii], acc);
@@ -13,6 +13,9 @@
 	 }
 	 return acc;
      };
+
+     typechecker.injectRight = injectRight;
+     typechecker.inject = inject;
 
      var any = function(arr, f) {
 	 return inject(
@@ -131,34 +134,10 @@
 	 return this.value.infer(env);
      };
 
-     
-
      ast.Num.prototype.infer = function(env) {
 	 var v = typechecker.newTVar(new typechecker.Star(), env);
 	 return {
 	     preds: [new typechecker.Pred("Num", v)],
-	     type: v
-	 };
-     };
-
-     ast.Wildcard.prototype.infer = function(env) {
-	 var v = typechecker.newTVar(new typechecker.Star(), env);
-	 return {
-	     preds: [],
-	     assumps: [],
-	     type: v
-	 };
-     };
-
-     ast.VariableBinding.prototype.infer = function(env) {
-	 var v = typechecker.newTVar(new typechecker.Star(), env);
-	 return {
-	     preds: [],
-	     assumps: [
-		 new typechecker.Assump(
-		     this.identifier,
-		     typechecker.toScheme(v))
-	     ],
 	     type: v
 	 };
      };
@@ -176,20 +155,43 @@
 	 var fInf = this.func.infer(env);
 	 var argInf = this.arg.infer(env);
 	 var t = env.newTVar(new typechecker.Star());
-	 env.unify(typechecker.fn(argInf, t), fInf);
+	 // return argInf.type;
+	 env.unify(typechecker.fn(argInf.type, t), fInf.type);
 	 return {
-	     preds: fInf.preds().concat(argInf.preds()),
+	     preds: fInf.preds.concat(argInf.preds),
 	     type: t
 	 };
      };
 
-     ast.ConstantPattern.prototype.infer = function(env) {
-	 var t = this.value.infer(env);
-	 return t;
+     ast.Case.prototype.infer = function(env) {
+	 var condT = this.expr.infer(env);
+	 env.unify(condT,
+		   typechecker.tBool);
+
+	 var tp = env.newTVar(new typechecker.Star());
+	 var te = env.newTVar(new typechecker.Star());
+	 var ps = [];
+	 this.cases.map(
+	     function(c) {
+		 var patT = c[0].infer(env);
+		 var childEnv = env.createChild();
+		 childEnv.addMany(patT.assumps);
+		 var exprtT = c[1].infer(childEnv);
+		 env.unify(tp, patT);
+		 env.unify(te, exprT);
+		 ps = ps.concat(patT.preds).concat[exprT.preds];
+	     });
+	 return {
+	     preds: ps,
+	     type: te
+	 };
      };
 
-     ast.PatternContructor.prototype.infer = function(env) {
-	 /*
+     ast.ConstantPattern.prototype.infer = function(env) {
+	 return this.value.infer(env);
+     };
+
+     ast.PatternConstructor.prototype.infer = function(env) {
 	 var sc = env.lookup(this.identifier);
 	 var ps = [];
 	 var ts = [];
@@ -198,17 +200,25 @@
 	     function(pat) {
 		 var patInf = pat.infer(env);
 		 ps = ps.concat(patInf.preds);
-		 ts.push(patinf.type);
-		 as = as.concat(patinf.assumps);
+		 ts.push(patInf.type);
+		 as = as.concat(patInf.assumps);
 	     }
 	 );
-	 var inst = sc.freshInst(sc);
+	 var rt = env.newTVar(new typechecker.Star());
+	 var inst = sc.freshInst(env);
 	 var infert = injectRight(
 	     ts,
 	     function(t, acc) {
-		 typechecker.fn(t)
-	     });
-	 env.unify(inst.t(), ) */
+		 typechecker.fn(t, acc);
+	     },
+	     rt
+	 );
+	 env.unify(inst.t(), infert);
+	 return {
+	     preds: ps,
+	     assumps: as,
+	     type: rt
+	 };
      };
 
      ast.Combined.prototype.infer = function(env) {
@@ -221,6 +231,28 @@
 		     typechecker.toScheme(t.type))
 		 ],
 	     type: t.type
+	 };
+     };
+
+     ast.VariableBinding.prototype.infer = function(env) {
+	 var v = typechecker.newTVar(new typechecker.Star(), env);
+	 return {
+	     preds: [],
+	     assumps: [
+		 new typechecker.Assump(
+		     this.identifier,
+		     typechecker.toScheme(v))
+	     ],
+	     type: v
+	 };
+     };
+
+     ast.Wildcard.prototype.infer = function(env) {
+	 var v = typechecker.newTVar(new typechecker.Star(), env);
+	 return {
+	     preds: [],
+	     assumps: [],
+	     type: v
 	 };
      };
 
@@ -254,6 +286,10 @@
 	 };
      };
 
+     typechecker.Type = function() {
+	 
+     };
+
      /*
       * data Type = TVar Tyvar | TCon Tycon | TAp Type Type | TGen Int
       *   deriving Eq
@@ -262,8 +298,9 @@
      typechecker.TVar = function(id, kind) {
 	 this.type = function() { return "TVar"; };
 	 this.toString = function () {
-	     return this.id() + " (" + this.kind() + ")";
+	     return this.id();
 	 };
+	 this.toStringNested = this.toString;
 	 this.id = function () { return id; };
 	 this.kind = function() { return kind; };
 	 this.apply = function(subst) {
@@ -345,6 +382,10 @@
 	 };
 	 this.inst = function(ts) { return this; };
 	 this.hnf = function() { return false; };
+	 this.toString = function() {
+	     return this.id();
+	 };
+	 this.toStringNested = this.toString;
      };
 
      typechecker.TAp = function(t1, t2) {
@@ -397,13 +438,29 @@
 	 this.hnf = function() {
 	     return this.t1().hnf();
 	 };
+	 this.toString = function() {
+	     return this.t1().toStringNested()
+		 + " " + this.t2().toStringNested();
+	 };
+	 this.toStringNested = function() {
+	     return "(" + this.toString() + ")";
+	 };
      };
      typechecker.TGen = function(id) {
 	 this.id = function() { return id; };
 	 this.apply = function(subst) { return this; };
 	 this.tv = function() { return []; };
 	 this.inst = function(ts) { return ts[this.id()]; };
+	 this.toString = function() {
+	     return "g" + this.id();
+	 };
+	 this.toStringNested = this.toString;
      };
+
+     typechecker.TVar.prototype = new typechecker.Type();
+     typechecker.TCon.prototype = new typechecker.Type();
+     typechecker.TAp.prototype = new typechecker.Type();
+     typechecker.TGen.prototype = new typechecker.Type();
 
      typechecker.tArrow = function() {
 	 return new typechecker.TCon(
@@ -415,12 +472,22 @@
 		     new typechecker.Star())));
      };
      typechecker.fn = function(a,b) {
-	return new typechecker.TAp(
-	    new typechecker.TAp(
-		typechecker.tArrow(),
-		a),
-	    b);
+	 var fn = new typechecker.TAp(
+	     new typechecker.TAp(
+		 typechecker.tArrow(),
+		 a),
+	     b);
+	 fn.toString = function() {
+	     return a.toString() + " -> " + b.toString();
+	 };
+	 fn.toStringNested = fn.toString;
+	 return fn;
      };
+
+     typechecker.tBool = 
+	 new typechecker.TCon(
+	     "Bool",
+	     new typechecker.Star());
 
      typechecker.Subst = function() {
 	 var mappings = {};
@@ -493,6 +560,12 @@
 		     },
 		     true);
 	 };
+	 this.toString = function() {
+	     return this.inject(
+		 function(from, to, acc) {
+		     return from.toString() + ": " + to.toString() + ",";
+		 });
+	 };
      };
      typechecker.nullSubst = function() { return new typechecker.Subst({}); };
      
@@ -549,8 +622,8 @@
 		 ks,
 		 this.apply(s));
 	 };
-	 this.stringify = function() {
-	     return this.t().stringify();
+	 this.toString = function() {
+	     return this.t().toString();
 	 };
      };
 
@@ -589,11 +662,14 @@
 	 this.inHnf = function() {
 	     return this.type().hnf();
 	 };
+	 this.toString = function() {
+	     return this.id() + " => " + this.type();
+	 };
      };
 
      typechecker.Scheme = function(kinds, qual) {
 	 this.kinds = function() { return kinds; };
-	 this.qual = function() { return this.qual; };
+	 this.qual = function() { return qual; };
 	 this.apply = function(subst) {
 	     return new typechecker.Scheme(
 		 this.kinds(),
@@ -605,10 +681,10 @@
 		 function(kind) {
 		     return typechecker.newTVar(kind, env);
 		 });
-	     return qual.inst(ts);
+	     return this.qual().inst(ts);
 	 };
-	 this.stringify = function() {
-	     return this.qual().stringify();
+	 this.toString = function() {
+	     return this.qual().toString();
 	 };
      };
 
@@ -623,6 +699,9 @@
      typechecker.Assump = function(id, scheme) {
 	 this.id = function() { return id; };
 	 this.scheme = function() { return scheme; };
+	 this.toString = function() {
+	     return this.id() + " :: " + this.scheme().toString();
+	 };
      };
 
      typechecker.Assumps = function(parent) {
@@ -634,6 +713,14 @@
 	 var as = {};
 	 this.add = function(a) {
 	     as[a.id()] = a.scheme();
+	     return this;
+	 };
+	 this.addMany = function(as) {
+	     var cur = this;
+	     as.map(
+		 function(a) {
+		     cur.add(a);
+		 });
 	     return this;
 	 };
 	 this.lookup = function(id) {
@@ -942,8 +1029,22 @@
 	 this.newTVar = function(kind) {
 	     return typechecker.newTVar(kind, namegen);
 	 };
+	 this.add = function(a) {
+	     assumps.add(a);
+	     return this;
+	 };
+	 this.addMany = function(as) {
+	     return assumps.addMany(as);
+	 };
 	 this.lookup = function(id) {
 	     return assumps.lookup(id);
+	 };
+	 this.createChild = function() {
+	     return new typechecker.Environment(
+		 assumps.createChild(),
+		 subst,
+		 namegen
+	     );
 	 };
      };
  
