@@ -1,4 +1,4 @@
-(function(ast, interpreter, utilities, typechecker) {
+(function(ast, interpreter, utilities) {
     expectType = utilities.expectType;
 
     expectTypeOf = utilities.expectTypeOf;
@@ -27,6 +27,42 @@
        Import = Import Identifier VisibleNames
               | ImportQualified Identifer VisibleNames Identifier
      */
+
+    /* 
+       data Type = TypeVariable Identifier
+                 | TypeConstructor Identifier
+		 | TypeApplication Type Type
+		 | TypeTupple Int
+    */
+
+    ast.Type = function() {};
+
+    ast.TypeVariable = function(name) {
+	expectTypeOf(name, "string");
+	this.name = name;
+    };
+    ast.TypeVariable.prototype = new ast.Type();
+
+    ast.TypeConstructor = function(name) {
+	expectTypeOf(name, "string");
+	this.name = name;
+    };
+    ast.TypeConstructor.prototype = new ast.Type();
+
+    ast.TypeApplication = function(t1, t2) {
+	expectType(t1, ast.Type);
+	expectType(t2, ast.Type);
+	this.t1 = t1;
+	this.t2 = t2;
+    };
+    ast.TypeApplication.prototype = new ast.Type();
+
+    ast.TypeTupple = function(size) {
+	expectTypeOf(size, "number");
+	this.size = size;
+    };
+    ast.TypeTupple.prototype = new ast.Type();
+
 	
     /*
       data Expression = Constant Value
@@ -441,7 +477,7 @@
  
     ast.Data = function(identifier, tvars, constructors) {
 	expectTypeOf(identifier, "string");
-	expectTypeArray(tvars, typechecker.TVar);
+	expectTypeArray(tvars, ast.TypeVariable);
 	expectTypeArray(constructors, ast.Constructor);
 	this.type = "Data";
 	this.identifier = identifier;
@@ -493,7 +529,7 @@
 
     ast.Constructor = function(identifier, types) {
 	expectTypeOf(identifier, "string");
-	expectTypeArray(t, "number");
+	expectTypeArray(types, ast.Type);
 	this.type = "Constructor";
 	this.identifier = identifier;
 	this.types = types;
@@ -608,4 +644,4 @@
     ast.Combined.prototype        = new ast.Pattern();
     ast.ConstantPattern.prototype = new ast.Pattern();
     ast.Wildcard.prototype        = new ast.Pattern();
-})(haskell.ast,haskell.interpreter, haskell.utilities, haskell.typechecker);
+})(haskell.ast,haskell.interpreter, haskell.utilities);

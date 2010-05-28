@@ -3,6 +3,8 @@ module Prelude where
 
 data Bool = True | False
 
+data IO a = IO a
+
 infixl 6 +
 infixl 6 -
 infixl 7 *
@@ -103,12 +105,12 @@ data Maybe a = Just a | Nothing
 concatMap f xs = concat (map f xs)
 
 
--- List monad -_-
+-- IO monad -_-
 (>>) m a = m >>= (\_ -> a) 
 
-(>>=) m f = concatMap f m
+(>>=) (IO v) f = f v
 
-return a = [a]
+return a = IO a
 
 fail _ = []
 

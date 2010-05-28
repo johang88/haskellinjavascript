@@ -23,14 +23,18 @@ commands[":type"] = "TYPE";
         if (ast == undefined){
             return "Syntax Error";
         }
-        console.log("%o", ast);
 	if (ast.type == "DoExpr") {
 	    ast = new haskell.ast.DoExpr(new haskell.ast.Application(new haskell.ast.VariableLookup("hijiOutputLine#"), ast.expr));
 	}
 	var doexpr  = new haskell.ast.Do([ast,
-					  new haskell.ast.DoExpr(new haskell.ast.VariableLookup("hijiContinuation#"))
-					  ]);
-        return haskell.interpreter.eval(doexpr, env);
+					  new haskell.ast.DoExpr(new haskell.ast.Primitive(
+					       function(env) {
+						   return new haskell.interpreter.Data("IO", [new haskell.interpreter.HeapPtr(env)]);
+					       }
+											   ))]);
+        console.log("%o", doexpr);
+        var res = haskell.interpreter.eval(doexpr, env);
+	return res.ptrs[0].dereference();
     };
     var makeModules = function(modules){
         return "<ul class='modules'><li>" + modules.join("</li><li>") + "</li></ul>";
@@ -109,7 +113,7 @@ commands[":type"] = "TYPE";
 			// Global variable: 
                         printArea = $("ol", this);                
                         env = evaluateHaskell(line, env);
-                        
+			console.log("%o", env);
 			//                        var output = makeOutput(result);
 			//                        $('.input', this).after(output).replaceWith(newLine);
                         $("ol",this).append(makeInput(modules));

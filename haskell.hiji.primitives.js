@@ -41,9 +41,9 @@
     
 
     primitives.initHiji = function(env) {
-	env.bind("hijiContinuation#", primitives.createPrimitive(env, 1,
+	env.bind("hijiContinuation#", primitives.createPrimitive(env, 0,
 						      function(env, args) {
-							  return env;
+								     return new interpreter.Data("IO", [new interpreter.HeapPtr(env)]);
 						      }));
 
 	// hijiOutputLine# :: a -> IO ()
@@ -59,6 +59,7 @@
 							    result = result.str;
 							}
 							printArea.append($("<li class='output'></li>").text(result.toString()));
+							return new interpreter.Data("IO", [new interpreter.HeapPtr(new interpreter.Closure(env, new ast.VariableLookup("()")))]);
 						    }));
     };
 })(haskell.primitives, haskell.ast, haskell.interpreter);
