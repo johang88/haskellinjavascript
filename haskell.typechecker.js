@@ -165,11 +165,9 @@
 
      ast.Case.prototype.infer = function(env) {
 	 var condT = this.expr.infer(env);
-	 env.unify(condT,
-		   typechecker.tBool);
-
 	 var tp = env.newTVar(new typechecker.Star());
 	 var te = env.newTVar(new typechecker.Star());
+	 env.unify(tp, condT.type);
 	 var ps = [];
 	 this.cases.map(
 	     function(c) {
@@ -177,8 +175,8 @@
 		 var childEnv = env.createChild();
 		 childEnv.addMany(patT.assumps);
 		 var exprtT = c[1].infer(childEnv);
-		 env.unify(tp, patT);
-		 env.unify(te, exprT);
+		 env.unify(tp, patT.type);
+		 env.unify(te, exprT.type);
 		 ps = ps.concat(patT.preds).concat[exprT.preds];
 	     });
 	 return {
@@ -213,7 +211,7 @@
 	     },
 	     rt
 	 );
-	 env.unify(inst.t(), infert);
+	 // env.unify(inst.t(), infert);
 	 return {
 	     preds: ps,
 	     assumps: as,
@@ -712,7 +710,7 @@
 	 } : parent;
 	 var as = {};
 	 this.add = function(a) {
-	     as[a.id()] = a.scheme();
+	     as[a.id()] = a;
 	     return this;
 	 };
 	 this.addMany = function(as) {
@@ -725,12 +723,20 @@
 	 };
 	 this.lookup = function(id) {
 	     if(as[id] != undefined) {
-		 return as[id];
+		 return as[id].scheme();
 	     }
 	     return parent.lookup(id);
 	 };
 	 this.createChild = function() {
 	     return new typechecker.Assumps(this);
+	 };
+	 this.toString = function() {
+	     var str = "";
+	     as.map(
+		 function(a) {
+		     str += a.id() + "::" + a.scheme().toString()  + ",";
+		 });
+	     return str;
 	 };
      };
 
@@ -1046,6 +1052,13 @@
 		 namegen
 	     );
 	 };
+     };
+
+     typechecker.emptyEnv = function() {
+	 return new typechecker.Environment(
+	     new typechecker.Assumps(),
+	     new typechecker.Subst(),
+	     new typechecker.NameGen());
      };
  
 }) (haskell.typechecker, haskell.ast);
