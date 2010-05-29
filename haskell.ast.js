@@ -89,7 +89,7 @@
         return this.desugar().stringify();
     };
     ast.Expression.prototype.desugar = function() {
-        return this;
+        return undefined;
     };
 
     ast.Constant = function(value) {
