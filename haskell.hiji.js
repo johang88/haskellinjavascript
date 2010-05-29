@@ -114,8 +114,7 @@ commands[":type"] = "TYPE";
                         printArea = $("ol", this);                
                         env = evaluateHaskell(line, env);
 			console.log("%o", env);
-			//                        var output = makeOutput(result);
-			//                        $('.input', this).after(output).replaceWith(newLine);
+			$('.input', this).replaceWith(makeEntered(modules, line));
                         $("ol",this).append(makeInput(modules));
                     }
                     catch(e) {
