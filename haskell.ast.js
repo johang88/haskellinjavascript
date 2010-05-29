@@ -27,6 +27,42 @@
        Import = Import Identifier VisibleNames
               | ImportQualified Identifer VisibleNames Identifier
      */
+
+    /* 
+       data Type = TypeVariable Identifier
+                 | TypeConstructor Identifier
+		 | TypeApplication Type Type
+		 | TypeTupple Int
+    */
+
+    ast.Type = function() {};
+
+    ast.TypeVariable = function(name) {
+	expectTypeOf(name, "string");
+	this.name = name;
+    };
+    ast.TypeVariable.prototype = new ast.Type();
+
+    ast.TypeConstructor = function(name) {
+	expectTypeOf(name, "string");
+	this.name = name;
+    };
+    ast.TypeConstructor.prototype = new ast.Type();
+
+    ast.TypeApplication = function(t1, t2) {
+	expectType(t1, ast.Type);
+	expectType(t2, ast.Type);
+	this.t1 = t1;
+	this.t2 = t2;
+    };
+    ast.TypeApplication.prototype = new ast.Type();
+
+    ast.TypeTupple = function(size) {
+	expectTypeOf(size, "number");
+	this.size = size;
+    };
+    ast.TypeTupple.prototype = new ast.Type();
+
 	
     /*
       data Expression = Constant Value
@@ -422,7 +458,7 @@
     /*
       data Declaration = Variable Pattern Expression
                        | Function Identifier [Pattern] [(Guard, Expression)]|Expression 
-                       | Data Identifier [Constructor]
+                       | Data Identifier [TVar] [Constructor]
     */
 
     ast.Declaration = function(){};
@@ -438,12 +474,14 @@
             return this.pattern.stringify() + " = " + this.expression.stringify();
         };
     };
-
-    ast.Data = function(identifier, constructors) {
+ 
+    ast.Data = function(identifier, tvars, constructors) {
 	expectTypeOf(identifier, "string");
+	expectTypeArray(tvars, ast.TypeVariable);
 	expectTypeArray(constructors, ast.Constructor);
 	this.type = "Data";
 	this.identifier = identifier;
+	this.tvars = tvars;
 	this.constructors = constructors;
     };
 
@@ -486,14 +524,15 @@
     ast.Function.prototype = new ast.Declaration();
 
     /*
-      data Constructor = Constructor Identifier Integer
+      data Constructor = Constructor Identifier [Type]
      */
-    ast.Constructor = function(identifier, num) {
+
+    ast.Constructor = function(identifier, types) {
 	expectTypeOf(identifier, "string");
-	expectTypeOf(num, "number");
+	expectTypeArray(types, ast.Type);
 	this.type = "Constructor";
 	this.identifier = identifier;
-	this.number = num;
+	this.types = types;
     };
 
     /*

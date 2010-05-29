@@ -195,7 +195,7 @@
 	return new interpreter.HeapPtr(new interpreter.Closure(env, expr));        
     };
     
-    function createPrimitive(env, numArgs, func) {
+    var createPrimitive = function(env, numArgs, func) {
 	if (numArgs.length != undefined) {
 	    numArgs = numArgs.length; // KLUDGE: createPrimitive should take a number instead of an argument list
 	}
@@ -208,6 +208,7 @@
         };
         return parameterCollector(env, numArgs, prim);
     };
+    primitives.createPrimitive = createPrimitive;
 
 
     function createDataConstructor(env, ident, num) {
