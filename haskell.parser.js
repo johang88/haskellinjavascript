@@ -782,8 +782,8 @@
         var constr_action = function(p) {
             return action(p, function(ast) {
                 var name = ast[0];
-                var count = ast[1].length;
-                return new haskell.ast.Constructor(name, count);
+                var arguments = ast[1];
+                return new haskell.ast.Constructor(name, arguments);
             });
         };
         
@@ -798,8 +798,14 @@
                 return ast;
             });
         };
+
+	var fix_sequence_action = function(p) {
+	    return action(p, function(ast) {
+		    return ast[1];
+		});
+	};
         
-        var constr = choice(constr_action(sequence(ws(con), repeat0(sequence(optional(ws('!')), ws(atype))))),
+        var constr = choice(constr_action(sequence(ws(con), repeat0(fix_sequence_action(sequence(optional(ws('!')), ws(atype)))))),
                             constr_op_action(sequence(choice(ws(btype), sequence(optional(ws('!')), ws(atype))), ws(conop), choice(ws(btype), sequence(optional(ws('!')), ws(atype))))),
                             constr_fielddecl_action(sequence(ws(con), expectws('{'), list(ws(fielddecl), ws(',')), expectws('}')))
                            ); // Todo: fielddecl stuffz
@@ -832,27 +838,109 @@
                                 scontext_many_action(sequence(expectws('('), list(ws(simpleclass), ws(',')), expectws(')')))
                              );
 
+
+	var gtycon_qtycon_action = function(p) {
+	    return action(p, function(ast) {
+		    return new haskell.ast.TypeConstructor(ast);
+		});
+	};
+
+	var gtycon_qtycon_action = function(p) {
+	    return action(p, function(ast) {
+		    return new haskell.ast.TypeConstructor(ast);
+		});
+	};
+
+	var gtycon_unit_action = function(p) {
+	    return action(p, function(ast) {
+		    return new haskell.ast.TypeConstructor("()");
+		});
+	};
+
+	var gtycon_list_action = function(p) {
+	    return action(p, function(ast) {
+		    return new haskell.ast.TypeConstructor("([])");
+		});
+	};
+
+	var gtycon_arrow_action = function(p) {
+	    return action(p, function(ast) {
+		    return new haskell.ast.TypeConstructor("(->)");
+		});
+	};
+
+	var gtycon_tupple_action = function(p) {
+	    return action(p, function(ast) {
+		    var size = ast[0].length+1;
+		    var constructor = "(" + new Array(size).join(",") + ")";
+		    return new haskell.ast.TypeTupple(constructor, size);
+		});
+	};
+
 	// redefinition
-        gtycon = choice(qtycon,
-                            sequence(repeat1(ws(var_)), repeat0(ws(apat))),
-                            "()",
-                            "[]",
-                            "(->)",
-                            sequence(ws('('), repeat1(ws(',')), ws(')'))
+        gtycon = choice(gtycon_qtycon_action(qtycon),
+			//			sequence(repeat1(ws(var_)), repeat0(ws(apat))), // TODO: WTF? A pattern in a type? :/
+			gtycon_unit_action("()"),
+			gtycon_list_action("[]"),
+			gtycon_arrow_action("(->)"),
+			gtycon_tupple_action(sequence(ws('('), repeat1(ws(',')), ws(')')))
                             );
-        
+
+	var atype_tyvar_action = function(p) {
+	    return action(p, function(ast) {
+		    return new haskell.ast.TypeVariable(ast);
+		});
+	};
+
+	var atype_tupple_action = function(p) {
+	    return action(p, function(ast) {
+		    var size = ast[0].length;
+		    var constructor = "(" + new Array(size).join(",") + ")";
+		    var type = new haskell.ast.TypeTupple(constructor, size);
+		    for (var i in ast[0]) {
+			type = new haskell.ast.TypeApplication(type, ast[0][i]);
+		    };
+		    return type;
+		});
+	};
+
+	var atype_list_action = function(p) {
+	    return action(p, function(ast) {
+		    return new haskell.ast.TypeApplication(new haskell.ast.TypeConstructor("([])"), ast[0]);
+		});
+	};
         
 	// redefinition
 	atype = choice( gtycon,
-			tyvar,
-			sequence(ws('('), list(ws(type), ','), ws(')')),
-			sequence(ws('['), ws(type), ws(']')),
-			sequence(ws('('), ws(type), ws(')'))
+			atype_tyvar_action(tyvar),
+			atype_tupple_action(sequence(expectws('('), list(ws(type), ws(',')), expectws(')'))),
+			atype_list_action(sequence(expectws('['), ws(type), expectws(']'))),
+			sequence(expectws('('), ws(type), expectws(')'))
 			);
+
+	var btype_action = function(p) {
+	    return action(p, function(ast) {
+		    var type = ast[0];
+		    for (var i = 1; i < ast.length; i++) {
+			type = new haskell.ast.TypeApplication(type, ast[i]);
+		    }
+		    return type;
+		});
+	};
         
-        var btype = repeat1(ws(atype));
+        var btype = btype_action(repeat1(ws(atype)));
+
+	var type_action = function(p) {
+	    return action(p, function(ast) {
+		    var type = ast[0];
+		    for (var i = 1; i < ast.length; i++) {
+			type = new haskell.ast.TypeApplication(new haskell.ast.TypeApplication(new haskell.ast.TypeConstructor("(->)"), type), ast[i]);
+		    }
+		    return type;
+		});
+	};
 	// redefinition
-        type = list(ws(btype), ws("->"));
+        type = type_action(list(ws(btype), ws("->")));
         
         var fixity = choice(ws("infixl"), ws("infixr"), ws("infix"));
         
@@ -986,7 +1074,8 @@
             return action(p, function(ast) {
                 var ident = ast[1][0];
                 var constructors = ast[2];
-                return new haskell.ast.Data(ident, constructors);
+		// TODO: type variables
+                return new haskell.ast.Data(ident, [], constructors);
             });
         };
         

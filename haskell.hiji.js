@@ -23,14 +23,18 @@ commands[":type"] = "TYPE";
         if (ast == undefined){
             return "Syntax Error";
         }
-        console.log("%o", ast);
 	if (ast.type == "DoExpr") {
 	    ast = new haskell.ast.DoExpr(new haskell.ast.Application(new haskell.ast.VariableLookup("hijiOutputLine#"), ast.expr));
 	}
 	var doexpr  = new haskell.ast.Do([ast,
-					  new haskell.ast.DoExpr(new haskell.ast.VariableLookup("hijiContinuation#"))
-					  ]);
-        return haskell.interpreter.eval(doexpr, env);
+					  new haskell.ast.DoExpr(new haskell.ast.Primitive(
+					       function(env) {
+						   return new haskell.interpreter.Data("IO", [new haskell.interpreter.HeapPtr(env)]);
+					       }
+											   ))]);
+        console.log("%o", doexpr);
+        var res = haskell.interpreter.eval(doexpr, env);
+	return res.ptrs[0].dereference();
     };
     var makeModules = function(modules){
         return "<ul class='modules'><li>" + modules.join("</li><li>") + "</li></ul>";
@@ -100,6 +104,7 @@ commands[":type"] = "TYPE";
                 }
                 input.attr("value","");
 
+                $('.input', this).replaceWith(makeEntered(modules, line));
                 if(isCommand(line)){
                     runCommand(line, input, line);
                 }else
@@ -109,15 +114,13 @@ commands[":type"] = "TYPE";
 			// Global variable: 
                         printArea = $("ol", this);                
                         env = evaluateHaskell(line, env);
-                        
-			//                        var output = makeOutput(result);
-			//                        $('.input', this).after(output).replaceWith(newLine);
-                        $("ol",this).append(makeInput(modules));
+			console.log("%o", env);
                     }
                     catch(e) {
                         console.log("%o", e);
                     };
                 }
+                $("ol",this).append(makeInput(modules));
 
                 //set focus
                 $("input:text:visible:first").focus();
@@ -211,11 +214,15 @@ commands[":type"] = "TYPE";
                 $("ol").append(makeInput(modules));
             } else if (commands[command] == "TYPE") {
 		var arg     = trim(input.substr(command.length)); 
-		var ast = haskell.parser.parse(arg).ast;
-		var type = ast.infer(/* some env */);
-		var newLine = ast.stringify() + " :: " + type.stringify();
-		$('.input').after(output).replaceWith(newLine);
-		$("ol").append(makeInput(modules));
+		var ast = haskell.parser.parse('{' + arg + '}').ast.expr;
+                var tc = haskell.typechecker;
+		var infered = ast.infer(new tc.Environment(new tc.Assumps(), new tc.Subst(), new tc.NameGen()));
+                var predsString = infered.preds.map(function(p) { return p.toString(); }).join(", ");
+                if (predsString.length > 0) {
+                    predsString = "(" + predsString + ") => ";
+                }
+		var newLine = ast.stringify() + " :: " + predsString + infered.type.toString();
+		$("ol").append(makeOutput(newLine));
 	    }
         }
     };
