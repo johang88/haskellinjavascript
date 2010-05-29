@@ -663,7 +663,7 @@
 	     return this.type().hnf();
 	 };
 	 this.toString = function() {
-	     return this.id() + " => " + this.type();
+	     return this.id() + " " + this.type();
 	 };
      };
 
