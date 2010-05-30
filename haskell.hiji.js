@@ -221,7 +221,12 @@ commands[":type"] = "TYPE";
                 var type = infered.type.apply(env.getSubst());
                 var preds = infered.preds.filter(
 	            function (p)  {
-		        return tc.elem(type.tv(), p.type());
+		        return tc.any(
+                            p.tv(),
+                            function(t) {
+                                return tc.elem(type.tv(), t);
+                            }
+                        )
 	            }
                 );
                 var predsString = preds.map(function(p) { return p.toString(); }).join(", ");
