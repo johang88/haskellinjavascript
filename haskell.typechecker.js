@@ -1,3 +1,4 @@
+
 (function (typechecker, ast) {
 
      var inject = function(arr, f, acc) {
@@ -155,7 +156,6 @@
 	 var fInf = this.func.infer(env);
 	 var argInf = this.arg.infer(env);
 	 var t = env.newTVar(new typechecker.Star());
-	 // return argInf.type;
 	 env.unify(typechecker.fn(argInf.type, t), fInf.type);
 	 return {
 	     preds: fInf.preds.concat(argInf.preds),
@@ -168,16 +168,16 @@
 	 var tp = env.newTVar(new typechecker.Star());
 	 var te = env.newTVar(new typechecker.Star());
 	 env.unify(tp, condT.type);
-	 var ps = [];
+	 var ps = condT.preds;
 	 this.cases.map(
 	     function(c) {
 		 var patT = c[0].infer(env);
+		 env.unify(tp, patT.type);
 		 var childEnv = env.createChild();
 		 childEnv.addMany(patT.assumps);
-		 var exprtT = c[1].infer(childEnv);
-		 env.unify(tp, patT.type);
+		 var exprT = c[1].infer(childEnv);
 		 env.unify(te, exprT.type);
-		 ps = ps.concat(patT.preds).concat[exprT.preds];
+		 ps = ps.concat(patT.preds).concat(exprT.preds);
 	     });
 	 return {
 	     preds: ps,
@@ -186,7 +186,12 @@
      };
 
      ast.ConstantPattern.prototype.infer = function(env) {
-	 return this.value.infer(env);
+	 var inf = this.value.infer(env);
+	 return {
+	     preds: inf.preds,
+	     assumps: [],
+	     type: inf.type
+	 };	     
      };
 
      ast.PatternConstructor.prototype.infer = function(env) {
@@ -198,7 +203,7 @@
 	     function(pat) {
 		 var patInf = pat.infer(env);
 		 ps = ps.concat(patInf.preds);
-		 ts.push(patInf.type);
+		 ts = ts.concat([patInf.type]);
 		 as = as.concat(patInf.assumps);
 	     }
 	 );
@@ -207,11 +212,11 @@
 	 var infert = injectRight(
 	     ts,
 	     function(t, acc) {
-		 typechecker.fn(t, acc);
+		 return typechecker.fn(t, acc);
 	     },
 	     rt
 	 );
-	 // env.unify(inst.t(), infert);
+	 env.unify(inst.t(), infert);
 	 return {
 	     preds: ps,
 	     assumps: as,
@@ -408,10 +413,13 @@
 		 });
 	 };
 	 this.mgu = function(otherType) {
+	     if(otherType.type() == "TVar") {
+		 return otherType.mgu(this);
+	     }
 	     if(otherType.type() == "TAp") {
 		 var s1 = this.t1().mgu(otherType.t1());
 		 var s2 = this.t2().apply(s1).mgu(otherType.t2().apply(s1));
-		 return s1.compose(s2);
+		 return s2.compose(s1);
 	     }
 	     throw "types do not unify";
 	 };
@@ -490,6 +498,9 @@
      typechecker.Subst = function() {
 	 var mappings = {};
 	 this.add = function(from, to) {
+	     if(this.exists(to)) {
+		 to = to.apply(this);
+	     }
 	     mappings[from.id()] = {
 		 from: from,
 		 to: to
@@ -518,12 +529,11 @@
 		     return acc.add(from, to);
 		 },
 		 new typechecker.Subst());
-	     otherSubst.inject(
+	     return otherSubst.inject(
 		 function(from, to, acc) {
 		     return acc.add(from, to.apply(curSubst));
 		 },
 		 newSubst);
-	     return newSubst;
 	 };
 	 this.merge = function(otherSubst) {
 	     var newSubst = this.inject(
@@ -628,7 +638,12 @@
      typechecker.Pred = function(id, type) {
 	 this.id = function() { return id; };
 	 this.type = function() { return type; };
-	 this.apply = function(subst) { return this.type().apply(subst); };
+	 this.apply = function(subst) {
+	     return new typechecker.Pred(
+		 this.id(),
+		 this.type().apply(subst)
+	     );
+	 };
 	 this.mguPred = function(otherPred) {
 	     if(this.id() == otherPred.id()) {
 		 return this.type().mgu(otherPred.type());
@@ -1028,8 +1043,11 @@
 	     return subst;
 	 };
 	 this.unify = function(t1, t2) {
+	     var s = this.getSubst();
 	     var newSubst = t1.apply(
-		 this.getSubst()).mgu(t2.apply(this.getSubst()));
+		 s
+	     ).mgu(
+		 t2.apply(s));
 	     this.extSubst(newSubst);
 	 };
 	 this.newTVar = function(kind) {
