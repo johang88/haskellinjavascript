@@ -239,7 +239,7 @@
         this.expr = expr;
         this.type = type;
         this.eval = function(env) {
-            return this.expr;
+            return this.expr.eval(env);
         };
         
         this.stringify = function() {
