@@ -104,6 +104,7 @@ commands[":type"] = "TYPE";
                 }
                 input.attr("value","");
 
+                $('.input', this).replaceWith(makeEntered(modules, line));
                 if(isCommand(line)){
                     runCommand(line, input, line);
                 }else
@@ -114,14 +115,12 @@ commands[":type"] = "TYPE";
                         printArea = $("ol", this);                
                         env = evaluateHaskell(line, env);
 			console.log("%o", env);
-			//                        var output = makeOutput(result);
-			//                        $('.input', this).after(output).replaceWith(newLine);
-                        $("ol",this).append(makeInput(modules));
                     }
                     catch(e) {
                         console.log("%o", e);
                     };
                 }
+                $("ol",this).append(makeInput(modules));
 
                 //set focus
                 $("input:text:visible:first").focus();

@@ -42,12 +42,18 @@
 	this.name = name;
     };
     ast.TypeVariable.prototype = new ast.Type();
+    ast.TypeVariable.prototype.stringify = function() {
+        return this.name;
+    };
 
     ast.TypeConstructor = function(name) {
 	expectTypeOf(name, "string");
 	this.name = name;
     };
     ast.TypeConstructor.prototype = new ast.Type();
+    ast.TypeConstructor.prototype.stringify = function() {
+        return this.name;
+    };
 
     ast.TypeApplication = function(t1, t2) {
 	expectType(t1, ast.Type);
@@ -56,12 +62,49 @@
 	this.t2 = t2;
     };
     ast.TypeApplication.prototype = new ast.Type();
+    ast.TypeApplication.prototype.stringify = function() {
+        return this.t1.stringify() + " " + this.t2.stringify();
+    };
 
     ast.TypeTupple = function(size) {
 	expectTypeOf(size, "number");
 	this.size = size;
     };
     ast.TypeTupple.prototype = new ast.Type();
+    ast.TypeTupple.prototype.stringify = function() {
+        return "(" + (new Array(this.size)).join(",") + ")";
+    };
+
+    /* 
+       data Constraint = Constraint Identifier Identifier
+     */
+
+    ast.Constraint = function(typeclass, typevar) {
+        expectTypeOf(typeclass, "string");
+        expectTypeOf(typevar, "string");
+        this.typeclass = typeclass;
+        this.typevar = typevar;
+    };
+    ast.Constraint.prototype.stringify = function() {
+        return this.typeclass + " " + this.typevar;
+    };
+
+    /*
+      data TypeConstraint = TypeConstraint [Constraint] Type
+    */
+    ast.TypeConstraint = function(constraints, type) {
+        expectTypeArray(constraints, ast.Constraint);
+        expectType(type, ast.Type);
+        this.constraints = constraints;
+        this.type = type;
+    };
+    ast.Constraint.prototype.stringify = function() {
+        var constraints  = this.constraints.map(function(p) { return p.stringify(); }).join(", ");
+        if (constraints.length > 0) {
+            constraints = "(" + constraints + ") => ";
+        }
+	return predsString + this.type.stringify();
+    };    
 
 	
     /*
@@ -71,6 +114,7 @@
             	      | Let Pattern Expression Expression
                	      | Case Expression [(Pattern, Expression)]
                       | VariableLookup Identifier
+                      | ExpressionTypeConstraint Expression TypeConstraint
 		      | If Expression Expression Expression
 		      | Do [DoNotation]
 		      | List [Expression]
@@ -89,7 +133,7 @@
         return this.desugar().stringify();
     };
     ast.Expression.prototype.desugar = function() {
-        return this;
+        return undefined;
     };
 
     ast.Constant = function(value) {
@@ -189,6 +233,21 @@
             return this.identifier;
         };
     };
+    ast.ExpressionTypeConstraint = function(expr, type) {
+        expectType(expr, ast.Expression);
+        expectType(type, ast.TypeConstraint);
+        this.expr = expr;
+        this.type = type;
+        this.eval = function(env) {
+            return this.expr;
+        };
+        
+        this.stringify = function() {
+            return this.expr.stringify() + " :: " + this.type.stringify();
+        };
+    };
+    ast.ExpressionTypeConstraint.prototype = new ast.Expression();
+
     ast.If = function(ifExpr, thenExpr, elseExpr) {
 	expectType(ifExpr, ast.Expression);
 	expectType(thenExpr, ast.Expression);
@@ -215,6 +274,7 @@
 	};
     };
     ast.If.prototype = new ast.Expression();
+
     ast.Do = function(notations) {
 	expectTypeArray(notations, ast.DoNotation);
 	this.type="Do";
@@ -459,6 +519,7 @@
       data Declaration = Variable Pattern Expression
                        | Function Identifier [Pattern] [(Guard, Expression)]|Expression 
                        | Data Identifier [TVar] [Constructor]
+                       | TypeConstraintDeclaration [Identifier] TypeConstraint
     */
 
     ast.Declaration = function(){};
@@ -518,6 +579,14 @@
 		}).join(" ") + " = " + exprstr;
 	};
     };
+
+    ast.TypeConstraintDeclaration = function(funs, type) {
+        // expectTypeArrayOf(funs, "string");
+        expectType(type, ast.TypeConstraint);
+        this.funs = funs;
+        this.type = type;
+    };
+    ast.TypeConstraintDeclaration.prototype = new ast.Declaration();
 
     ast.Variable.prototype = new ast.Declaration();
     ast.Data.prototype = new ast.Declaration();
