@@ -218,12 +218,17 @@ commands[":type"] = "TYPE";
                 var tc = haskell.typechecker;
                 var env = new tc.Environment(new tc.Assumps(), new tc.Subst(), new tc.NameGen());
 		var infered = ast.infer(env);
-                var subst = infered.type.apply(env.getSubst());
-                var predsString = infered.preds.map(function(p) { return p.toString(); }).join(", ");
+                var type = infered.type.apply(env.getSubst());
+                var preds = infered.preds.filter(
+	            function (p)  {
+		        return tc.elem(type.tv(), p.type());
+	            }
+                );
+                var predsString = preds.map(function(p) { return p.toString(); }).join(", ");
                 if (predsString.length > 0) {
                     predsString = "(" + predsString + ") => ";
                 }
-		var newLine = ast.stringify() + " :: " + predsString + subst.toString();
+		var newLine = ast.stringify() + " :: " + predsString + type.toString();
 		$("ol").append(makeOutput(newLine));
 	    }
         }
