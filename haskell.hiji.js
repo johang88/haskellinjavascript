@@ -214,11 +214,15 @@ commands[":type"] = "TYPE";
                 $("ol").append(makeInput(modules));
             } else if (commands[command] == "TYPE") {
 		var arg     = trim(input.substr(command.length)); 
-		var ast = haskell.parser.parse("{" + arg + "}").ast;
-		var type = ast.infer(/* some env */);
-		var newLine = ast.stringify() + " :: " + type.stringify();
-		$('.input').after(output).replaceWith(newLine);
-		$("ol").append(makeInput(modules));
+		var ast = haskell.parser.parse('{' + arg + '}').ast.expr;
+                var tc = haskell.typechecker;
+		var infered = ast.infer(new tc.Environment(new tc.Assumps(), new tc.Subst(), new tc.NameGen()));
+                var predsString = infered.preds.map(function(p) { return p.toString(); }).join(", ");
+                if (predsString.length > 0) {
+                    predsString = "(" + predsString + ") => ";
+                }
+		var newLine = ast.stringify() + " :: " + predsString + infered.type.toString();
+		$("ol").append(makeOutput(newLine));
 	    }
         }
     };
