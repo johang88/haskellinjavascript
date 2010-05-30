@@ -66,6 +66,15 @@
 	 return ys;
      };
 
+     var unique = function(arr) {
+	 return uniqueBy(
+	     arr,
+	     function(a, b) {
+		 return a.compare(b);
+	     });
+     };
+     typechecker.unique = unique;
+
      var flatten = function(arr) {
 	 return inject(
 	     arr,
