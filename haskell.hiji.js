@@ -219,7 +219,8 @@ commands[":type"] = "TYPE";
                 var env = new tc.Environment(new tc.Assumps(), new tc.Subst(), new tc.NameGen());
 		var infered = ast.infer(env);
                 var type = infered.type.apply(env.getSubst());
-                var preds = infered.preds.filter(
+                var predsSubst = infered.preds.map(function(p) { return p.apply(env.getSubst())});
+                var preds = predsSubst.filter(
 	            function (p)  {
 		        return tc.any(
                             p.tv(),
