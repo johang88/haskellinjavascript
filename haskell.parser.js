@@ -947,13 +947,31 @@
         var vars = list(ws(var_), ws(','));
         
         var ops = epsilon_p;
+
+        var class__context_action = function(p) {
+            return action(p, function(ast) {
+                return new haskell.ast.Constraint(ast[0], ast[1]);
+            });
+        };
         
-        var class_ = choice(sequence(ws(qtycls), ws(tyvar)),
-                            sequence(ws(qtycls), ws('('), list(ws(atype), ws(',')) ,ws(')'))
+        var class_ = choice(class__context_action(sequence(ws(qtycls), ws(tyvar))),
+                            sequence(ws(qtycls), ws('('), list(ws(atype), ws(',')) ,ws(')')) // TODO: What is this?
                             );
         
-        var context = choice(   ws(class_), 
-                                sequence(ws('('), list(ws(class_), ws(',')) ,ws(')'))
+        var context_single_action = function(p) {
+            return action(p, function(ast) {
+                return [ast];
+            });
+        };
+
+        var context_multi_action = function(p) {
+            return action(p, function(ast) {
+                return ast[0];
+            });
+        };
+
+        var context = choice(   context_single_action(ws(class_)), 
+                                context_multi_action(sequence(expectws('('), list(ws(class_), ws(',')) , expectws(')')))
                             );
         
         var fixity_op_action = function(p) {
@@ -981,8 +999,18 @@
                 return "fixity";
             });
         };
+
+        var gendecl_type_action = function(p) {
+            return action(p, function(ast) {
+                var vars = ast[0];
+                var constraints = ast[1] ? ast[1][0] : [];
+                var type = ast[2];
+                var tc = new haskell.ast.TypeConstraint(constraints, type);
+                return new haskell.ast.TypeConstraintDeclaration(vars, tc);
+            });
+        };
         
-        var gendecl = choice(   sequence(ws(vars), ws("::"), optional(sequence(ws(context), ws("=>"))), ws(type)),
+        var gendecl = choice(   gendecl_type_action(sequence(ws(vars), expectws("::"), optional(sequence(ws(context), expectws("=>"))), ws(type))),
                                 fixity_op_action(sequence(ws(fixity), optional(ws(integer)), ws(choice(varop, conop)))), // Should be multiple op's
                                 epsilon_p
                             );
