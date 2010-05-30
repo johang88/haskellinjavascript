@@ -34,7 +34,7 @@
 		 return p.compare(pp);
 	     });
      };
-
+     typechecker.elem = elem;
      typechecker.any = any;
 
      var all = function(arr, f) {

@@ -27,6 +27,7 @@ not x = case x of
     True -> False
     False -> True
 
+otherwise :: Bool
 otherwise = True
 
 id x = x
@@ -39,6 +40,7 @@ map f xs = case xs of
 (++) [] ys = ys
 (++) (x:xs) ys = x : (xs ++ ys)
 
+concat :: [[a]] -> [a]
 concat [] = []
 concat (x:xs) = x ++ concat xs
 
@@ -80,6 +82,7 @@ fib n = case n of
 
 data Int = I# Int#
 
+(+) :: Num a => a -> a -> a
 (+) (I# i1) (I# i2) = I# (i1 +# i2)
 
 (-) (I# i1) (I# i2) = I# (i1 -# i2)
