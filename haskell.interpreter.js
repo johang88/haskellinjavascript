@@ -258,7 +258,7 @@
 			    for (var j in matchedFunc.expression) {
 				var guard = matchedFunc.expression[j][0];
 				var expression = matchedFunc.expression[j][1];
-				var guardResult = guard.eval(newEnv);
+				var guardResult = (new interpreter.HeapPtr(new interpreter.Closure(newEnv, guard))).dereference();
 				if (guardResult.identifier == "True") {
 				    return new interpreter.Closure(newEnv, expression);
 				}
