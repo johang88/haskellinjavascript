@@ -117,10 +117,11 @@ return a = IO a
 
 fail _ = []
 
-guard True = return undefined
+-- But Monad Zero is for list monad...
+guard True = [undefined]
 guard False = mzero
-
 mzero = []
+
 
 
 undefined = undefined
