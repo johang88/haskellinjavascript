@@ -220,16 +220,16 @@ commands[":type"] = "TYPE";
 		var infered = ast.infer(env);
                 var type = infered.type.apply(env.getSubst());
                 var predsSubst = infered.preds.map(function(p) { return p.apply(env.getSubst())});
-                var preds = predsSubst.filter(
+                var preds = tc.unique(predsSubst.filter(
 	            function (p)  {
 		        return tc.any(
                             p.tv(),
                             function(t) {
                                 return tc.elem(type.tv(), t);
                             }
-                        )
+                        );
 	            }
-                );
+                ));
                 var predsString = preds.map(function(p) { return p.toString(); }).join(", ");
                 if (predsString.length > 0) {
                     predsString = "(" + predsString + ") => ";

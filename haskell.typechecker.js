@@ -66,6 +66,15 @@
 	 return ys;
      };
 
+     var unique = function(arr) {
+	 return uniqueBy(
+	     arr,
+	     function(a, b) {
+		 return a.compare(b);
+	     });
+     };
+     typechecker.unique = unique;
+
      var flatten = function(arr) {
 	 return inject(
 	     arr,
@@ -571,8 +580,9 @@
 	 this.toString = function() {
 	     return this.inject(
 		 function(from, to, acc) {
-		     return from.toString() + ": " + to.toString() + ",";
-		 });
+		     return acc + from.toString() + ": " + to.toString() + ", ";
+		 },
+		 "");
 	 };
      };
      typechecker.nullSubst = function() { return new typechecker.Subst({}); };
@@ -1037,7 +1047,7 @@
 	     return namegen.nextName();
 	 };
 	 this.extSubst = function(otherSubst) {
-	     subst = subst.compose(otherSubst);
+	     subst = otherSubst.compose(subst);
 	 };
 	 this.getSubst = function() {
 	     return subst;
