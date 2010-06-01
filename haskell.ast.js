@@ -341,11 +341,11 @@
     ast.ListComprehension.prototype = new ast.Expression();
     ast.ListComprehension.prototype.desugar = function() {
 	if (this.notations.length == 0) {
-	    return (new ast.Application(new ast.VariableLookup("return"), this.ret));
+	    return (new ast.Application(new ast.Application(new ast.VariableLookup(":"), this.ret), new ast.VariableLookup("[]")));
 	}
 	var first = this.notations[0];
-	return new ast.Do([first.partDesugar(), new ast.DoExpr(new ast.ListComprehension(this.ret,
-											 this.notations.slice(1)))]);
+        return first.partDesugar(new ast.ListComprehension(this.ret,
+						           this.notations.slice(1)));
     };
 
 
@@ -445,9 +445,11 @@
 	this.expr = expr;
     };
     ast.ListGuard.prototype = new ast.ListNotation();
-    ast.ListGuard.prototype.partDesugar = function() {
-	return new ast.DoExpr(new ast.Application(new ast.VariableLookup("guard"),
-						  this.expr));
+    ast.ListGuard.prototype.partDesugar = function(rest) {
+        return new ast.Application(new ast.Application(new ast.VariableLookup("concatMap"), 
+                                                       new ast.Lambda(new ast.Wildcard(), rest)),
+                                   new ast.Application(new ast.VariableLookup("guard"),
+						       this.expr));
     };
 
     ast.ListBind = function(pattern, expr) {
@@ -458,9 +460,10 @@
 	this.expr = expr;
     };
     ast.ListBind.prototype = new ast.ListNotation();
-    ast.ListBind.prototype.partDesugar = function() {
-	// x <- expr ==> x <- expr ...
-	return new ast.DoBind(this.pattern, this.expr);
+    ast.ListBind.prototype.partDesugar = function(rest) {
+        return new ast.Application(new ast.Application(new ast.VariableLookup("concatMap"), 
+                                                       new ast.Lambda(this.pattern, rest)),
+				   this.expr);
     };
 
     ast.ListLet = function(decls) {
