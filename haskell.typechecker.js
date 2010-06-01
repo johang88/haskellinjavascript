@@ -1,4 +1,3 @@
-
 (function (typechecker, ast) {
 
      var inject = function(arr, f, acc) {
@@ -90,6 +89,16 @@
 	 return uniqueBy(arr.concat(otherArray), comp);
      };
 
+     var union = function(arr, otherArray) {
+	 return unionBy(
+	     arr,
+	     otherArray,
+	     function(a, b) {
+		 return a.compare(b);
+	     }
+	 );
+     };
+
      var intersectBy = function(arr, otherArray, comp) {
 	 return inject(
 	     arr,
@@ -149,6 +158,81 @@
 	 return {
 	     preds: [new typechecker.Pred("Num", v)],
 	     type: v
+	 };
+     };
+
+     ast.List.prototype.infer = function(env) {
+	 var t = env.newTVar(new typechecker.Star());
+	 var ps = [];
+	 this.expressions.map(
+	     function(exp) {
+		 var expInf = exp.infer(env);
+		 ps = ps.concat(expInf.preds);
+		 env.unify(t, expInf.type);
+	     }
+	 );
+	 var lt = new typechecker.TAp(
+	     new typechecker.TCon(
+		 "[]",
+		 new typechecker.Kfun(
+		     new typechecker.Star(),
+		     new typechecker.Star()
+		 )
+	     ),
+	     t
+	 );
+	 return {
+	     preds: ps,
+	     type: lt
+	 };
+     };
+
+     ast.Let.prototype.infer = function(env) {
+	 var funcs = {};
+	 var vars = [];
+	 this.declr.map(
+	     function(d) {
+		 if(d.type == "Function") {
+		     if(funcs[d.identifier] == undefined) {
+			 funcs[d.identifier] = [];
+		     }
+		     funcs[d.identifier] = funcs[d.identifier].concat([d]);
+		 } else if(d.type == "Variable") {
+		     vars = vars.concat([d]);
+		 }
+	     }
+	 );
+	 var ts = {};
+	 var as = [];
+	 for(var i in funcs) {
+	     var v = env.newTVar(new typechecker.Star());
+	     ts[i] = v;
+	     as = as.concat(
+		 [
+		     new typechecker.Assump(
+			 i,
+			 typechecker.toScheme(v)
+		     )
+		 ]
+	     );
+	 }
+	 var newEnv = env.createChild().addMany(as);
+	 var ps = [];
+	 for(var i in funcs) {
+	     funcs[i].map(
+		 function(alt) {
+		     var altInf = alt.infer(newEnv);
+		     ps = ps.concat(altInf.preds);
+		     env.unify(ts[i], altInf.type);
+		 }
+	     );
+	 }
+	 
+	 var expInf = this.expr.infer(newEnv);
+	 return {
+	     preds: ps.concat(expInf.preds),
+	     assumps: [],
+	     type: expInf.type
 	 };
      };
 
@@ -268,18 +352,92 @@
 	 };
      };
 
+     ast.Variable.prototype.infer = function(env) {
+	 var t = env.newTVar(new typechecker.Star());
+	 var patInf = this.pattern.infer(env);
+	 var newEnv = env.createChild().addMany(patInf.assumps);
+	 var expInf = this.expression.infer(newEnv);
+	 env.unify(t, patInf.type);
+	 env.unify(t, expInf.type);
+	 env.unify(patInf.type, expInf.type);
+	 return {
+	     preds: patInf.preds.concat(expInf.preds),
+	     assumps: patInf.assumps,
+	     type: t
+	 };
+     };
+
+     ast.Function.prototype.infer = function(env) {
+	 var ps = [];
+	 var ts = [];
+	 var as = [];
+	 this.patterns.map(
+	     function(pat) {
+		 var patInf = pat.infer(env);
+		 ps = ps.concat(patInf.preds);
+		 ts = ts.concat([patInf.type]);
+		 as = as.concat(patInf.assumps);
+	     }
+	 );
+	 var newEnv = env.createChild().addMany(as);
+	 var expInf = this.expression.infer(newEnv);
+	 var tt = injectRight(
+	     ts,
+	     function(t, acc) {
+		 return typechecker.fn(t, acc);
+	     },
+	     expInf.type);
+	 return {
+	     preds: ps.concat(expInf.preds),
+	     assumps: [],
+	     type: tt
+	 };
+     };
+
+     ast.Data.prototype.kind = function(env) {
+	 return injectRight(
+	     this.tvars,
+	     function(t,acc) {
+		 return new typechecker.Kfun(
+		     env.newKVar(),
+		     acc);
+	     },
+	     new typechecker.Star()
+	 );
+     };
+
      /*
       * data Kind = Star | Kfun Kind Kind
       *   deriving Eq
       * 
       */
      typechecker.Star = function() {
+	 this.type = function () { return "Star"; };
 	 this.toString = function() { return "*"; };
 	 this.toStringNested = this.toString;
-	 this.equals = function(otherKind) { return otherKind.isStar(); };
-	 this.isStar = function() { return true; };
+	 this.equals = function(otherKind) {
+	     return otherKind.type() == "Star";
+	 };
+	 this.compare = this.equals;
+	 this.apply = function() {
+	     return this;
+	 };
+	 this.kv = function() {
+	     return [];
+	 };
+	 this.mgu = function(otherKind) {
+	     if(otherKind.type() == "Star") {
+		 return new typechecker.KindSubst();
+	     }
+	     if(otherKind.type() == "KVar") {
+		 return otherKind.substWith(this);
+	     }
+	     throw "kind mismatch";
+	 };
      };
+
      typechecker.Kfun = function(kind1, kind2) {
+	 this.type = function() { return "Kfun"; };
 	 this.kind1 = function() { return kind1; };
 	 this.kind2 = function() { return kind2; };
 	 this.toString = function() {
@@ -290,12 +448,69 @@
 	 this.toStringNested = function() {
 	     return "(" + this.toString() + ")";
 	 };
-	 this.isStar = function() { return false; };
 	 this.equals = function(otherKind) {
-	     return !otherKind.isStar() &&
+	     return otherKind.type() == "Kfun" &&
 		 this.kind1().equals(otherKind.kind1()) &&
 		 this.kind2().equals(otherKind.kind2());
 	 };
+	 this.compare = this.equals;
+	 this.apply = function(subst) {
+	     return new typechecker.Kfun(
+		 this.kind1().apply(subst),
+		 this.kind2.apply(subst));
+	 };
+	 this.kv = function() {
+	     return union(this.kind1().kv(), this.kind2().kv());
+	 };
+	 this.mgu = function(otherKind) {
+	     if(otherKind.type() == "KVar") {
+		 return otherKind.mgu(this);
+	     }
+	     if(otherKind.type() == "Kfun") {
+		 var s1 = this.kind1().mgu(otherKind.kind1());
+		 var s2 = this.kind2().apply(s1).mgu(
+		     otherKind.kind2().apply(s1));
+		 return s2.compose(s1);
+	     }
+	     throw "kind mismatch";
+	 };
+     };
+
+     typechecker.KVar = function(id) {
+	 this.type = function() { return "KVar"; };
+	 this.id = function() {
+	     return id;
+	 };
+	 this.apply = function(subst) {
+	     if(subst.lookup(this) != undefined) {
+		 return subst.lookup(this);
+	     }
+	     return this;
+	 };
+	 this.kv = function() {
+	     return [this];
+	 };
+	 this.mgu = function(otherKind) {
+	     if(this.compare(otherKind)) {
+		 return new typechecker.KindSubst();
+	     }
+	     if(elem(otherKind.kv(), this)) {
+		 throw "occurs check fails";
+	     }
+	     return this.substWith(otherKind);
+	 };
+	 this.substWith = function(otherKind) {
+	     return new typechecker.KindSubst().add(this, otherKind);
+	 };
+	 this.toString = function() {
+	     return this.id();
+	 };
+	 this.toStringNested = this.toString;
+	 this.equals = function(otherKind) {
+	     return otherKind.type() == "KVar" &&
+		 this.id() == otherKind.id();
+	 };
+	 this.compare = this.equals;
      };
 
      typechecker.Type = function() {
@@ -358,8 +573,8 @@
 	 this.hnf = function() { return true; };
      };
      
-      typechecker.newTVar = function(kind, env) {
-	 return new typechecker.TVar(env.nextName(), kind);
+      typechecker.newTVar = function(kind, namegen) {
+	 return new typechecker.TVar(namegen.nextName(), kind);
       };
 
      typechecker.TCon = function(id, kind) {
@@ -507,9 +722,7 @@
      typechecker.Subst = function() {
 	 var mappings = {};
 	 this.add = function(from, to) {
-	     if(this.exists(to)) {
-		 to = to.apply(this);
-	     }
+	     to = to.apply(this);
 	     mappings[from.id()] = {
 		 from: from,
 		 to: to
@@ -586,7 +799,50 @@
 	 };
      };
      typechecker.nullSubst = function() { return new typechecker.Subst({}); };
-     
+
+     typechecker.KindSubst = function() {
+	 var mappings = {};
+	 this.add = function(from, to) {
+	     to.apply(this);
+	     mappings[from.id()] = to;
+	     return this;
+	 };
+	 this.lookup = function(kind) {
+	     return mappings[kind.id()];
+	 };
+	 this.exists = function(kind) {
+	     return this.lookup(kind) != undefined;
+	 };
+	 this.inject = function(f, acc) {
+	     for(var i in mappings) {
+		 acc = f(i, mappings[i], acc);
+	     }
+	     return acc;
+	 };
+	 this.compose = function(otherSubst) {
+	     var cur = this;
+	     var newSubst = this.inject(
+		 function(from, to, acc) {
+		     return acc.add(new typechecker.KVar(from), to);
+		 },
+		 new typechecker.KindSubst()
+	     );
+	     return otherSubst.inject(
+		 function(from, to, acc) {
+		     return acc.add(new typechecker.KVar(from), to.apply(cur));
+		 },
+		 newSubst
+	     );
+	 };
+	 this.toString = function() {
+	     return this.inject(
+		 function(from, to, acc) {
+		     return acc + from + ": " + to.toString() + ", ";
+		 },
+		 "");
+	 };
+     };
+
      typechecker.Qual = function(preds, t) {
 	 this.preds = function() { return preds; };
 	 this.t = function() { return t; };
@@ -1042,15 +1298,77 @@
 	 return subst;
      };
 
-     typechecker.Environment = function(assumps, subst, namegen) {
+     typechecker.Environment = function(assumps, subst, namegen, kindsubst) {
+	 assumps.add(
+	     new typechecker.Assump(
+		 ":",
+		 new typechecker.Scheme(
+		     [new typechecker.Star()],
+		     new typechecker.Qual(
+			 [],
+			 typechecker.fn(
+			     new typechecker.TGen(0),
+			     typechecker.fn(
+				 new typechecker.TAp(
+				     new typechecker.TCon(
+					 "[]",
+					 new typechecker.Kfun(
+					     new typechecker.Star(),
+					     new typechecker.Star()
+					 )
+				     ),
+				     new typechecker.TGen(0)
+				 ),
+				 new typechecker.TAp(
+				     new typechecker.TCon(
+					 "[]",
+					 new typechecker.Kfun(
+					     new typechecker.Star(),
+					     new typechecker.Star()
+					 )
+				     ),
+				     new typechecker.TGen(0)
+				 )
+			     )
+			 )
+		     )
+		 )
+	     )
+	 ).add(
+	     new typechecker.Assump(
+		 "[]",
+		 new typechecker.Scheme(
+		     [new typechecker.Star()],
+		     new typechecker.Qual(
+			 [],
+			 new typechecker.TAp(
+			     new typechecker.TCon(
+				 "[]",
+				 new typechecker.Kfun(
+				     new typechecker.Star(),
+				     new typechecker.Star()
+				 )
+			     ),
+			     new typechecker.TGen(0)
+			 )
+		     )
+		 )
+	     )
+	 );
 	 this.nextName = function() {
 	     return namegen.nextName();
 	 };
 	 this.extSubst = function(otherSubst) {
 	     subst = otherSubst.compose(subst);
 	 };
+	 this.extKindSubst = function(otherSubst) {
+	     kindsubst = otherSubst.compose(kindsubst);
+	 };
 	 this.getSubst = function() {
 	     return subst;
+	 };
+	 this.getKindSubst = function() {
+	     return kindsubst;
 	 };
 	 this.unify = function(t1, t2) {
 	     var s = this.getSubst();
@@ -1060,15 +1378,27 @@
 		 t2.apply(s));
 	     this.extSubst(newSubst);
 	 };
+	 this.unifyKinds = function(k1, k2) {
+	     var s = this.getKindSubst();
+	     var newSubst = k1.apply(
+		 s
+	     ).mgu(
+		 k2.apply(s));
+	     this.extKindSubst(newSubst);
+	 };
 	 this.newTVar = function(kind) {
 	     return typechecker.newTVar(kind, namegen);
+	 };
+	 this.newKVar = function() {
+	     return new typechecker.KVar(namegen.nextName());
 	 };
 	 this.add = function(a) {
 	     assumps.add(a);
 	     return this;
 	 };
 	 this.addMany = function(as) {
-	     return assumps.addMany(as);
+	     assumps.addMany(as);
+	     return this;
 	 };
 	 this.lookup = function(id) {
 	     return assumps.lookup(id);
@@ -1077,7 +1407,8 @@
 	     return new typechecker.Environment(
 		 assumps.createChild(),
 		 subst,
-		 namegen
+		 namegen,
+		 kindsubst
 	     );
 	 };
      };
